@@ -1,4 +1,34 @@
-require('./structures');
+import {
+  literal,
+  symbolExpr,
+  Program,
+  couple,
+  ifExpr,
+  beginExpr,
+  letExpr,
+  letStarExpr,
+  letrecExpr,
+  localExpr,
+  andExpr,
+  orExpr,
+  condExpr,
+  caseExpr,
+  lambdaExpr,
+  quotedExpr,
+  unquotedExpr,
+  quasiquotedExpr,
+  unquoteSplice,
+  callExpr,
+  whenUnlessExpr,
+  defFunc,
+  defVar,
+  defVars,
+  defStruct,
+  requireExpr,
+  provideStatement,
+  unsupportedExpr,
+} from './structures'
+
 require('./modules');
 // if not defined, declare the compiler object as part of plt
 window.plt   = window.plt   || {};
@@ -12,44 +42,16 @@ var types = require('./runtime/types');
 
 (function () {
  'use strict';
- 
+
  // import frequently-used bindings
- var literal          = plt.compiler.literal;
- var symbolExpr       = plt.compiler.symbolExpr;
- var Program          = plt.compiler.Program;
- var couple           = plt.compiler.couple;
- var ifExpr           = plt.compiler.ifExpr;
- var beginExpr        = plt.compiler.beginExpr;
- var letExpr          = plt.compiler.letExpr;
- var letStarExpr      = plt.compiler.letStarExpr;
- var letrecExpr       = plt.compiler.letrecExpr;
- var localExpr        = plt.compiler.localExpr;
- var andExpr          = plt.compiler.andExpr;
- var orExpr           = plt.compiler.orExpr;
- var condExpr         = plt.compiler.condExpr;
- var caseExpr         = plt.compiler.caseExpr;
- var lambdaExpr       = plt.compiler.lambdaExpr;
- var quotedExpr       = plt.compiler.quotedExpr;
- var unquotedExpr     = plt.compiler.unquotedExpr;
- var quasiquotedExpr  = plt.compiler.quasiquotedExpr;
- var unquoteSplice    = plt.compiler.unquoteSplice;
- var callExpr         = plt.compiler.callExpr;
- var whenUnlessExpr   = plt.compiler.whenUnlessExpr;
- var defFunc          = plt.compiler.defFunc;
- var defVar           = plt.compiler.defVar;
- var defVars          = plt.compiler.defVars;
- var defStruct        = plt.compiler.defStruct;
- var requireExpr      = plt.compiler.requireExpr;
- var provideStatement = plt.compiler.provideStatement;
- var unsupportedExpr  = plt.compiler.unsupportedExpr;
- 
+
  var throwError       = plt.compiler.throwError;
  var structBinding    = plt.compiler.structBinding;
  var constantBinding  = plt.compiler.constantBinding;
  var functionBinding  = plt.compiler.functionBinding;
  var moduleBinding    = plt.compiler.moduleBinding;
  var knownModules     = plt.compiler.knownModules;
- 
+
   // checkDuplicateIdentifiers : [listof SymbolExprs], Program -> Void
   // sort the array, and throw errors for non-symbols, keywords or duplicates
   function checkDuplicateIdentifiers(lst, stx, loc){
@@ -67,10 +69,10 @@ var types = require('./runtime/types');
         } else {
           visitedIds[id.val] = id; // otherwise, record the identifier as being visited
         }
-                         
+
     });
   }
- 
+
  // tag-application-operator/module: Stx module-name -> Stx
  // Adjust the lexical context of the func so it refers to the environment of a particular module.
  function tagApplicationOperator_Module(application, moduleName){
@@ -96,7 +98,7 @@ var types = require('./runtime/types');
     tagApplicationOperator_Module(runtimeCall, 'moby/runtime/kernel/misc');
     return runtimeCall;
  }
- 
+
  //////////////////////////////////////////////////////////////////////////////
  // DESUGARING ////////////////////////////////////////////////////////////////
 
@@ -125,7 +127,7 @@ var types = require('./runtime/types');
       res[0].location = programs.location;
       return res;
  }
- 
+
  // Program.prototype.desugar: pinfo -> [Program, pinfo]
  Program.prototype.desugar = function(pinfo){ return [this, pinfo]; };
  defFunc.prototype.desugar = function(pinfo){
@@ -176,7 +178,7 @@ var types = require('./runtime/types');
         makeStructTypeCall = new callExpr(makeStructTypeFunc, makeStructTypeArgs);
     // set location for all of these nodes
     [makeStructTypeCall, makeStructTypeFunc].concat(idSymbols, makeStructTypeArgs).forEach(function(p){p.location = that.location});
- 
+
     // make the define-values stx object, but store the original stx for define-struct
     var defineValuesStx = new defVars([this.name].concat(idSymbols), makeStructTypeCall, this.stx),
         stxs = [defineValuesStx];
@@ -297,7 +299,7 @@ var types = require('./runtime/types');
                                              , "moby/runtime/kernel/misc");
     var ifStx = new symbolExpr("if");
     ifStx.location = this.stx.location;
- 
+
     expr.location = condExhausted.location = exhaustedLoc.location = this.location;
     for(var i=this.clauses.length-1; i>-1; i--){
       // desugar else to true
@@ -340,7 +342,7 @@ var types = require('./runtime/types');
         predicateStx = new lambdaExpr([xStx], equalTestStx, caseStx);
     // track the syntax that will need location information reset
     stxs = stxs.concat([equalStx, equalTestStx, predicateStx]);
- 
+
     // generate (if (ormap <predicate> clause.first) clause.second base)
     function processClause(base, clause){
       var ormapStx = new symbolExpr('ormap'),
@@ -357,20 +359,20 @@ var types = require('./runtime/types');
         letExp = new letExpr([binding], body, caseStx);
     // track the syntax that will need location information reset
     stxs = stxs.concat([binding, letExp]);
- 
+
     // assign location to every stx element we created
     stxs.forEach(function(stx){stx.location = that.location;});
- 
+
     return letExp.desugar(updatedPinfo2);
  };
- 
+
  // ands become nested ifs
  andExpr.prototype.desugar = function(pinfo){
     var that = this, ifStx = new symbolExpr("if"),
         exprsAndPinfo = desugarProgram(this.exprs, pinfo),
         exprs = exprsAndPinfo[0],
         pinfo = exprsAndPinfo[1];
- 
+
     // recursively walk through the exprs
     function desugarAndExprs(exprs){
       var predicate = forceBooleanContext(that.stx, that.stx.location, exprs[0]),
@@ -381,12 +383,12 @@ var types = require('./runtime/types');
           alternative = new literal(false),
           ifLink = new ifExpr(predicate, consequence, alternative, ifStx),
           stxs = [alternative, ifStx, ifLink];
- 
+
       // assign location information to everything
       stxs.forEach(function(stx){return stx.location = that.location;});
       return ifLink;
     }
- 
+
     var ifChain = desugarAndExprs(exprs);
     ifChain.location = that.location;
     return [ifChain, pinfo];
@@ -397,7 +399,7 @@ var types = require('./runtime/types');
         exprsAndPinfo = desugarProgram(this.exprs, pinfo),
         exprs = exprsAndPinfo[0],
         pinfo = exprsAndPinfo[1];
- 
+
     // recursively walk through the exprs
     function desugarOrExprs(exprs, pinfo){
       var firstExpr = exprs[0], exprLoc = firstExpr.location,
@@ -405,7 +407,7 @@ var types = require('./runtime/types');
           firstExprSym = pinfoAndTempSym[1],
           ifStx = new symbolExpr("if");
       firstExprSym.notOriginalSource = true;
- 
+
       // to match Racket's behavior, we override any expression's
       // stx to be "if", with the location of the whole expression
       if(firstExpr.stx && (firstExpr.stx.val !== "if")){
@@ -415,7 +417,7 @@ var types = require('./runtime/types');
       var pinfo = pinfoAndTempSym[0],
           tmpBinding = new couple(firstExprSym, forceBooleanContext(that.stx, that.stx.location, firstExpr)),
           secondExpr;
- 
+
       // if there are only two exprs in the chain, force a boolean ctx on the second expr before adding
       // otherwise, desugar the rest of the chain before adding it
       if(exprs.length == 2){
@@ -434,7 +436,7 @@ var types = require('./runtime/types');
       stxs.forEach(function(stx){return stx.location = that.location; });
       return let_exp.desugar(pinfo);
     }
- 
+
     return desugarOrExprs(exprs, pinfo);
  };
 
@@ -466,7 +468,7 @@ var types = require('./runtime/types');
        }
      }
    }
- 
+
    return desugarQuotedItem(pinfo, this.location)(this.val);
  };
 
@@ -525,7 +527,7 @@ var types = require('./runtime/types');
  };
 
  function desugarQuasiQuotedList(qqlist, pinfo, depth) {
- 
+
     // helper function for a single QQ-list element
     function desugarQuasiQuotedListElement(element, pinfo, depth, loc) {
      if (depth === 0 && element instanceof unquoteSplice) {
@@ -541,7 +543,7 @@ var types = require('./runtime/types');
        return [listCall, pinfo];
      }
    }
- 
+
    var loc = (typeof qqlist.location != 'undefined') ? qqlist.location :
               ((qqlist instanceof Array) && (typeof qqlist[0].location != 'undefined')) ? qqlist[0].location :
               (throwError( types.Message(["ASSERTION FAILURE: couldn't find a usable location"])
@@ -585,7 +587,7 @@ var types = require('./runtime/types');
      return [listCall, pinfo]
    }
  };
- 
+
  symbolExpr.prototype.desugar = function(pinfo){
     // if we're not in a clause, we'd better not see an "else"...
     if(!this.isClause && (this.val === "else")){
@@ -627,7 +629,7 @@ var types = require('./runtime/types');
     this.location.span = this.errorSpan;
     throwError(this.errorMsg, this.location, "Error-GenericReadError");
  }
- 
+
  //////////////////////////////////////////////////////////////////////////////
  // COLLECT DEFINITIONS ///////////////////////////////////////////////////////
 
@@ -647,10 +649,10 @@ var types = require('./runtime/types');
                                         ": this is a reserved keyword and cannot be used"+
                                         " as a variable or function name"])
                      , arg.location);
-           
+
                }
       });
- 
+
     var binding = bf(this.name.val, false, this.args.length, false, this.name.location);
     return pinfo.accumulateDefinedBinding(binding, this.location);
  };
@@ -706,13 +708,13 @@ var types = require('./runtime/types');
         resolvedModuleName = pinfo.modulePathResolver(moduleName, pinfo.currentModulePath),
         that = this,
         newPinfo;
- 
+
     // is this a shared WeScheme program?
     function getWeSchemeModule(name){
       var m = name.match(/^wescheme\/(\w+)$/);
       return m? m[1] : false;
     }
- 
+
     function throwModuleError(moduleName){
       var bestGuess = plt.compiler.moduleGuess(that.spec.toString());
       var msg = new types.Message(["Found require of the module "
@@ -721,10 +723,10 @@ var types = require('./runtime/types');
                                    , ((bestGuess.name===that.spec.toString())? "": " Did you mean '"+bestGuess.name+"'?")]);
       throwError(msg, that.spec.location, "Error-UnknownModule");
     }
- 
+
     // if it's an invalid moduleName, throw an error
     if(!(resolvedModuleName || getWeSchemeModule(moduleName))){ throwModuleError(moduleName); }
- 
+
     // processModule : JS -> pinfo
     // assumes the module has been assigned to window.COLLECTIONS.
     // pull out the bindings, and then add them to pinfo
@@ -739,12 +741,12 @@ var types = require('./runtime/types');
           modulebinding = new moduleBinding(moduleName, provideBindings);
       newPinfo = pinfo.accumulateModule(modulebinding).accumulateModuleBindings(provideBindings);
     }
- 
+
     // open a *synchronous* GET request -- FIXME to use callbacks?
     var url = window.location.protocol+"//"+window.location.host
               + (getWeSchemeModule(moduleName)?  "/loadProject?publicId="+(getWeSchemeModule(moduleName))
                                               : "/js/mzscheme-vm/collects/"+moduleName+".js");
- 
+
     // if the module is already loaded, we can just process without loading
     if(window.COLLECTIONS && window.COLLECTIONS[moduleName]){
       processModule(moduleName);
@@ -793,9 +795,9 @@ var types = require('./runtime/types');
  Program.prototype.collectProvides = function(pinfo){ return pinfo; };
  provideStatement.prototype.collectProvides = function(pinfo){
     var that = this;
- 
+
     function addProvidedName(id){ pinfo.providedNames.put(id, new provideBindingId(id)); }
- 
+
     // collectProvidesFromClause : pinfo clause -> pinfo
     function collectProvidesFromClause(pinfo, clause){
       // if it's a symbol, make sure it's defined (otherwise error)
@@ -833,7 +835,7 @@ var types = require('./runtime/types');
     }
     return this.clauses.reduce(collectProvidesFromClause, pinfo);
   };
- 
+
  //////////////////////////////////////////////////////////////////////////////
  // ANALYZE USES //////////////////////////////////////////////////////////////
 
@@ -861,7 +863,7 @@ var types = require('./runtime/types');
         oldKeys = oldEnv.bindings.keys(),
         newBindings = types.makeLowLevelEqHash();
     oldKeys.forEach(function(k){newBindings.put(k, oldEnv.bindings.get(k));});
- 
+
     // 2) make a copy of the environment, using the newly-copied bindings, and
     //    add the args to this environment
     var newEnv = new plt.compiler.env(newBindings),
@@ -930,7 +932,7 @@ var types = require('./runtime/types');
  function analyze(programs){
     return programAnalyzeWithPinfo(programs, plt.compiler.getBasePinfo("base"));
  }
- 
+
  // programAnalyzerWithPinfo : [listof Programs], pinfo -> pinfo
  // build up pinfo by looking at definitions, provides and uses
  function programAnalyzeWithPinfo(programs, pinfo){
@@ -956,7 +958,7 @@ var types = require('./runtime/types');
     var pinfo2 = collectProvides(programs, pinfo1);
     return analyzeUses(programs, pinfo2);
  }
- 
+
  /////////////////////
  /* Export Bindings */
  /////////////////////

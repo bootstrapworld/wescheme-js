@@ -41,6 +41,8 @@
     "only": [
       "bundle.js",
       "src/wescheme.js",
+      "src/structures.js",
+      "src/analyzer.js",
       "example/*"
     ]
   },
