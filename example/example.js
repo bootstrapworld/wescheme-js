@@ -1,6 +1,7 @@
 import CodeMirror from 'CodeMirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/monokai.css'
+import prettyJS from 'pretty-js'
 
 import compile from '../wescheme'
 
@@ -16,7 +17,14 @@ var cm2 = CodeMirror.fromTextArea(
   document.getElementById('code2'),
   {theme:'3024-day'}
 )
+cm.setValue('(triangle 200 "solid" "turquoise")')
+
+cm2.setValue(prettyJS(compile(cm.getValue())))
 
 cm.on('change', function() {
-  cm2.setValue(compile(cm.getValue()))
+  try {
+    cm2.setValue(prettyJS(compile(cm.getValue())))
+  } catch (e) {
+    cm2.setValue(e)
+  }
 })
