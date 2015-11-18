@@ -3,7 +3,7 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/monokai.css'
 import prettyJS from 'pretty-js'
 
-import compile from '../wescheme'
+import compile from '../src/wescheme'
 
 require('./example.css')
 require('./example-page.css')

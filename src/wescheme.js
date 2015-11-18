@@ -1,7 +1,7 @@
-var lex = require('./src/lex')
-var parser = require('./src/parser')
-var analyzer = require('./src/analyzer')
-var compiler = require('./src/compiler')
+var lex = require('./lex')
+var parser = require('./parser')
+var analyzer = require('./analyzer')
+var compiler = require('./compiler')
 
 export default function compile(code, debug=false) {
   var lexemes = lex.lex(code, 'foo', debug)
