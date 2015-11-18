@@ -19,7 +19,7 @@
     "webpack-dev-server": "^1.12.1"
   },
   "scripts": {
-    "compile": "babel -d lib/ src/",
+    "compile": "cp -r src/ lib && ./node_modules/babel-cli/bin/babel.js --only src/wescheme.js -D -d lib/ src/",
     "prepublish": "npm run compile",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --content-base example/",
@@ -40,7 +40,7 @@
       "es2015"
     ],
     "only": [
-      "wescheme.js",
+      "src/wescheme.js",
       "example/*"
     ]
   },
