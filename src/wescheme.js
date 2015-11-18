@@ -9,7 +9,7 @@ export var compile = function compile(code, debug=false) {
   var desugared = analyzer.desugar(AST)[0]  // includes [AST, pinfo]
   var pinfo = analyzer.analyze(desugared)
   var local_bytecode = compiler.compile(desugared, pinfo)
-  return local_bytecode.bytecode
+  return local_bytecode
 }
 
 export default compile

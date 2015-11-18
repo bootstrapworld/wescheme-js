@@ -23,7 +23,7 @@ cm2.setValue(prettyJS(compile(cm.getValue())))
 
 cm.on('change', function() {
   try {
-    cm2.setValue(prettyJS(compile(cm.getValue())))
+    cm2.setValue(prettyJS(compile(cm.getValue()).bytcode))
   } catch (e) {
     cm2.setValue(e)
   }
