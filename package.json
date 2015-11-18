@@ -13,6 +13,7 @@
     "css-loader": "^0.23.0",
     "eslint": "^1.9.0",
     "eslint-loader": "^1.1.1",
+    "pretty-js": "^0.1.8",
     "style-loader": "^0.13.0",
     "webpack": "^1.12.6",
     "webpack-dev-server": "^1.12.1"
@@ -35,6 +36,10 @@
   "babel": {
     "presets": [
       "es2015"
+    ],
+    "only": [
+      "wescheme.js",
+      "example/*"
     ]
   },
   "homepage": "https://github.com/pcardune/wescheme-js"
