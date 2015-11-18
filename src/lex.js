@@ -1,15 +1,10 @@
-goog.provide('plt.compiler.lex');
-goog.provide('plt.compiler.sexpToString');
-
-goog.require("plt.compiler.literal");
-goog.require("plt.compiler.symbolExpr");
-goog.require("plt.compiler.unsupportedExpr");
-goog.require("plt.compiler.throwError");
 
 
 // if not defined, declare the compiler object as part of plt
 window.plt   = window.plt || {};
-plt.compiler = plt.compiler || {};
+plt.compiler = require('./structures');
+var types = require('./runtime/types');
+var jsnums = require('./runtime/js-numbers');
 
 /*
  
@@ -962,3 +957,5 @@ plt.compiler = plt.compiler || {};
     };
     plt.compiler.sexpToString = sexpToString;
 })();
+
+module.exports = plt.compiler;

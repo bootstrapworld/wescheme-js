@@ -1,26 +1,6 @@
-goog.provide('plt.compiler.compile');
-goog.provide('plt.compiler.localStackReference');
-goog.provide('plt.compiler.globalStackReference');
-goog.provide('plt.compiler.unboundStackReference');
-
-goog.require("plt.compiler.literal");
-goog.require("plt.compiler.symbolExpr");
-goog.require("plt.compiler.Program");
-goog.require("plt.compiler.ifExpr");
-goog.require("plt.compiler.beginExpr");
-goog.require("plt.compiler.localExpr");
-goog.require("plt.compiler.andExpr");
-goog.require("plt.compiler.orExpr");
-goog.require("plt.compiler.lambdaExpr");
-goog.require("plt.compiler.quotedExpr");
-goog.require("plt.compiler.callExpr");
-goog.require("plt.compiler.defFunc");
-goog.require("plt.compiler.defVar");
-goog.require("plt.compiler.defVars");
-goog.require("plt.compiler.defStruct");
-goog.require("plt.compiler.requireExpr");
-goog.require("plt.compiler.provideStatement");
-
+require('./structures');
+var jsnums = require('./runtime/js-numbers');
+var types = require('./runtime/types');
 
 // if not defined, declare the compiler object as part of plt
 window.plt   = window.plt   || {};
@@ -1159,3 +1139,5 @@ plt.compiler = plt.compiler || {};
       return response;
    };
  })();
+
+module.exports = plt.compiler;

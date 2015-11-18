@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // helper functions
 
-//var jsnums = require('./js-numbers');
-
+var jsnums = require('./js-numbers');
+var _Hashtable = require('./jshashtable');
 
 var types = {};
 
@@ -25,7 +25,7 @@ var hasOwnProperty = {}.hasOwnProperty;
 
 
 var _eqHashCodeCounter = 0;
-makeEqHashCode = function() {
+var makeEqHashCode = function() {
     _eqHashCodeCounter++;
     return _eqHashCodeCounter;
 };
@@ -33,7 +33,7 @@ makeEqHashCode = function() {
     
 // getHashCode: any -> (or fixnum string)
 // Produces a hashcode appropriate for eq.
-getEqHashCode = function(x) {
+var getEqHashCode = function(x) {
     if (x && !x._eqHashCode) {
 	x._eqHashCode = makeEqHashCode();
     }
@@ -160,7 +160,7 @@ function makeRParen(){
 //////////////////////////////////////////////////////////////////////
 
 
-StructType = function(name, type, numberOfArgs, numberOfFields, firstField,
+var StructType = function(name, type, numberOfArgs, numberOfFields, firstField,
 		      constructor, predicate, accessor, mutator) {
 	this.name = name;
 	this.type = type;
@@ -2385,8 +2385,9 @@ types.GradientPart = GradientPart;
 types.isGradientPart = isGradientPart;
 types.MultiPart = MultiPart;
 types.isMultiPart = isMultiPart;
-
+types.Vector = Vector;
 
 
 })();
 
+module.exports = types;

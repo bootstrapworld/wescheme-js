@@ -1,14 +1,6 @@
-goog.provide('plt.compiler.topLevelModules');
-goog.provide('plt.compiler.knownModules');
-goog.provide('plt.compiler.knownCollections');
-
-goog.require("plt.compiler.moduleBinding");
-goog.require("plt.compiler.functionBinding");
-goog.require("plt.compiler.constantBinding");
-
 // if not defined, declare the compiler object as part of plt
 window.plt   = window.plt   || {};
-plt.compiler = plt.compiler || {};
+plt.compiler = require('./structures');
 /*
  TODO
  -
@@ -666,3 +658,5 @@ plt.compiler = plt.compiler || {};
                               , parserModule
                               , topLevelModule];
 })();
+
+module.exports = plt.compiler;

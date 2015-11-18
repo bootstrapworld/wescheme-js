@@ -1,54 +1,10 @@
-goog.provide('plt.compiler.throwError');
-
-goog.provide('plt.compiler.Program');
-goog.provide('plt.compiler.couple');
-goog.provide('plt.compiler.defFunc');
-goog.provide('plt.compiler.defVar');
-goog.provide('plt.compiler.defVars');
-goog.provide('plt.compiler.defStruct');
-goog.provide('plt.compiler.beginExpr');
-goog.provide('plt.compiler.lambdaExpr');
-goog.provide('plt.compiler.localExpr');
-goog.provide('plt.compiler.letrecExpr');
-goog.provide('plt.compiler.letExpr');
-goog.provide('plt.compiler.letStarExpr');
-goog.provide('plt.compiler.condExpr');
-goog.provide('plt.compiler.caseExpr');
-goog.provide('plt.compiler.andExpr');
-goog.provide('plt.compiler.orExpr');
-goog.provide('plt.compiler.callExpr');
-goog.provide('plt.compiler.ifExpr');
-goog.provide('plt.compiler.whenUnlessExpr');
-goog.provide('plt.compiler.symbolExpr');
-goog.provide('plt.compiler.literal');
-goog.provide('plt.compiler.quotedExpr');
-goog.provide('plt.compiler.unquotedExpr');
-goog.provide('plt.compiler.quasiquotedExpr');
-goog.provide('plt.compiler.unquoteSplice');
-goog.provide('plt.compiler.requireExpr');
-goog.provide('plt.compiler.provideStatement');
-goog.provide('plt.compiler.unsupportedExpr');
-
-goog.provide('plt.compiler.pinfo');
-goog.provide('plt.compiler.getBasePinfo');
-goog.provide('plt.compiler.isExpression');
-goog.provide('plt.compiler.isDefinition');
-goog.provide('plt.compiler.env');
-goog.provide('plt.compiler.emptyEnv');
-goog.provide('plt.compiler.localEnv');
-goog.provide('plt.compiler.globalEnv');
-goog.provide('plt.compiler.moduleBinding');
-goog.provide('plt.compiler.functionBinding');
-goog.provide('plt.compiler.constantBinding');
-goog.provide('plt.compiler.structBinding');
-goog.provide('plt.compiler.unnamedEnv');
-
-//goog.require("plt.compiler.knownCollections");
-
+var types = require('./runtime/types');
+var Vector = types.Vector;
 
 // if not defined, declare the compiler object as part of plt
 window.plt   = window.plt   || {};
 plt.compiler = plt.compiler || {};
+//plt.compiler = require('./modules');
 
 /*
  TODO
@@ -1011,3 +967,5 @@ plt.compiler = plt.compiler || {};
  plt.compiler.structBinding  = structBinding;
  plt.compiler.unnamedEnv  = unnamedEnv;
 })();
+
+module.exports = plt.compiler;

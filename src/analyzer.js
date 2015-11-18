@@ -1,44 +1,9 @@
-goog.provide('plt.compiler.desugar');
-goog.provide('plt.compiler.analyze');
-
-goog.require("plt.compiler.literal");
-goog.require("plt.compiler.symbolExpr");
-goog.require("plt.compiler.Program");
-goog.require("plt.compiler.couple");
-goog.require("plt.compiler.ifExpr");
-goog.require("plt.compiler.beginExpr");
-goog.require("plt.compiler.letExpr");
-goog.require("plt.compiler.letStarExpr");
-goog.require("plt.compiler.letrecExpr");
-goog.require("plt.compiler.localExpr");
-goog.require("plt.compiler.andExpr");
-goog.require("plt.compiler.orExpr");
-goog.require("plt.compiler.condExpr");
-goog.require("plt.compiler.caseExpr");
-goog.require("plt.compiler.lambdaExpr");
-goog.require("plt.compiler.quotedExpr");
-goog.require("plt.compiler.unquotedExpr");
-goog.require("plt.compiler.quasiquotedExpr");
-goog.require("plt.compiler.unquoteSplice");
-goog.require("plt.compiler.callExpr");
-goog.require("plt.compiler.whenUnlessExpr");
-goog.require("plt.compiler.defFunc");
-goog.require("plt.compiler.defVar");
-goog.require("plt.compiler.defVars");
-goog.require("plt.compiler.defStruct");
-goog.require("plt.compiler.requireExpr");
-goog.require("plt.compiler.provideStatement");
-goog.require("plt.compiler.unsupportedExpr");
-goog.require("plt.compiler.structBinding");
-goog.require("plt.compiler.constantBinding");
-goog.require("plt.compiler.functionBinding");
-goog.require("plt.compiler.moduleBinding");
-goog.require("plt.compiler.knownModules");
-goog.require("plt.compiler.throwError");
-
+require('./structures');
+require('./modules');
 // if not defined, declare the compiler object as part of plt
 window.plt   = window.plt   || {};
 plt.compiler = plt.compiler || {};
+var types = require('./runtime/types');
 
 /*
  TODO
@@ -1024,3 +989,5 @@ plt.compiler = plt.compiler || {};
  plt.compiler.provideBindingId = provideBindingId;
  plt.compiler.provideBindingStructId = provideBindingStructId;
 })();
+
+module.exports = plt.compiler;
