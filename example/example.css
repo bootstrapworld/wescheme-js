@@ -1,0 +1,84 @@
+.blocks-expression {
+  display: inline-flex;
+  align-items: stretch;
+  color: black;
+  border: 2px solid black;
+  border-radius: 15px 0px 0px 15px;
+  margin: 5px;
+  background: #ccc;
+  cursor: default;
+}
+
+.blocks-operator {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  font-weight: bold;
+  border-right: 2px solid black;
+  padding: 5px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.blocks-args {
+  display: inline-flex;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  background: #eee;
+}
+
+.blocks-literal {
+  display: inline-block;
+  color: black;
+  border-radius: 5px;
+  padding: 5px;
+  border: 1px solid transparent;
+}
+
+
+.blocks-expression.blocks-selected {
+  border-color: red;
+}
+.blocks-expression.blocks-selected .blocks-operator {
+  border-color: red;
+}
+.blocks-literal.blocks-selected {
+  border-color: red;
+}
+
+.blocks-editing {
+  outline: 0;
+}
+
+.blocks-literal.blocks-editing {
+  border: 1px solid green;
+}
+
+.blocks-over-target {
+  background-color: red;
+}
+
+.blocks-white-space:before {
+  content: ' ';
+}
+.blocks-white-space {
+  padding: 5px;
+  border: 2px solid transparent;
+  font-weight: bold;
+}
+
+.blocks-white-space:hover {
+  border-color: black;
+  border-radius: 5px;
+}
+.blocks-white-space:hover:before {
+  content: '+';
+}
+
+.blocks-white-space.blocks-editing:before {
+  content: '';
+}
+.blocks-white-space.blocks-editing {
+  font-weight: normal;
+  margin: 15px;
+}
