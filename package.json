@@ -19,10 +19,11 @@
     "webpack-dev-server": "^1.12.1"
   },
   "scripts": {
-    "compile": "cp -r src/ lib && webpack --config webpack-package.config.js && ./node_modules/babel-cli/bin/babel.js --only src/wescheme.js -D -d lib/ src/",
+    "compile": "webpack --config webpack-package.config.js && ./node_modules/babel-cli/bin/babel.js -D -d lib/ src/",
     "prepublish": "npm run compile",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --content-base example/",
+    "start-test": "webpack-dev-server --port 8085 --content-base test/",
     "lint": "eslint . --ext .js || true"
   },
   "repository": {
@@ -39,11 +40,11 @@
       "es2015"
     ],
     "only": [
-      "bundle.js",
       "src/wescheme.js",
       "src/structures.js",
       "src/analyzer.js",
-      "example/*"
+      "example/*",
+      "test/*"
     ]
   },
   "homepage": "https://github.com/pcardune/wescheme-js"

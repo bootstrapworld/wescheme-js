@@ -1,0 +1,36 @@
+<html>
+  <head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Repl 2.0</title>
+
+    <style>
+      td {min-width: 10px; max-width: 300px; overflow: hidden;}
+    </style>
+    <!--script type="text/javascript" src="../mzscheme-vm/support.js"></script>
+    <script type="text/javascript" src="compiler-calc.js"></script>
+    <script type="text/javascript" src="repl2.js"></script-->
+  </head>
+  <body>
+    <textarea cols="80" rows="5" type="text" name="repl-input" id="repl-input" onkeypress="readFromRepl(event)"></textarea>
+    <hr>
+    <input type="button" value="Load test-suite" id="runTests" style="width: 100px;"/>
+    <select id="whichTests" style="display: none;">
+      <option value="all">all</option>
+    </select>
+    <span style="font-size: 12px; display: none;" id="pyretUI"><input type="checkbox" id="pyretTest"/>Test Pyret</span>
+    <input type="button" disabled="true" value="Memory Stress-Test" id="memoryTest"/>
+    <br/>
+    <input type="button" id="makeTeachpack" value="Download source as teachpack file"/>
+    <br/>
+    <span id="status"></span>
+    <table id="testResults" style="font-family:monospace;">
+    </table>
+
+    <form id="compareText" target="_blank" method="post" action="http://text-compare.com/" style="display: none;">
+      <textarea name="text1" id="text1"></textarea>
+      <textarea name="text2" id="text2"></textarea>
+      <button type="submit" id="compareButton">Compare!</button>
+    </form>
+
+    <script type="text/javascript" src="build/test.js"></script>
+  </body>
+</html>

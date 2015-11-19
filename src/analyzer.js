@@ -751,35 +751,40 @@ var types = require('./runtime/types');
     if(window.COLLECTIONS && window.COLLECTIONS[moduleName]){
       processModule(moduleName);
     } else {
-      jQuery.ajax({
-           url:    url,
-           success: function(result) {
-                      // if it's not a native module, manually assign it to window.COLLECTIONS
-                      if(getWeSchemeModule(moduleName)){
-                        var program = (0,eval)('(' + result + ')');
-                        // Create the COLLECTIONS array, if it doesn't exist
-                        if(window.COLLECTIONS === undefined){ window.COLLECTIONS = []; }
-                        // extract the sourcecode
-                        var lexemes     = plt.compiler.lex(program.source.src, moduleName),
-                            AST         = plt.compiler.parse(lexemes),
-                            desugared   = plt.compiler.desugar(AST)[0],  // includes [AST, pinfo]
-                            pinfo       = plt.compiler.analyze(desugared),
-                            objectCode  = plt.compiler.compile(desugared, pinfo);
-                        window.COLLECTIONS[moduleName] = {
-                                    'name': moduleName,
-                                    'bytecode' : (0,eval)('(' + objectCode.bytecode + ')'),
-                                    'provides' : objectCode.provides
-                                };
-                      // otherwise, simply evaluate the raw JS
-                      } else {
-                        eval(result);
-                      }
-                  if(result){ processModule(moduleName); }
-                  else { throwModuleError(moduleName); }
-                },
-           error: function (error) { throwModuleError(moduleName); },
-           async: false
-      });
+      if (window.jQuery) {
+        jQuery.ajax({
+             url:    url,
+             success: function(result) {
+                        // if it's not a native module, manually assign it to window.COLLECTIONS
+                        if(getWeSchemeModule(moduleName)){
+                          var program = (0,eval)('(' + result + ')');
+                          // Create the COLLECTIONS array, if it doesn't exist
+                          if(window.COLLECTIONS === undefined){ window.COLLECTIONS = []; }
+                          // extract the sourcecode
+                          var lexemes     = plt.compiler.lex(program.source.src, moduleName),
+                              AST         = plt.compiler.parse(lexemes),
+                              desugared   = plt.compiler.desugar(AST)[0],  // includes [AST, pinfo]
+                              pinfo       = plt.compiler.analyze(desugared),
+                              objectCode  = plt.compiler.compile(desugared, pinfo);
+                          window.COLLECTIONS[moduleName] = {
+                                      'name': moduleName,
+                                      'bytecode' : (0,eval)('(' + objectCode.bytecode + ')'),
+                                      'provides' : objectCode.provides
+                                  };
+                        // otherwise, simply evaluate the raw JS
+                        } else {
+                          eval(result);
+                        }
+                    if(result){ processModule(moduleName); }
+                    else { throwModuleError(moduleName); }
+                  },
+             error: function (error) { throwModuleError(moduleName); },
+             async: false
+        });
+      } else {
+        console.log('jQuery not available, can\'t load data from ' + url)
+        throwModuleError(moduleName)
+      }
     }
     return newPinfo;
  };
@@ -992,4 +997,4 @@ var types = require('./runtime/types');
  plt.compiler.provideBindingStructId = provideBindingStructId;
 })();
 
-module.exports = plt.compiler;
+export default plt.compiler;

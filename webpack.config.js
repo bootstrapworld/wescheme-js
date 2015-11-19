@@ -3,7 +3,8 @@ var path = require("path")
 module.exports = {
   devtool: 'source-map',
   entry: {
-    "example": './example/example.js'
+    "example": './example/example.js',
+    "test": './test/test.js'
   },
   output: {
     path: path.resolve(__dirname, "build"),
