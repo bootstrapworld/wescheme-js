@@ -16,7 +16,7 @@ plt.compiler = plt.compiler || {};
  */
 
 (function (){
- 
+
    // import frequently-used bindings
    var literal          = plt.compiler.literal;
    var symbolExpr       = plt.compiler.symbolExpr;
@@ -34,7 +34,7 @@ plt.compiler = plt.compiler || {};
    var defVars          = plt.compiler.defVars;
    var defStruct        = plt.compiler.defStruct;
    var requireExpr      = plt.compiler.requireExpr;
-   var provideStatement = plt.compiler.provideStatement;   
+   var provideStatement = plt.compiler.provideStatement;
 
    // Inheritance from pg 168: Javascript, the Definitive Guide.
     var heir = function(p) {
@@ -43,8 +43,8 @@ plt.compiler = plt.compiler || {};
       return new f();
     };
 
- 
- 
+
+
     literal.prototype.toBytecode = function(){
       var str = this.val.toBytecode? this.val.toBytecode()
               : this.val===true? "true"
@@ -55,7 +55,7 @@ plt.compiler = plt.compiler || {};
     symbolExpr.prototype.toBytecode = function(){
       return 'types.symbol("'+escapeSym(this.val)+'")';
     };
-    Vector.prototype.toBytecode = function(){
+    types.Vector.prototype.toBytecode = function(){
       return 'types.vector(['+this.elts.join(',')+'])';
     };
     Array.prototype.toBytecode = function(quoted){
@@ -78,7 +78,7 @@ plt.compiler = plt.compiler || {};
     jsnums.Complex.prototype.toBytecode = function(){
       return 'types.complex('+convertToBytecode(this.r)+', '+convertToBytecode(this.i)+')';
     };
-    Char.prototype.toBytecode = function(){
+    types.Char.prototype.toBytecode = function(){
       return 'types[\'char\'](String.fromCharCode('+this.val.charCodeAt(0)+'))';
     };
     // STACKREF STRUCTS ////////////////////////////////////////////////////////////////
@@ -110,8 +110,8 @@ plt.compiler = plt.compiler || {};
      *    (see https://github.com/bootstrapworld/wescheme-compiler2012/blob/master/js-runtime/src/bytecode-structs.ss)
      *
      **************************************************************************/
- 
- 
+
+
     // all Programs, by default, print out their values and have no location
     // anything that behaves differently must provide their own toBytecode() function
     var Bytecode = function() {
@@ -124,7 +124,7 @@ plt.compiler = plt.compiler || {};
        if(types.isString(bc) && bc.chars!==undefined) return '"'+bc.toString()+'"';
        return (bc.toBytecode)? bc.toBytecode() : bc;
     }
- 
+
     // convert a symbol-name into bytecode string
     function escapeSym(symName){
       var str = symName.toString().replace(/\|/g,''),  bcStr = "";
@@ -137,7 +137,7 @@ plt.compiler = plt.compiler || {};
       bcStr= bcStr.replace(/\n/g,"\\n");
       return bcStr;
     }
- 
+
     // Global bucket
     function globalBucket(name) {
       Bytecode.call(this);
@@ -344,7 +344,7 @@ plt.compiler = plt.compiler || {};
     // lam
     function lam(name, operatorAndRandLocs, flags, numParams, paramTypes,
                  rest, closureMap, closureTypes, maxLetDepth, body) {
- 
+
       Bytecode.call(this);
       this.name       = name;         // symbol, vector, empty
       this.flags      = flags;        // (list of ('preserves-marks 'is-method 'single-result))
@@ -708,7 +708,7 @@ plt.compiler = plt.compiler || {};
       Bytecode.call(this);
     };
     ModuleRename.prototype = heir(Bytecode.prototype);
- 
+
     // HACK: module-path
     function modulePath(path, base){
       this.path = path;
@@ -719,7 +719,7 @@ plt.compiler = plt.compiler || {};
       };
     };
     modulePath.prototype = heir(Bytecode.prototype);
- 
+
     // freeVariables : [listof symbols] env -> [list of symbols]
     Program.prototype.freeVariables   = function(acc, env){ return acc; }
     ifExpr.prototype.freeVariables    = function(acc, env){
@@ -737,27 +737,30 @@ plt.compiler = plt.compiler || {};
       // helper functions
       var pushLocalBoxedFromSym = function(env, sym) { return new plt.compiler.localEnv(sym.val, true, env); },
           pushLocalFromSym      = function(env, sym) { return new plt.compiler.localEnv(sym.val, false, env); };
- 
+
           // collect all the defined names in the local
-      var definedNames = this.defs.reduce(function(names, d){
-                                            return ((d instanceof defVars)? d.names : [d.name]).concat(names); }
-                                           , []),
+      var definedNames = this.defs.reduce(
+        function(names, d){
+          return ((d instanceof defVars)? d.names : [d.name]).concat(names);
+        },
+        []
+      );
           // make an environment with those names added to the stack
-          updatedEnv = definedNames.reduce(pushLocalBoxedFromSym, env),
-          // use that env to find all free variables in the body
-          freeVarsInBody = this.body.freeVariables(acc, updatedEnv),
- 
-          // given free variables and a definition, add the free variables from that definition...
-          // while *also* updating the stack to reflect defined names
-          addFreeVarsInDef = function(acc, d){
-             if(d instanceof defFunc){
-                var envWithArgs = d.args.reduce(function(env, arg){return pushLocalFromSym(env, arg);}, updatedEnv);
-                return d.body.freeVariables(acc, envWithArgs);
-             }
-             if(d instanceof defStruct){ return acc; }
-             else{ return d.expr.freeVariables(acc, updatedEnv); }
-          }
- 
+      var updatedEnv = definedNames.reduce(pushLocalBoxedFromSym, env);
+      // use that env to find all free variables in the body
+      var freeVarsInBody = this.body.freeVariables(acc, updatedEnv);
+
+      // given free variables and a definition, add the free variables from that definition...
+      // while *also* updating the stack to reflect defined names
+      var addFreeVarsInDef = function(acc, d){
+        if(d instanceof defFunc){
+          var envWithArgs = d.args.reduce(function(env, arg){return pushLocalFromSym(env, arg);}, updatedEnv);
+          return d.body.freeVariables(acc, envWithArgs);
+        }
+        if(d instanceof defStruct){ return acc; }
+        else{ return d.expr.freeVariables(acc, updatedEnv); }
+      }
+
       // collect free variables from all the definitions and the body, while simultaneously
       // updating the environment to reflect defined names
       return this.defs.reduce(addFreeVarsInDef, freeVarsInBody);
@@ -773,7 +776,7 @@ plt.compiler = plt.compiler || {};
       var pushLocalFromSym  = function(env, sym) { return new plt.compiler.localEnv(sym.val, false, env); },
           envWithArgs       = this.args.slice(0).reverse().reduce(pushLocalFromSym, env);
       return this.body.freeVariables(acc, envWithArgs);
- 
+
     };
     quotedExpr.prototype.freeVariables= function(acc, env){ return acc; };
     callExpr.prototype.freeVariables  = function(acc, env){
@@ -781,14 +784,14 @@ plt.compiler = plt.compiler || {};
                                                                                 return expr.freeVariables(acc, env);
                                                                               } , acc);
     };
- 
+
   /**************************************************************************
    *
    *    COMPILATION -
    *    (see https://github.com/bootstrapworld/wescheme-compiler2012/blob/master/js-runtime/src/mzscheme-vm.ss)
    *
    **************************************************************************/
- 
+
    // sort-and-unique: (listof X) (X X -> boolean) (X X -> boolean) -> (listof X)
    function sortAndUnique(elts, lessThan, equalTo) {
       function unique(elts){
@@ -800,8 +803,8 @@ plt.compiler = plt.compiler || {};
       var convertedSortFn = function(x,y){ return lessThan(x,y)? -1 : lessThan(y,x);}
       return unique(elts.sort(convertedSortFn));
    }
- 
- 
+
+
    // [bytecodes, pinfo, env], Program -> [bytecodes, pinfo, env]
    // compile the program, then add the bytecodes and pinfo information to the acc
    function compilePrograms(acc, p){
@@ -811,15 +814,15 @@ plt.compiler = plt.compiler || {};
         pinfo     = compiledProgramAndPinfo[1];
     return [[compiledProgram].concat(bytecodes), pinfo, env];
    }
- 
+
    // extend the Program class to include compilation
    // compile: pinfo -> [bytecode, pinfo]
- 
+
    // literals evaluate to themselves
    Program.prototype.compile = function(env, pinfo){
       return [this, pinfo];
    };
-   
+
    defFunc.prototype.compile = function(env, pinfo){
       var compiledFunNameAndPinfo = this.name.compile(env, pinfo),
           compiledFunName = compiledFunNameAndPinfo[0],
@@ -853,7 +856,7 @@ plt.compiler = plt.compiler || {};
         var bytecode = new defValues(compiledIds, compiledBody);
         return [bytecode, pinfo];
    };
-   
+
    beginExpr.prototype.compile = function(env, pinfo){
       var compiledExpressionsAndPinfo = this.exprs.reduceRight(compilePrograms, [[], pinfo, env]),
           compiledExpressions = compiledExpressionsAndPinfo[0],
@@ -866,7 +869,7 @@ plt.compiler = plt.compiler || {};
    // environment.
    lambdaExpr.prototype.compile = function(env, pinfo, isUnnamedLambda, name){
       if(isUnnamedLambda===undefined) isUnnamedLambda = true;
- 
+
       // maskUnusedGlobals : (listof symbol?) (listof symbol?) -> (listof symbol or false)
       function maskUnusedGlobals(listOfNames, namesToKeep){
         return listOfNames.map(function(n){ return (namesToKeep.indexOf(n)>-1)? n : false; });
@@ -875,7 +878,7 @@ plt.compiler = plt.compiler || {};
       function pushLocal(env, n)      { return new plt.compiler.localEnv(n, false, env); }
       function pushLocalBoxed(env, n) { return new plt.compiler.localEnv(n, true, env); }
       function pushGlobals(names, env){ return new plt.compiler.globalEnv(names, false, env); }
- 
+
       // getClosureVectorAndEnv : (list of Symbols) (list of Symbols) env -> [(Vector of number), env]
       // take in a list of args, a list of freevars, and an empty env that ONLY includes the arguments
       function getClosureVectorAndEnv(args, freeVariables, originalEnv){
@@ -923,19 +926,19 @@ plt.compiler = plt.compiler || {};
         }
       }
       // push each arg onto an empty Env, the compute the free variables in the function body with that Env
-      var envWithArgs = this.args.map(function(s){return s.val;}).reduce(pushLocal, new plt.compiler.emptyEnv());
-          freeVarsInBody = this.body.freeVariables([], envWithArgs);
-      // compute the closure information using a COPY of the args array (protect against in-place reversal)
-      var closureVectorAndEnv = getClosureVectorAndEnv(this.args.slice(0), freeVarsInBody, env),
-          closureVector = closureVectorAndEnv[0],
-          extendedEnv = closureVectorAndEnv[1];
-      // compile the body using the closure's environent
-      var compiledBodyAndPinfo = this.body.compile(extendedEnv, pinfo),
-          compiledBody = compiledBodyAndPinfo[0],
-          pinfo1 = compiledBodyAndPinfo[1];
-      // emit the bytecode
-      var getLocs = function(id){return id.location.toVector();},
-          bytecode = new lam(isUnnamedLambda? [] : new symbolExpr(name),
+     var envWithArgs = this.args.map(function(s){return s.val;}).reduce(pushLocal, new plt.compiler.emptyEnv());
+     var freeVarsInBody = this.body.freeVariables([], envWithArgs);
+     // compute the closure information using a COPY of the args array (protect against in-place reversal)
+     var closureVectorAndEnv = getClosureVectorAndEnv(this.args.slice(0), freeVarsInBody, env),
+         closureVector = closureVectorAndEnv[0],
+         extendedEnv = closureVectorAndEnv[1];
+     // compile the body using the closure's environent
+     var compiledBodyAndPinfo = this.body.compile(extendedEnv, pinfo),
+         compiledBody = compiledBodyAndPinfo[0],
+         pinfo1 = compiledBodyAndPinfo[1];
+     // emit the bytecode
+     var getLocs = function(id){return id.location.toVector();},
+         bytecode = new lam(isUnnamedLambda? [] : new symbolExpr(name),
                              [isUnnamedLambda? this.stx:name].concat(this.args).map(getLocs),
                              [],                                                          // flags
                              this.args.length,                                            // numParams
@@ -958,12 +961,12 @@ plt.compiler = plt.compiler || {};
          definedNames = this.defs.reduce(getDefinedNames, []),
          pushLocalBoxedFromSym = function(env, sym) { return new plt.compiler.localEnv(sym.val, true, env); },
          envWithBoxedNames = definedNames.reverse().reduce(pushLocalBoxedFromSym, env);
- 
+
      // (2) process the definitions, starting with pinfo and our new environment as the base
      var letVoidBodyAndPinfo = processDefns(this.defs, pinfo, envWithBoxedNames, 0),
          letVoidBody = letVoidBodyAndPinfo[0],
          pinfo = letVoidBodyAndPinfo[1];
- 
+
      // (3) return a new letVoid for the stack depth we require, then use the bytecode as the body
      return [new letVoid(definedNames.length, true, letVoidBody), pinfo]
 
@@ -972,31 +975,31 @@ plt.compiler = plt.compiler || {};
      function getDefinedNames(names, def){
         return names.concat((def instanceof defVars)? def.names : def.name);
      }
- 
+
      // processDefns : [defs], pinfo, numInstalled -> [bytecode, pinfo]
      // fold-like function that will generate bytecode to install each defn at the
      // correct stack location , then move on to the rest of the definitions
      function processDefns(defs, pinfo, env, numInstalled){
-        if(defs.length===0){ return that.body.compile(envWithBoxedNames, pinfo); }
- 
-        // compile the first definition in the current environment
-        var compiledDefAndPInfo = defs[0].compile(env, pinfo),
-            compiledRhs         = compiledDefAndPInfo[0].rhs, // important: all we need is the rhs!!
-            pinfo               = compiledDefAndPInfo[1];
+       if(defs.length===0){ return that.body.compile(envWithBoxedNames, pinfo); }
+
+       // compile the first definition in the current environment
+       var compiledDefAndPInfo = defs[0].compile(env, pinfo);
+       var compiledRhs         = compiledDefAndPInfo[0].rhs; // important: all we need is the rhs!!
+       pinfo               = compiledDefAndPInfo[1];
 
         // figure out how much room we'll need on the stack for this defn
         // compile the rest of the definitions, using the new pinfo and stack size
-        var numToInstall    = (defs[0] instanceof defVars)? defs[0].names.length : 1,
-            newBodyAndPinfo = processDefns(defs.slice(1), pinfo, env, numInstalled+numToInstall)
-            newBody         = newBodyAndPinfo[0],
-            pinfo           = newBodyAndPinfo[1];
- 
+       var numToInstall    = (defs[0] instanceof defVars)? defs[0].names.length : 1;
+       var newBodyAndPinfo = processDefns(defs.slice(1), pinfo, env, numInstalled+numToInstall);
+       var newBody         = newBodyAndPinfo[0]
+       pinfo           = newBodyAndPinfo[1];
+
        // generate bytecode to install new values for the remaining body
-        var bytecode = new installValue(numToInstall, numInstalled, true, compiledRhs, newBody);
-        return [bytecode, pinfo];
+       var bytecode = new installValue(numToInstall, numInstalled, true, compiledRhs, newBody);
+       return [bytecode, pinfo];
      }
    };
-   
+
    callExpr.prototype.compile = function(env, pinfo){
       // add space to the stack for each argument, then build the bytecode for the application itself
       var makeSpace = function(env, operand){return new plt.compiler.unnamedEnv(env);},
@@ -1017,7 +1020,7 @@ plt.compiler = plt.compiler || {};
                                                             this.location.toVector(), app));
           return [appWithcontMark, pinfo2];
    };
-   
+
    ifExpr.prototype.compile = function(env, pinfo){
       var compiledPredicateAndPinfo = this.predicate.compile(env, pinfo),
           compiledPredicate = compiledPredicateAndPinfo[0],
@@ -1031,7 +1034,7 @@ plt.compiler = plt.compiler || {};
       var bytecode = new branch(compiledPredicate, compiledConsequence, compiledAlternate);
       return [bytecode, pinfo3];
    };
-   
+
    symbolExpr.prototype.compile = function(env, pinfo){
      var stackReference = env.lookup(this.val, 0), bytecode;
       if(stackReference instanceof localStackReference){
@@ -1045,16 +1048,16 @@ plt.compiler = plt.compiler || {};
       }
       return [bytecode, pinfo];
    };
- 
+
    // a quotedExpr is a literal version of the raw stx object
    quotedExpr.prototype.compile = function(env, pinfo){
       function unwrapLiterals(v){
         return (v instanceof literal)? unwrapLiterals(v.val) : (v instanceof Array)? v.map(unwrapLiterals) : v;
       }
-      result = new literal(unwrapLiterals(this.val));
+      var result = new literal(unwrapLiterals(this.val));
       return [result, pinfo];
    };
- 
+
    provideStatement.prototype.compile = function(env, pinfo){};
    requireExpr.prototype.compile = function(env, pinfo){
      return [new req(this.spec, new topLevel(0, 0, false, false, false)), pinfo];
@@ -1070,7 +1073,7 @@ plt.compiler = plt.compiler || {};
         var requiredModuleBindings = pinfo.modules.reduce(function(acc, m){return acc.concat(m.bindings);}, []),
             isNotRequiredModuleBinding = function(b){ return b.moduleSource && (requiredModuleBindings.indexOf(b) === -1)},
             moduleOrTopLevelDefinedBindings = pinfo.usedBindingsHash.values().filter(isNotRequiredModuleBinding),
- 
+
             allModuleBindings = requiredModuleBindings.concat(moduleOrTopLevelDefinedBindings),
 
             // utility functions for making globalBuckets and moduleVariables
@@ -1119,8 +1122,8 @@ plt.compiler = plt.compiler || {};
                       "provides" : pinfo.providedNames.keys()};
           return response;
    }
- 
- 
+
+
   /////////////////////
   /* Export Bindings */
   /////////////////////

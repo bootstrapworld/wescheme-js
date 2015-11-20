@@ -30,20 +30,21 @@ var makeEqHashCode = function() {
     return _eqHashCodeCounter;
 };
 
-    
+
 // getHashCode: any -> (or fixnum string)
 // Produces a hashcode appropriate for eq.
 var getEqHashCode = function(x) {
-    if (x && !x._eqHashCode) {
-	x._eqHashCode = makeEqHashCode();
-    }
-    if (x && x._eqHashCode) {
-	return x._eqHashCode;
-    }
-    if (typeof(x) == 'string') {
-	return x;
-    }
-    return 0;
+  if (typeof(x) == 'string') {
+	  return x;
+  }
+  if (x && !x._eqHashCode) {
+    console.log("hashing", x);
+	  x._eqHashCode = makeEqHashCode();
+  }
+  if (x && x._eqHashCode) {
+	  return x._eqHashCode;
+  }
+  return 0;
 };
 
 
@@ -58,7 +59,7 @@ var UnionFind = function() {
 // find: ptr -> UnionFindNode
 // Returns the representative for this ptr.
 UnionFind.prototype.find = function(ptr) {
-	var parent = (this.parentMap.containsKey(ptr) ? 
+	var parent = (this.parentMap.containsKey(ptr) ?
 		      this.parentMap.get(ptr) : ptr);
 	if (parent === ptr) {
 	    return parent;
@@ -76,73 +77,6 @@ UnionFind.prototype.merge = function(ptr1, ptr2) {
 	this.parentMap.put(this.find(ptr1), this.find(ptr2));
 };
 
-
-
-//////////////////////////////////////////////////////////////////////
-
-// Class inheritance infrastructure
-
-// This code copied directly from http://ejohn.org/blog/simple-javascript-inheritance/
-var Class = (function(){
-	var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
-	// The base Class implementation (does nothing)
-	var innerClass = function(){};
-	
-	// Create a new Class that inherits from this class
-	innerClass.extend = function(prop) {
-		var _super = this.prototype;
-		
-		// Instantiate a base class (but only create the instance,
-		// don't run the init constructor)
-		initializing = true;
-		var prototype = new this();
-		initializing = false;
-		
-		// Copy the properties over onto the new prototype
-		for (var name in prop) {
-			// Check if we're overwriting an existing function
-			prototype[name] = typeof prop[name] == "function" && 
-				typeof _super[name] == "function" && fnTest.test(prop[name]) ?
-				(function(name, fn){
-					return function() {
-						var tmp = this._super;
-						
-						// Add a new ._super() method that is the same method
-						// but on the super-class
-						this._super = _super[name];
-						
-						// The method only need to be bound temporarily, so we
-						// remove it when we're done executing
-						var ret = fn.apply(this, arguments);				
-						this._super = tmp;
-						
-						return ret;
-					};
-				})(name, prop[name]) :
-				prop[name];
-		}
-		
-		// The dummy class constructor
-		var Dummy = function() {
-			// All construction is actually done in the init method
-			if ( !initializing && this.init )
-				this.init.apply(this, arguments);
-		}
-		
-		// Populate our constructed prototype object
-		Dummy.prototype = prototype;
-		
-		// Enforce the constructor to be what we expect
-		Dummy.constructor = Dummy;
-
-		// And make this class extendable
-		Dummy.extend = arguments.callee;
-		
-		return Dummy;
-	};
-	return innerClass;
-})();
- 
 function makeLParen(){
    var node = document.createElement('span');
    node.appendChild(document.createTextNode("("));
@@ -184,18 +118,19 @@ StructType.prototype.isEqual = function(other, aUnionFind) {
 
 
 var makeStructureType = function(theName, parentType, initFieldCnt, autoFieldCnt, autoV, guard) {
-    // If no parent type given, then the parent type is Struct
-    if ( !parentType ) {
-	parentType = ({type: Struct,
-		       numberOfArgs: 0,
-		       numberOfFields: 0,
-		       firstField: 0});
-    }
-    var numParentArgs = parentType.numberOfArgs;
-
-    // Create a new struct type inheriting from the parent
-    var aStruct = parentType.type.extend({
-	init: function(name, initArgs) {
+  // If no parent type given, then the parent type is Struct
+  if ( !parentType ) {
+	  parentType = ({type: Struct,
+		               numberOfArgs: 0,
+		               numberOfFields: 0,
+		               firstField: 0});
+  }
+  var numParentArgs = parentType.numberOfArgs;
+  var aStruct = function(name, initArgs) {
+    this.init(name, initArgs);
+  }
+  Object.assign(aStruct.prototype, parentType.type.prototype);
+  aStruct.prototype.init = function(name, initArgs) {
 		// if there's no guard, construct a default one
 
 		if (!guard) {
@@ -222,9 +157,9 @@ var makeStructureType = function(theName, parentType, initFieldCnt, autoFieldCnt
 			} else {
 				guardedArgs = [guardRes];
 			}
-			
+
 			var parentArgs = guardedArgs.slice(0, numParentArgs);
-			that._super(name, parentArgs);
+			parentType.type.init.bind(that)(name, parentArgs);
 
 			for (var i = 0; i < initFieldCnt; i++) {
 				that._fields.push(guardedArgs[i+numParentArgs]);
@@ -236,37 +171,86 @@ var makeStructureType = function(theName, parentType, initFieldCnt, autoFieldCnt
 		initArgs.unshift(cont);
 		initArgs.push(Symbol.makeInstance(name));
 		guard.apply(null, initArgs);
-	}
-    });
-    // Set type, necessary for equality checking
-    aStruct.prototype.type = aStruct;
+  }
 
-    // construct and return the new type
-    return new StructType(theName,
-			  aStruct,
-			  initFieldCnt + numParentArgs,
-			  initFieldCnt + autoFieldCnt,
-			  parentType.firstField + parentType.numberOfFields,
-			  function() {
-			  	var args = [];
-				for (var i = 0; i < arguments.length; i++) {
-					args.push(arguments[i]);
-				}
-				return new aStruct(theName, args);
-			  },
-			  function(x) { return x instanceof aStruct; },
-			  function(x, i) { return x._fields[i + this.firstField]; },
-			  function(x, i, v) { x._fields[i + this.firstField] = v; });
+  // Create a new struct type inheriting from the parent
+  //var aStruct = parentType.type.extend({
+	//  init: function(name, initArgs) {
+	//	  // if there's no guard, construct a default one
+  //
+	//	  if (!guard) {
+	//		  guard = function(k) {
+	//			  if (arguments.length == 3) {
+	//				  k(arguments[1]);
+	//			  }
+	//			  else {
+	//				  var args = [];
+	//				  var i;
+	//				  for(i = 1; i < arguments.length-1; i++) {
+	//					  args.push(arguments[i]);
+	//				  }
+	//				  k(new ValuesWrapper(args));
+	//			  }
+	//		  }
+	//	  }
+  //
+	//	  var that = this;
+	//	  var cont = function(guardRes) {
+	//		  var guardedArgs;
+	//		  if ( guardRes instanceof ValuesWrapper ) {
+	//			  guardedArgs = guardRes.elts;
+	//		  } else {
+	//			  guardedArgs = [guardRes];
+	//		  }
+  //
+	//		  var parentArgs = guardedArgs.slice(0, numParentArgs);
+	//		  that._super(name, parentArgs);
+  //
+	//		  for (var i = 0; i < initFieldCnt; i++) {
+	//			  that._fields.push(guardedArgs[i+numParentArgs]);
+	//		  }
+	//		  for (var i = 0; i < autoFieldCnt; i++) {
+	//			  that._fields.push(autoV);
+	//		  }
+	//	  };
+	//	  initArgs.unshift(cont);
+	//	  initArgs.push(Symbol.makeInstance(name));
+	//	  guard.apply(null, initArgs);
+	//  }
+  //});
+  // Set type, necessary for equality checking
+  aStruct.prototype.type = aStruct;
+
+  // construct and return the new type
+  return new StructType(
+    theName,
+		aStruct,
+		initFieldCnt + numParentArgs,
+		initFieldCnt + autoFieldCnt,
+		parentType.firstField + parentType.numberOfFields,
+		function() {
+			var args = [];
+			for (var i = 0; i < arguments.length; i++) {
+				args.push(arguments[i]);
+			}
+			return new aStruct(theName, args);
+		},
+		function(x) { return x instanceof aStruct; },
+		function(x, i) { return x._fields[i + this.firstField]; },
+		function(x, i, v) { x._fields[i + this.firstField] = v; });
 };
 
 // Structures.
-var Struct = Class.extend({
-	init: function (constructorName, fields) {
-	    this._constructorName = constructorName; 
-	    this._fields = [];
+var Struct = function(constructorName, fields) {
+  this.init(constructorName, fields);
+}
+Object.assign(Struct.prototype, {
+  init(constructorName, fields) {
+	  this._constructorName = constructorName;
+	  this._fields = [];
 	},
 
-	toWrittenString: function(cache) { 
+	toWrittenString(cache) {
 	    //    cache.put(this, true);
 	    var buffer = [];
 	    var i;
@@ -280,9 +264,9 @@ var Struct = Class.extend({
 	    return buffer.join("");
 	},
 
-	toDisplayedString: function(cache) { return this.toWrittenString(cache); },
+	toDisplayedString(cache) { return this.toWrittenString(cache); },
 
-	toDomNode: function(cache) {
+	toDomNode(cache) {
 	    //    cache.put(this, true);
 	    var node = document.createElement("div"),
             constructor= document.createElement("span");
@@ -297,22 +281,21 @@ var Struct = Class.extend({
 	    return node;
 	},
 
+	isEqual(other, aUnionFind) {
+	  if ( other.type == undefined ||
+		     this.type !== other.type ||
+		     !(other instanceof this.type) ) {
+		       return false;
+	  }
 
-	isEqual: function(other, aUnionFind) {
-	    if ( other.type == undefined ||
-		 this.type !== other.type ||
-		 !(other instanceof this.type) ) {
-		    return false;
-	    }
-
-	    for (var i = 0; i < this._fields.length; i++) {
-		if (! isEqual(this._fields[i],
-			      other._fields[i],
-			      aUnionFind)) {
-			return false;
-		}
-	    }
-	    return true;
+	  for (var i = 0; i < this._fields.length; i++) {
+		  if (! isEqual(this._fields[i],
+			              other._fields[i],
+			              aUnionFind)) {
+			                return false;
+		  }
+	  }
+	  return true;
 	}
 });
 Struct.prototype.type = Struct;
@@ -375,7 +358,7 @@ Bytes.prototype.subbytes = function(start, end) {
 	if (end == null || end == undefined) {
 		end = this.bytes.length;
 	}
-	
+
 	return new Bytes( this.bytes.slice(start, end), true );
 };
 
@@ -429,7 +412,7 @@ var escapeByte = function(aByte) {
 
 //////////////////////////////////////////////////////////////////////
 // Boxes
-    
+
 var Box = function(x, mutable) {
 	this.val = x;
 	this.mutable = mutable;
@@ -477,7 +460,7 @@ Box.prototype.toDomNode = function(cache) {
 
 
 // We are reusing the built-in Javascript boolean class here.
-Logic = {
+var Logic = {
     TRUE : true,
     FALSE : false
 };
@@ -502,10 +485,10 @@ Boolean.prototype.isEqual = function(other, aUnionFind){
 
 // Chars
 // Char: string -> Char
-Char = function(val){
+var Char = function(val){
     this.val = val;
 };
-    
+
 Char.makeInstance = function(val){
     return new Char(val);
 };
@@ -553,7 +536,7 @@ Char.prototype.isEqual = function(other, aUnionFind){
 };
 
 //////////////////////////////////////////////////////////////////////
-    
+
 // Symbols
 
 //////////////////////////////////////////////////////////////////////
@@ -562,7 +545,7 @@ var Symbol = function(val) {
 };
 
 var symbolCache = {};
-    
+
 // makeInstance: string -> Symbol.
 Symbol.makeInstance = function(val) {
     // To ensure that we can eq? symbols with equal values.
@@ -571,12 +554,12 @@ Symbol.makeInstance = function(val) {
     }
     return symbolCache[val];
 };
-    
+
 Symbol.prototype.isEqual = function(other, aUnionFind) {
     return other instanceof Symbol &&
     this.val == other.val;
 };
-    
+
 
 Symbol.prototype.toString = function() {
     return this.val;
@@ -615,7 +598,7 @@ var Keyword = function(val) {
 };
 
 var keywordCache = {};
-    
+
 
 // makeInstance: string -> Keyword.
 Keyword.makeInstance = function(val) {
@@ -625,12 +608,12 @@ Keyword.makeInstance = function(val) {
     }
     return keywordCache[val];
 };
-    
+
 Keyword.prototype.isEqual = function(other, aUnionFind) {
     return other instanceof Keyword &&
     this.val == other.val;
 };
-    
+
 
 Keyword.prototype.toString = function() {
     return this.val;
@@ -648,10 +631,10 @@ Keyword.prototype.toDisplayedString = function(cache) {
 //////////////////////////////////////////////////////////////////////
 
 
-    
-    
-    
-Empty = function() {
+
+
+
+var Empty = function() {
 };
 Empty.EMPTY = new Empty();
 
@@ -678,13 +661,13 @@ Empty.prototype.toDisplayedString = function(cache) { return "empty"; };
 Empty.prototype.toString = function(cache) { return "()"; };
 
 
-    
+
 // Empty.append: (listof X) -> (listof X)
 Empty.prototype.append = function(b){
     return b;
 };
-    
-Cons = function(f, r) {
+
+var Cons = function(f, r) {
     this.f = f;
     this.r = r;
 };
@@ -698,7 +681,7 @@ Cons.prototype.reverse = function() {
     }
     return ret;
 };
-    
+
 Cons.makeInstance = function(f, r) {
     return new Cons(f, r);
 };
@@ -712,19 +695,19 @@ Cons.prototype.isEqual = function(other, aUnionFind) {
     return (isEqual(this.first(), other.first(), aUnionFind) &&
 	    isEqual(this.rest(), other.rest(), aUnionFind));
 };
-    
+
 Cons.prototype.first = function() {
     return this.f;
 };
-    
+
 Cons.prototype.rest = function() {
     return this.r;
 };
-    
+
 Cons.prototype.isEmpty = function() {
     return false;
 };
-    
+
 // Cons.append: (listof X) -> (listof X)
 Cons.prototype.append = function(b){
     if (b === Empty.EMPTY)
@@ -735,10 +718,10 @@ Cons.prototype.append = function(b){
 	ret = Cons.makeInstance(lst.first(), ret);
 	lst = lst.rest();
     }
-	
+
     return ret;
 };
-    
+
 
 Cons.prototype.toWrittenString = function(cache) {
     //    cache.put(this, true);
@@ -791,7 +774,7 @@ Cons.prototype.toDisplayedString = function(cache) {
 //	    texts.push(toDisplayedString(p, cache));
 //	    break;
 //	}
-//	if (p.isEmpty()) 
+//	if (p.isEmpty())
 //	    break;
 //	texts.push(toDisplayedString(p.first(), cache));
 //	p = p.rest();
@@ -807,7 +790,7 @@ Cons.prototype.toDomNode = function(cache) {
         abbr = document.createElement("span");
     node.className = "wescheme-cons";
     abbr.appendChild(document.createTextNode("list"));
- 
+
      node.appendChild(makeLParen());
      node.appendChild(abbr);
     var p = this;
@@ -847,7 +830,7 @@ var explicitConsDomNode = function(p, cache) {
 
 //////////////////////////////////////////////////////////////////////
 
-Vector = function(n, initialElements) {
+var Vector = function(n, initialElements) {
     this.elts = new Array(n);
     if (initialElements) {
 	for (var i = 0; i < n; i++) {
@@ -892,8 +875,8 @@ Vector.prototype.isEqual = function(other, aUnionFind) {
 Vector.prototype.toList = function() {
     var ret = Empty.EMPTY;
     for (var i = this.length() - 1; i >= 0; i--) {
-	ret = Cons.makeInstance(this.elts[i], ret);	    
-    }	
+	ret = Cons.makeInstance(this.elts[i], ret);
+    }
     return ret;
 };
 
@@ -974,7 +957,7 @@ Str.prototype.substring = function(start, end) {
 	if (end == null || end == undefined) {
 		end = this.length;
 	}
-	
+
 	return Str.makeInstance( this.chars.slice(start, end) );
 }
 
@@ -1063,15 +1046,15 @@ String = String;
 String.makeInstance = function(s) {
     return s.valueOf();
 };
-    
-    
+
+
 // WARNING
 // WARNING: we are extending the built-in Javascript string class here!
 // WARNING
 String.prototype.isEqual = function(other, aUnionFind){
     return this == other;
 };
-    
+
 var _quoteReplacingRegexp = new RegExp("[\"\\\\]", "g");
 String.prototype.toWrittenString = function(cache) {
     return '"' + this.replace(_quoteReplacingRegexp,
@@ -1091,8 +1074,10 @@ String.prototype.toDisplayedString = function(cache) {
 // makeLowLevelEqHash: -> hashtable
 // Constructs an eq hashtable that uses Moby's getEqHashCode function.
 var makeLowLevelEqHash = function() {
-    return new _Hashtable(function(x) { return getEqHashCode(x); },
-			  function(x, y) { return x === y; });
+  return new _Hashtable(
+    function(x) { return getEqHashCode(x); },
+		function(x, y) { return x === y; }
+  );
 };
 
 
@@ -1135,10 +1120,10 @@ EqHashTable.prototype.toDisplayedString = function(cache) {
 
 EqHashTable.prototype.isEqual = function(other, aUnionFind) {
     if ( !(other instanceof EqHashTable) ) {
-	return false; 
+	return false;
     }
 
-    if (this.hash.keys().length != other.hash.keys().length) { 
+    if (this.hash.keys().length != other.hash.keys().length) {
 	return false;
     }
 
@@ -1158,10 +1143,10 @@ EqHashTable.prototype.isEqual = function(other, aUnionFind) {
 
 var EqualHashTable = function(inputHash) {
 	this.hash = new _Hashtable(function(x) {
-			return toWrittenString(x); 
+			return toWrittenString(x);
 		},
 		function(x, y) {
-			return isEqual(x, y, new UnionFind()); 
+			return isEqual(x, y, new UnionFind());
 		});
 	this.mutable = true;
 };
@@ -1191,10 +1176,10 @@ EqualHashTable.prototype.toDisplayedString = function(cache) {
 
 EqualHashTable.prototype.isEqual = function(other, aUnionFind) {
     if ( !(other instanceof EqualHashTable) ) {
-	return false; 
+	return false;
     }
 
-    if (this.hash.keys().length != other.hash.keys().length) { 
+    if (this.hash.keys().length != other.hash.keys().length) {
 	return false;
     }
 
@@ -1242,7 +1227,7 @@ WorldConfig.prototype.toString = function() {
 WorldConfig.prototype.isEqual = function(other, aUnionFind) {
 	if ( ! isEqual(this.startup, other.startup, aUnionFind) ||
 	     ! isEqual(this.shutdown, other.shutdown, aUnionFind) ||
-	     this.startupArgs.length != other.startupArgs.length || 
+	     this.startupArgs.length != other.startupArgs.length ||
 	     ! isEqual(this.shutdownArg, other.shutdownArg, aUnionFind) ) {
 		return false;
 	}
@@ -1281,7 +1266,7 @@ var makeEffectType = function(name, superType, initFieldCnt, impl, guard, caller
 	if ( !superType ) {
 		superType = Effect;
 	}
-	
+
 	var newType = makeStructureType(name, superType, initFieldCnt, 0, false, guard);
 	var lastFieldIndex = newType.firstField + newType.numberOfFields;
 
@@ -1290,7 +1275,7 @@ var makeEffectType = function(name, superType, initFieldCnt, impl, guard, caller
 			function(aState, worldUpdater) {
 				helpers.check(aState, worldUpdater, helpers.procArityContains(1),
 					      'update-world', 'procedure (arity 1)', 1);
-				
+
 				changeWorld(function(w, k2) { interpret.call(aState,
 									     worldUpdater, [w],
 									     k2,
@@ -1319,7 +1304,7 @@ var makeRenderEffectType = function(name, superType, initFieldCnt, impl, guard) 
 	if ( !superType ) {
 		superType = RenderEffect;
 	}
-	
+
 	var newType = makeStructureType(name, superType, initFieldCnt, 0, false, guard);
 	var lastFieldIndex = newType.firstField + newType.numberOfFields;
 
@@ -1350,7 +1335,7 @@ var makeRenderEffectType = function(name, superType, initFieldCnt, impl, guard) 
 
 
 var toWrittenString = function(x, cache) {
-    if (! cache) { 
+    if (! cache) {
      	cache = makeLowLevelEqHash();
     }
 
@@ -1426,7 +1411,7 @@ var toDomNode = function(x, cache) {
     if (! cache) {
     	cache = makeLowLevelEqHash();
     }
-    
+
     if (isNumber(x)) {
 	return numberToDomNode(x);
     }
@@ -1459,7 +1444,7 @@ var toDomNode = function(x, cache) {
 	returnVal =  x;
     } else if (typeof(x.toDomNode) !== 'undefined') {
 	returnVal =  x.toDomNode(cache);
-    } else if (typeof(x.toWrittenString) !== 'undefined') {	
+    } else if (typeof(x.toWrittenString) !== 'undefined') {
         returnVal = textToDomNode(x.toWrittenString(cache))
     } else if (typeof(x.toDisplayedString) !== 'undefined') {
         returnVal = textToDomNode(x.toDisplayedString(cache));
@@ -1555,7 +1540,7 @@ var rationalToDomNode = function(n) {
     fractionalNode.appendChild(barNode);
     fractionalNode.appendChild(denominatorNode);
 
-    
+
     var numberNode = document.createElement("span");
     numberNode.appendChild(repeatingDecimalNode);
     numberNode.appendChild(fractionalNode);
@@ -1565,9 +1550,9 @@ var rationalToDomNode = function(n) {
 
     numberNode.onclick = function(e) {
 	showingRepeating = !showingRepeating;
-	repeatingDecimalNode.style['display'] = 
+	repeatingDecimalNode.style['display'] =
 	    (showingRepeating ? 'inline' : 'none')
-	fractionalNode.style['display'] = 
+	fractionalNode.style['display'] =
 	    (!showingRepeating ? 'inline' : 'none')
     };
     numberNode.style['cursor'] = 'pointer';
@@ -1614,7 +1599,7 @@ var isEqual = function(x, y, aUnionFind) {
 	    return true;
 	}
 	else {
-	    aUnionFind.merge(x, y); 
+	    aUnionFind.merge(x, y);
 	    return x.isEqual(y, aUnionFind);
 	}
     }
@@ -1629,23 +1614,23 @@ var isEqual = function(x, y, aUnionFind) {
 // Lifts a primitive toplevel or module-bound value to a scheme value.
 var liftToplevelToFunctionValue = function(primitiveF,
 				       name,
-				       minArity, 
+				       minArity,
 				       procedureArityDescription) {
     if (! primitiveF._mobyLiftedFunction) {
 	var lifted = function(args) {
 	    return primitiveF.apply(null, args.slice(0, minArity).concat([args.slice(minArity)]));
 	};
-	lifted.isEqual = function(other, cache) { 
-	    return this === other; 
+	lifted.isEqual = function(other, cache) {
+	    return this === other;
 	}
-	lifted.toWrittenString = function(cache) { 
+	lifted.toWrittenString = function(cache) {
 	    return "#<function:" + name + ">";
 	};
 	lifted.toDisplayedString = lifted.toWrittenString;
 	lifted.procedureArity = procedureArityDescription;
 	primitiveF._mobyLiftedFunction = lifted;
-	    
-    } 
+
+    }
     return primitiveF._mobyLiftedFunction;
 };
 
@@ -1767,7 +1752,7 @@ var PrefixValue = function() {
 };
 
 PrefixValue.prototype.addSlot = function(v) {
-    if (v === undefined) { 
+    if (v === undefined) {
 	this.slots.push(types.UNDEFINED);
 	this.definedMask.push(false);
     } else {
@@ -1818,7 +1803,7 @@ PrefixValue.prototype.set = function(n, v) {
 };
 
 
-PrefixValue.prototype.length = function() { 
+PrefixValue.prototype.length = function() {
     return this.slots.length;
 };
 
@@ -1991,7 +1976,7 @@ Message.prototype.toString = function() {
   for(i = 0; i < this.args.length; i++) {
       toReturn.push(''+this.args[i]);
   }
-  
+
   return toReturn.join("");
 };
 
@@ -2159,7 +2144,7 @@ types.posn = Posn.constructor;
 types.posnX = function(psn) { return Posn.accessor(psn, 0); };
 types.posnY = function(psn) { return Posn.accessor(psn, 1); };
 
-types.color = function(r, g, b, a) { 
+types.color = function(r, g, b, a) {
     if (a === undefined) {
         a = 255;
     }
@@ -2208,7 +2193,7 @@ types.getProcedureType = function(x){
        (x instanceof ContinuationClosureValue)? "ContinuationClosureValue" :
        /* else */ false;
 };
- 
+
 types.isJsObject = function(x) { return x instanceof JsObject; };
 
 types.UnionFind = UnionFind;
@@ -2241,9 +2226,6 @@ types.VariableReference = VariableReference;
 types.Box = Box;
 types.ThreadCell = ThreadCell;
 
-
-
-types.Class = Class;
 
 
 types.makeStructureType = makeStructureType;
@@ -2386,7 +2368,7 @@ types.isGradientPart = isGradientPart;
 types.MultiPart = MultiPart;
 types.isMultiPart = isMultiPart;
 types.Vector = Vector;
-
+types.Char = Char;
 
 })();
 

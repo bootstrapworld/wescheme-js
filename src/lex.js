@@ -7,15 +7,15 @@ var types = require('./runtime/types');
 var jsnums = require('./runtime/js-numbers');
 
 /*
- 
+
  Follows WeScheme's current implementation of Advanced Student
  http://docs.racket-lang.org/htdp-langs/advanced.html
 
  NOT SUPPORTED BY MOBY, WESCHEME, OR THIS COMPILER: define-datatype, begin0, set!, time, delay, shared, recur,
     match, check-member-of, check-range, (require planet), byetstrings (#"Apple"),
     regexps (#rx or #px), hashtables (#hash), graphs (#1=100 #1# #1#), #reader and #lang
- 
- 
+
+
  TODO
  - JSLint
  - convert Location structs to use those from the Pyret lexer
@@ -66,7 +66,7 @@ var jsnums = require('./runtime/js-numbers');
     var delims, line, column, startCol, startRow, source, caseSensitiveSymbols, i;
     // UGLY HACK to track index if an error occurs. We should remove this if we can make i entirely stateful
     var endOfError;
-                            
+
     // the location struct
     // endCol and endRow are included for pyret error location
     var Location = function(startCol, startRow, startChar, span, theSource){
@@ -75,11 +75,11 @@ var jsnums = require('./runtime/js-numbers');
       this.startChar  = startChar;  // ch index of lexeme start, from beginning
       this.span       = span;       // num chrs between lexeme start and end
       this.source     = theSource || source; // [OPTIONAL] id of the containing DOM element
-                            
+
       this.endCol     = column;     // ending index into the line
       this.endRow     = line;       // ending index into the line
       this.endChar    = startChar+span;      // ch index of lexeme end, from beginning
-                            
+
       this.start      = function(){ return new Location("", "", this.startChar, 1); };
       this.end        = function(){ return new Location("", "", this.startChar+this.span-1, 1); };
       this.toString   = function(){
@@ -101,7 +101,7 @@ var jsnums = require('./runtime/js-numbers');
     /////////////////////
     /* Utility Methods */
     /////////////////////
-                   
+
     // some important string methods
     function isWhiteSpace(str) {
       return (/\s/).test(str);
@@ -164,7 +164,7 @@ var jsnums = require('./runtime/js-numbers');
                                     : sexp.toString();
     }
 
-                   
+
     /////////////////////
     /* Primary Methods */
     /////////////////////
@@ -247,7 +247,7 @@ var jsnums = require('./runtime/js-numbers');
                   /* else */                   readSymbolOrNumber(str, i);
        return sexp;
     }
-                            
+
     // readList : String Number -> SExp
     // reads a list encoded in this string with the left delimiter at index i
     function readList(str, i) {
@@ -259,7 +259,7 @@ var jsnums = require('./runtime/js-numbers');
       var sexp, list = [];
       delims.push(openingDelim);
       i = chewWhiteSpace(str, i);
-         
+
       // read a single list item
       // To allow optimization in v8, this function is broken out into its own (named) function
       // see http://www.html5rocks.com/en/tutorials/speed/v8/#toc-topic-compilation
@@ -281,7 +281,7 @@ var jsnums = require('./runtime/js-numbers');
         }
         return i;
       }
-                            
+
       // if we have one dot, splice the element at that idx into the list
       // if we have two dots, move the element they surround to the front
       // throw errors for everything else
@@ -323,7 +323,7 @@ var jsnums = require('./runtime/js-numbers');
            return list.slice(0,dot1Idx).concat(list[dot1Idx+1],list.slice(dot1Idx+2));
          }
       }
-                            
+
       // if we see an error while reading a listItem
       function handleError(e){
         // Some errors we throw immediately, without reading the rest of the list...
@@ -344,7 +344,7 @@ var jsnums = require('./runtime/js-numbers');
         }
         return i;
       }
-                            
+
       // read forward until we see a closing delim, saving the last known-good location
       while (i < str.length && !rightListDelims.test(str.charAt(i))) {
         // check for newlines
@@ -376,11 +376,11 @@ var jsnums = require('./runtime/js-numbers');
                                       ]);
          throwError(msg, new Location(column, line, i, 1));
       }
-      
+
       column++; i++;  // move forward to count the closing delimeter
       // if an error occured within the list, set endOfError to the end, and throw it
       if(innerError){ endOfError = i; throw innerError; }
-                            
+
       // deal with dots, if they exist
       if(dot1Idx || dot2Idx) list = processDots(list, dot1Idx, dot2Idx);
       list.location = new Location(startCol, startRow, iStart, i-iStart);
@@ -478,7 +478,7 @@ var jsnums = require('./runtime/js-numbers');
       i++; column++; // skip over the pound sign
       // construct an unsupported error string
       var unsupportedError;
-                            
+
       // throwUnsupportedError : ErrorString token -> Error
       function throwUnsupportedError(errorStr, token){
         var msg = new types.Message([source, ":", line.toString()
@@ -488,7 +488,7 @@ var jsnums = require('./runtime/js-numbers');
                    , new Location(startCol, startRow, iStart, token.length+1)
                    , "Error-GenericReadError");
       }
-               
+
       if(i < str.length) {
         var p = str.charAt(i).toLowerCase();
         // fl and fx Vectors, structs, and hashtables are not supported
@@ -545,7 +545,7 @@ var jsnums = require('./runtime/js-numbers');
           }
 
           i+=elts.location.span;
-          datum = new literal(new Vector(len, elts));
+          datum = new literal(new types.Vector(len, elts));
           datum.location = new Location(startCol, startRow, iStart, i-iStart);
           return datum;
         } else {
@@ -656,7 +656,7 @@ var jsnums = require('./runtime/js-numbers');
       var startCol = column, startRow = line, iStart = i;
       i+=2;  column++; // skip over the #\\
       var datum = "", isFirstChar=true, regexp;
-                                                        
+
       // read until we hit the end of the string, another char, or whitespace when it's not the first char
       while(i < str.length && (str.slice(i,i+2) !== "#\\")
              && !(!isFirstChar && (isWhiteSpace(str.charAt(i)) || isDelim(str.charAt(i))) )) {
@@ -664,7 +664,7 @@ var jsnums = require('./runtime/js-numbers');
         column++;
         datum += str.charAt(i++);
       }
-                                                        
+
       // a special char is one of the following, as long as the next char is not alphabetic
       // unlike DrRacket, there is no JS equivalent for nul, null, page and rubout
       var special = new RegExp("(backspace|tab|newline|space|vtab)[^a-zA-Z]*", "i"),
@@ -678,7 +678,7 @@ var jsnums = require('./runtime/js-numbers');
                   datum === 'vtab' ?    '\v' :
                     "Impossible: unknown special char was matched by special char!";
           i = iStart + 2 + match[1].length; // set the reader to the end of the char
-                                                        
+
        // octal charCodes
        } else if(/^[0-9].*/.test(datum)                       // if it starts with a number...
                  && oct3.test(datum)                         // it had better have some octal digits..
@@ -689,7 +689,7 @@ var jsnums = require('./runtime/js-numbers');
           var match = /[0-7]+/.exec(datum)[0];
           datum = String.fromCharCode(parseInt(match, 8));
           i = iStart + 2 + match.length; // set the reader to the end of the char
-                                                        
+
        // check for hex4 or hex6
       } else if( /[uU]/.test(datum)                          // if it declares itself to be hexidecimal...
                 && (regexp=datum.charAt(0)==="u"? hex4:hex6) // and we have a regexp for it...
@@ -747,7 +747,7 @@ var jsnums = require('./runtime/js-numbers');
             (nextSExp instanceof Comment)){            // and it's not a comment
         i = nextSExp.location.endChar;
       }
-                                                        
+
       // if we're done reading, make sure we didn't read past the end of the file
       if(i+1 >= str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
@@ -799,7 +799,7 @@ var jsnums = require('./runtime/js-numbers');
         var action = p == "'" ? " quoting " :
                      p == "`" ? " quasiquoting " :
                      p == "," ? " unquoting " :
-                     p == ",@" ? " unquoting " :                                 
+                     p == ",@" ? " unquoting " :
                      /* else */  "";
         throwError(new types.Message([source, ":", startRow.toString(), ":", startCol.toString()
                                       , ": read: expected an element for" + action, p
@@ -841,12 +841,12 @@ var jsnums = require('./runtime/js-numbers');
       }
       var quotedSexp = [symbol, nextSExp],
           quotedSpan = (nextSExp.location.end().startChar+1) - iStart;
-      
+
       quotedSexp.location = new Location(startCol, startRow, iStart, quotedSpan);
       return quotedSexp;
     }
-                   
-                                                                
+
+
     // readSymbolOrNumber : String Number -> symbolExpr | types.Number
     // NOT OPTIMIZED BY V8, due to presence of try/catch
     function readSymbolOrNumber(str, i){
@@ -867,7 +867,7 @@ var jsnums = require('./runtime/js-numbers');
       }
       // move the read head and column tracker forward
       i+=chunk.length; column+=chunk.length;
-                                                        
+
       // remove escapes
       var unescaped = "";
       for(var j=0; j < chunk.length; j++){
@@ -894,7 +894,7 @@ var jsnums = require('./runtime/js-numbers');
                       ,new Location(column, line, lastVerbatimMarkerIndex, str.length-lastVerbatimMarkerIndex)
                       ,"Error-GenericReadError");
       }
-                                                        
+
       // enforce case-sensitivity for non-verbatim sections.
       var filtered = chunks.reduce(function(acc, str, i){
             // if we're inside a verbatim portion (i is even) *or* we're case sensitive, preserve case
@@ -908,7 +908,7 @@ var jsnums = require('./runtime/js-numbers');
       var special_chars = new RegExp("^$|[\\(\\)\\{\\}\\[\\]\\,\\'\\`\\s\\\"\\\\]", 'g');
       var escaped_nums = new RegExp("^.*\\\\[\\d]*.*|\\|[\\d]*\\|");
       filtered = (escaped_nums.test(chunk) || special_chars.test(filtered)? "|"+filtered+"|" : filtered);
-                                                        
+
       // PERF: start out assuming it's a symbol...
       var node = new symbolExpr(filtered);
       // PERF: if it's not trivially a symbol, we take the hit of jsnums.fromString()

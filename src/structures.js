@@ -5,7 +5,7 @@ var Vector = types.Vector;
 /////////////////// COMMON FUNCTIONS AND STRUCTURES //////////////////////////
 //////////////// used by multiple phases of the compiler/////////////////////
 
-var unimplementedException = function(str){
+export var unimplementedException = function(str){
   this.str = str;
 }
 
@@ -75,7 +75,7 @@ export function couple(first, second) {
   this.toString = function(){
     return "("+this.first.toString() +" "+this.second.toString()+")";
   };
-};
+}
 
 /**************************************************************************
  *
@@ -109,7 +109,7 @@ export function defFunc(name, args, body, stx) {
   this.toString = function(){
     return "(define ("+this.name.toString()+" "+this.args.join(" ")+")\n    "+this.body.toString()+")";
   };
-};
+}
 defFunc.prototype = heir(Program.prototype);
 
 
@@ -122,7 +122,7 @@ export function defVar(name, expr, stx) {
   this.toString = function(){
     return "(define "+this.name.toString()+" "+this.expr.toString()+")";
   };
-};
+}
 defVar.prototype = heir(Program.prototype);
 
 // Multi-Variable definition
@@ -134,7 +134,7 @@ export function defVars(names, expr, stx) {
   this.toString = function(){
     return "(define-values ("+this.names.join(" ")+") "+this.expr.toString()+")";
   };
-};
+}
 defVars.prototype = heir(Program.prototype);
 
 // Structure definition
@@ -146,7 +146,7 @@ export function defStruct(name, fields, stx) {
   this.toString = function(){
     return "(define-struct "+this.name.toString()+" ("+this.fields.toString()+"))";
   };
-};
+}
 defStruct.prototype = heir(Program.prototype);
 
 // Begin expression
@@ -157,7 +157,7 @@ export function beginExpr(exprs, stx) {
   this.toString = function(){
     return "(begin "+this.exprs.join(" ")+")";
   };
-};
+}
 beginExpr.prototype = heir(Program.prototype);
 
 // Lambda expression
@@ -169,7 +169,7 @@ export function lambdaExpr(args, body, stx) {
   this.toString = function(){
     return "(lambda ("+this.args.join(" ")+") "+this.body.toString()+")";
   };
-};
+}
 lambdaExpr.prototype = heir(Program.prototype);
 
 // Local expression
@@ -181,7 +181,7 @@ export function localExpr(defs, body, stx) {
   this.toString = function(){
     return "(local ("+this.defs.toString()+") "+this.body.toString()+")";
   };
-};
+}
 localExpr.prototype = heir(Program.prototype);
 
 // Letrec expression
@@ -192,7 +192,7 @@ export function letrecExpr(bindings, body, stx) {
   this.toString = function(){
     return "(letrec ("+this.bindings.toString()+") ("+this.body.toString()+"))";
   };
-};
+}
 
 // Let expression
 export function letExpr(bindings, body, stx) {
@@ -202,7 +202,7 @@ export function letExpr(bindings, body, stx) {
   this.toString = function(){
     return "(let ("+this.bindings.toString()+") ("+this.body.toString()+"))";
   };
-};
+}
 
 // Let* expressions
 export function letStarExpr(bindings, body, stx) {
@@ -212,7 +212,7 @@ export function letStarExpr(bindings, body, stx) {
   this.toString = function(){
     return "(let* ("+this.bindings.toString()+") ("+this.body.toString()+"))";
   };
-};
+}
 
 // cond expression
 export function condExpr(clauses, stx) {
@@ -221,7 +221,7 @@ export function condExpr(clauses, stx) {
   this.toString = function(){
     return "(cond\n    "+this.clauses.join("\n    ")+")";
   };
-};
+}
 
 // Case expression
 export function caseExpr(expr, clauses, stx) {
@@ -232,7 +232,7 @@ export function caseExpr(expr, clauses, stx) {
   this.toString = function(){
     return "(case "+this.expr.toString()+"\n    "+this.clauses.join("\n    ")+")";
   };
-};
+}
 caseExpr.prototype = heir(Program.prototype);
 
 // and expression
@@ -240,14 +240,14 @@ export function andExpr(exprs, stx) {
   this.exprs  = exprs;
   this.stx    = stx;
   this.toString = function(){ return "(and "+this.exprs.join(" ")+")"; };
-};
+}
 
 // or expression
 export function orExpr(exprs, stx) {
   this.exprs  = exprs;
   this.stx    = stx;
   this.toString = function(){ return "(or "+this.exprs.toString()+")"; };
-};
+}
 
 // application expression
 export function callExpr(func, args, stx) {
@@ -258,7 +258,7 @@ export function callExpr(func, args, stx) {
   this.toString = function(){
     return "("+[this.func].concat(this.args).join(" ")+")";
   };
-};
+}
 callExpr.prototype = heir(Program.prototype);
 
 // if expression
@@ -271,7 +271,7 @@ export function ifExpr(predicate, consequence, alternative, stx) {
   this.toString = function(){
     return "(if "+this.predicate.toString()+" "+this.consequence.toString()+" "+this.alternative.toString()+")";
   };
-};
+}
 ifExpr.prototype = heir(Program.prototype);
 
 // when/unless expression
@@ -283,7 +283,7 @@ export function whenUnlessExpr(predicate, exprs, stx) {
   this.toString = function(){
     return "("+this.stx[0]+" "+this.predicate.toString()+" "+this.exprs.toString()+")";
   };
-};
+}
 whenUnlessExpr.prototype = heir(Program.prototype);
 
 // symbol expression (ID)
@@ -291,7 +291,7 @@ export function symbolExpr(val, stx) {
   Program.call(this);
   this.val = val;
   this.stx = stx;
-};
+}
 symbolExpr.prototype = heir(Program.prototype);
 
 // Literal values (String, Char, Number, Vector)
@@ -303,7 +303,7 @@ export function literal(val) {
     if(this.val===true) return "#t";
     if(this.val===false) return "#f";
     // racket prints special chars using their names
-    if(this.val instanceof Char){
+    if(this.val instanceof types.Char){
       var c = this.val.val;
       return c === '\b' ? '#\\backspace' :
       c === '\t' ? '#\\tab' :
@@ -314,12 +314,12 @@ export function literal(val) {
     }
     return types.toWrittenString(this.val);
   }
-};
+}
 literal.prototype = heir(Program.prototype);
 
 Vector.prototype.toString = Vector.prototype.toWrittenString = function(){
   var filtered = this.elts.filter(function(e){return e!==undefined;}),
-  last = filtered[filtered.length-1];
+    last = filtered[filtered.length-1];
   return "#("+this.elts.map(function(elt){return elt===undefined? last : elt;})+")";
 }
 
@@ -357,7 +357,7 @@ export function quotedExpr(val) {
 
     return "'"+elementToString(this.val)
   }
-};
+}
 quotedExpr.prototype = heir(Program.prototype);
 
 // unquoted expression
@@ -365,7 +365,7 @@ export function unquotedExpr(val) {
   Program.call(this);
   this.val = val;
   this.toString = function(){ return ","+this.val.toString(); };
-};
+}
 unquotedExpr.prototype = heir(Program.prototype);
 
 // quasiquoted expression
@@ -376,7 +376,7 @@ export function quasiquotedExpr(val) {
     if(this.val instanceof Array) return "`("+this.val.toString()+")";
     else return "`"+this.val.toString();
   };
-};
+}
 quasiquotedExpr.prototype = heir(Program.prototype);
 
 // unquote-splicing
@@ -384,7 +384,7 @@ export function unquoteSplice(val) {
   Program.call(this);
   this.val = val;
   this.toString = function(){ return ",@"+this.val.toString();};
-};
+}
 unquoteSplice.prototype = heir(Program.prototype);
 
 // require expression
@@ -393,7 +393,7 @@ export function requireExpr(spec, stx) {
   this.spec = spec;
   this.stx  = stx;
   this.toString = function(){ return "(require "+this.spec.toString()+")"; };
-};
+}
 requireExpr.prototype = heir(Program.prototype);
 
 // provide expression
@@ -402,7 +402,7 @@ export function provideStatement(clauses, stx) {
   this.clauses  = clauses;
   this.stx      = stx;
   this.toString = function(){ return "(provide "+this.clauses.toString()+")" };
-};
+}
 provideStatement.prototype = heir(Program.prototype);
 
 // Unsupported structure (allows us to generate parser errors ahead of "unsupported" errors)
@@ -412,7 +412,7 @@ export function unsupportedExpr(val, errorMsg, errorSpan) {
   this.errorMsg = errorMsg;
   this.errorSpan = errorSpan; // when throwing an error, we use a different span from the actual sexp span
   this.toString = function(){ return this.val.toString() };
-};
+}
 unsupportedExpr.prototype = heir(Program.prototype);
 
 
@@ -645,7 +645,7 @@ function levenshteinDistance(a, b) {
     }
   }
   return matrix[b.length][a.length];
-};
+}
 
 // moduleGuess: symbol -> symbol
 // loop through known modules and make best suggestion for a given name
@@ -668,8 +668,8 @@ export var defaultModulePathResolver = function(path, parentPath){
   */
   // anything of the form wescheme/w+, or that has a known collection AND module
   var parts = path.toString().split("/"),
-  collectionName = parts[0],
-  moduleName = parts.slice(1).join();
+    collectionName = parts[0],
+    moduleName = parts.slice(1).join();
   // TODO: fix this circular dependency
   var modules = require('./modules')
   return ((modules.knownCollections.indexOf(collectionName) > -1)
@@ -864,7 +864,7 @@ export function pinfo(env, modules, usedBindingsHash, freeVariables, gensymCount
     // THIS IS A HACK according to Danny's original sources...not sure why
     function decorateWithPermissions(binding){
       var bindingEntry = function(entry){return entry[0]===binding.name;},
-      filteredPermissions = that.declaredPermissions.filter(bindingEntry);
+        filteredPermissions = that.declaredPermissions.filter(bindingEntry);
       binding.permissions = filteredPermissions.map(function(p){return p[1];});
       return binding;
     }

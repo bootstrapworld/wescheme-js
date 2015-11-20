@@ -52,7 +52,7 @@ var callWithValues = function(f, vals) {
 
 var procedureArity = function(aState, proc) {
 	check(aState, proc, isFunction, 'procedure-arity', 'function name', 1, [proc]);
-			
+
 	var singleCaseArity = function(aCase) {
 		if (aCase instanceof types.ContinuationClosureValue) {
 			return types.arityAtLeast(0);
@@ -64,7 +64,7 @@ var procedureArity = function(aState, proc) {
 			return aCase.numParams;
 		}
 	}
-	
+
 	if ( proc instanceof PrimProc ||
 	     proc instanceof types.ClosureValue ||
 	     proc instanceof types.ContinuationClosureValue ) {
@@ -175,12 +175,12 @@ var quicksort = function(functionName) {
     return function(aState, initList, comp) {
 	checkList(aState, initList, functionName, 1, arguments);
 	check(aState, comp, procArityContains(2), functionName, 'procedure (arity 2)', 2, arguments);
-	
+
 	var quicksortHelp = function(aState, lst) {
 	    if ( lst.isEmpty() ) {
 		return types.EMPTY;
 	    }
-	    
+
 	    var compYes = new PrimProc('compYes', 1, false, false,
 				       function(aState, x) { return CALL(comp, [x, lst.first()], id); });
 	    var compNo = new PrimProc('compNo', 1, false, false,
@@ -265,29 +265,29 @@ var isImmutable = function(x) {
 
 // Every world configuration function (on-tick, stop-when, ...)
 // produces a WorldConfigOption instance.
-var WorldConfigOption = types.Class.extend({
-	init: function(name) {
-	    this.name = name;	    
-	},
+class WorldConfigOption {
+	constructor(name) {
+	    this.name = name;
+	}
 
-	configure: function(config) {
+	configure(config) {
 	    throw types.internalError("unimplemented", false);
-	},
+	}
 
-	toDomNode: function(cache) {
+	toDomNode(cache) {
 	    var div = document.createElement('div');
 	    div.appendChild(document.createTextNode("(" + this.name + " ...)"));
 	    return div;
-	},
+	}
 
-	toWrittenString: function(cache) {
-	    return "(" + this.name + " ...)";
-	},
-
-	toDisplayedString: function(cache) {
+	toWrittenString(cache) {
 	    return "(" + this.name + " ...)";
 	}
-});
+
+	toDisplayedString(cache) {
+	    return "(" + this.name + " ...)";
+	}
+}
 
 
 var isWorldConfigOption = function(x) { return x instanceof WorldConfigOption; };
@@ -304,20 +304,21 @@ var onEvent = function(funName, inConfigName, numArgs) {
 };
 
 var onEventBang = function(funName, inConfigName) {
-    return function(aState, handler, effectHandler) {
+  return function(aState, handler, effectHandler) {
 		check(aState, handler, isFunction, funName, 'function name', 1, arguments);
 		check(aState, effectHandler, isFunction, funName, 'function name', 2, arguments);
-		return new (WorldConfigOption.extend({
-			    init: function() {
-				this._super(funName);
-			    },
-			    configure: function(config) {
+		return new (class extends WorldConfigOption {
+			constructor() {
+				super(funName);
+			}
+			configure(config) {
 				var newHash = {};
 				newHash[inConfigName] = handler;
 				newHash[inConfigName+'Effect'] = effectHandler;
 				return config.updateAll(newHash);
-			    }}))();
-    };
+			}
+    })();
+  };
 };
 
 
@@ -395,12 +396,12 @@ var getMakeStructTypeReturns = function(aStructType) {
 					    aStructType.numberOfArgs,
 					    false,
 					    false,
-					    function(aState) { 
+					    function(aState) {
                                                 return aStructType.constructor.apply(
                                                     null, [].slice.call(arguments, 1));
                                             })),
 		 (new StructPredicateProc(name, name+'?', 1, false, false,
-                                          function(aState, x) { 
+                                          function(aState, x) {
                                               return aStructType.predicate(x);
                                           })),
 		 (new StructAccessorProc(name,
@@ -474,7 +475,7 @@ var isStepCount = function(x) {
 var angleToProperRange = function(angle){
  return angle % 360;
 };
- 
+
 var isSymbol = types.isSymbol;
 var isChar = types.isChar;
 var isString = types.isString;
@@ -620,11 +621,11 @@ function excess(sideA, sideB, sideC) {
 function cosRel(sideA, sideB, angleC) {
     return (sideA*sideA) + (sideB*sideB) - (2*sideA*sideB*Math.cos(angleC * Math.PI/180));
 }
- 
+
 var less = function(lhs, rhs) {
     return (rhs - lhs) > 0.00001;
 }
- 
+
 //var throwCheckError = helpers.throwCheckError;
 var check = helpers.check;
 var checkVarArity = helpers.checkVarArity;
@@ -671,7 +672,7 @@ var checkAllSameLength = function(aState, lists, functionName, args) {
 		});
 }
 
- 
+
 // A hook for notifying the outside world about file loading
  var notifyLoading = function(url){
     if(window.plt && window.plt.wescheme && plt.wescheme.WeSchemeIntentBus){
@@ -692,27 +693,27 @@ PRIMITIVES['verify-boolean-branch-value'] =
 		     4,
 		     false,
 		     false,
-		     function(aState, name, nameLoc, x, aLoc) { 
+		     function(aState, name, nameLoc, x, aLoc) {
 			 if (x !== true && x !== false) {
-		
-       			var positionStack = 
+
+       			var positionStack =
         			state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
-       
+
        			var locationList = positionStack[positionStack.length - 1];
 			     raise(types.incompleteExn(
                                  types.exnFailContract,
-				 new types.Message([new types.ColoredPart(name, nameLoc), 
+				 new types.Message([new types.ColoredPart(name, nameLoc),
 						    ": expected a boolean value, but found: ",
 						    new types.ColoredPart(types.toWrittenString(x),
                                                                           aLoc)
-                                                    
+
 						   ]),
-                                 []));  
+                                 []));
 			 }
 			 return x;
 		     })
 
-PRIMITIVES['throw-cond-exhausted-error'] = 
+PRIMITIVES['throw-cond-exhausted-error'] =
 	new PrimProc('throw-cond-exhausted-error',
 		     1,
 		     false,
@@ -724,15 +725,15 @@ PRIMITIVES['throw-cond-exhausted-error'] =
 			// throw types.schemeError(types.incompleteExn(types.exnFail, "cond: all question results were false", []));
 			 raise(types.incompleteExn(
 			     types.exnFailContract,
-			     new types.Message([new types.ColoredPart("cond", aLoc), 
+			     new types.Message([new types.ColoredPart("cond", aLoc),
 						": all question results were false"
 					       ]),
 			     []));
-			 
+
 		     });
 
 
-PRIMITIVES['print-values'] = 
+PRIMITIVES['print-values'] =
     new PrimProc('print-values',
 		 0,
 		 true,
@@ -793,7 +794,7 @@ PRIMITIVES['check-within'] =
 				var msg = 'check-within cannot compare functions';
 				raise( types.incompleteExn(types.exnFailContract, msg, []) );
 			}
-			
+
 		 	if ( !( isEqual(actual, expected) ||
 			        (isReal(actual) && isReal(expected) &&
 				 jsnums.lessThanOrEqual(jsnums.abs(jsnums.subtract(actual, expected)),
@@ -810,16 +811,16 @@ PRIMITIVES['check-within'] =
 			}
 			return types.VOID;
 		});
-				
+
 
 
 //////////////////////////////////////////////////////////////////////
 
-var defaultPrint = 
-    new PrimProc('print', 
-		 1, 
-		 false, 
-		 false, 
+var defaultPrint =
+    new PrimProc('print',
+		 1,
+		 false,
+		 false,
 		 function(aState, x) {
 		     aState.getPrintHook()(types.toWrittenString(x));
 		     return types.VOID;
@@ -838,7 +839,7 @@ PRIMITIVES['write'] =
 
 
 
-PRIMITIVES['display'] = 
+PRIMITIVES['display'] =
 	new CasePrimitive('display',
 		      [new PrimProc('display', 1, false, false, function(aState, x) {
 			  aState.getDisplayHook()(types.toDisplayedString(x));
@@ -851,7 +852,7 @@ PRIMITIVES['display'] =
 
 
 
-PRIMITIVES['newline'] = 
+PRIMITIVES['newline'] =
 	new CasePrimitive('newline',
                           [new PrimProc('newline', 0, false, true, function(aState) {
 	    aState.getDisplayHook()('\n');
@@ -865,8 +866,8 @@ PRIMITIVES['newline'] =
 
 
 PRIMITIVES['current-print'] =
-    new PrimProc('current-print', 
-		 0, 
+    new PrimProc('current-print',
+		 0,
 		 false, false,
 		 function(aState) {
 		     return defaultPrint;
@@ -882,14 +883,14 @@ PRIMITIVES['current-continuation-marks'] =
 		     return state.captureCurrentContinuationMarks(aState);
 		 });
 
-PRIMITIVES['continuation-mark-set->list'] = 
+PRIMITIVES['continuation-mark-set->list'] =
     new PrimProc('continuation-mark-set->list',
 		 2,
 		 false,
 		 false,
 		 function(aState, markSet, keyV) {
-		     check(aState, markSet, 
-			   types.isContinuationMarkSet, 
+		     check(aState, markSet,
+			   types.isContinuationMarkSet,
 			   'continuation-mark-set->list',
 			   'continuation-mark-set',
 			   1,
@@ -900,8 +901,8 @@ PRIMITIVES['continuation-mark-set->list'] =
 
 
 PRIMITIVES['for-each'] =
-        new PrimProc('for-each', 
-		     2, 
+        new PrimProc('for-each',
+		     2,
 		     true, false,
 		     function(aState, f, firstArg, arglists) {
 		 	 var allArgs = [f, firstArg].concat(arglists);
@@ -930,7 +931,7 @@ PRIMITIVES['for-each'] =
 		     });
 
 
-PRIMITIVES['make-thread-cell'] = 
+PRIMITIVES['make-thread-cell'] =
 	new CasePrimitive('make-thread-cell', [
 	new PrimProc("make-thread-cell",
 		     1, false, false,
@@ -947,8 +948,8 @@ PRIMITIVES['make-thread-cell'] =
 
 
 
-PRIMITIVES['make-continuation-prompt-tag'] = 
-	new CasePrimitive('make-continuation-prompt-tag', 
+PRIMITIVES['make-continuation-prompt-tag'] =
+	new CasePrimitive('make-continuation-prompt-tag',
 			  [
 	new PrimProc("make-continuation-prompt-tag",
 		     0, false, false,
@@ -988,7 +989,7 @@ var makeOptionPrimitive = function(name,
 				     args.concat(defaultVals.slice(startDefaults)));
 			     });
     };
-	
+
     var cases = [];
     for (var i = 0; i <= defaultVals.length; i++) {
 	cases.push(makeNthPrimitive(i));
@@ -1003,7 +1004,7 @@ PRIMITIVES['make-struct-type'] =
 	makeOptionPrimitive(
 	    'make-struct-type',
 	    4,
-	    [false, 
+	    [false,
 	     types.EMPTY,
 	     types.symbol("prefab"),
 	     false,
@@ -1045,7 +1046,7 @@ PRIMITIVES['make-struct-type'] =
 				[]));
 		}
 		var jsGuard = (guard ? schemeProcToJs(aState, guard) : false);
-		var aStructType = 
+		var aStructType =
 		    types.makeStructureType(name.toString(),
 					    superType,
 					    jsnums.toFixnum(initFieldCnt),
@@ -1055,8 +1056,8 @@ PRIMITIVES['make-struct-type'] =
 
 		return getMakeStructTypeReturns(aStructType);
 	    });
-			    
-/*			   
+
+/*
 PRIMITIVES['make-struct-field-accessor'] =
 	makeOptionPrimitive(
 	    'make-struct-field-accessor',
@@ -1147,7 +1148,7 @@ PRIMITIVES['struct-mutator-procedure?'] =
 
 
 
-PRIMITIVES['procedure-arity'] = new PrimProc('procedure-arity', 1, false, false, 
+PRIMITIVES['procedure-arity'] = new PrimProc('procedure-arity', 1, false, false,
                                              function(aState, proc){ return procedureArity(aState, proc); });
 
 
@@ -1205,7 +1206,7 @@ PRIMITIVES['compose'] =
 				return PRIMITIVES['values'];
 			}
 			var funList = types.list(procs).reverse();
-			
+
 			var composeHelp = function(x, fList) {
 				if ( fList.isEmpty() ) {
 					return x;
@@ -1283,7 +1284,7 @@ PRIMITIVES['sleep'] =
 		      false, false,
 		      function(aState, secs) {
 			  check(aState, secs, isNonNegativeReal, 'sleep', 'non-negative real number', 1);
-			  
+
 			  var millisecs = jsnums.toFixnum(jsnums.multiply(secs, 1000) );
 			  return PAUSE(function(restarter, caller) {
 				  setTimeout(function() { restarter(types.VOID); },
@@ -1351,7 +1352,7 @@ PRIMITIVES['exn-continuation-marks'] =
 
 PRIMITIVES['make-exn:fail'] = new PrimProc('make-exn:fail', 2, false, false,
                                            function(aState, msg, marks) { return types.exnFail(msg, marks); });
-                                     
+
 
 PRIMITIVES['make-exn:fail:contract'] = new PrimProc('make-exn:fail:contract', 2, false, false,
                                                     function(aState, msg, marks) { return types.exnFailContract(msg, marks); });
@@ -1368,7 +1369,7 @@ PRIMITIVES['make-exn:fail:contract:division-by-zero'] =
  ***********************/
 
 
-PRIMITIVES['*'] = 
+PRIMITIVES['*'] =
     new PrimProc('*',
 		 0,
 		 true, false,
@@ -1385,7 +1386,7 @@ PRIMITIVES['*'] =
 
 
 
-PRIMITIVES['-'] = 
+PRIMITIVES['-'] =
     new PrimProc("-",
 		 1,
 		 true, false,
@@ -1394,7 +1395,7 @@ PRIMITIVES['-'] =
 		     check(aState, x, isNumber, '-', 'number', 1, allArgs);
 		     arrayEach(args, function(y, i) {check(aState, y, isNumber, '-', 'number', i+2, allArgs);});
 
-		     if (args.length == 0) { 
+		     if (args.length == 0) {
 			  return jsnums.subtract(0, x);
 		     }
 		     var result = x;
@@ -1405,14 +1406,14 @@ PRIMITIVES['-'] =
 		 });
 
 
-PRIMITIVES['+'] = 
+PRIMITIVES['+'] =
     new PrimProc("+",
 		 0,
 		 true, false,
 		 function(aState, args) {
 		     arrayEach(args, function(x, i) {check(aState, x, isNumber, '+', 'number', i+1, args);});
 
-		     if (args.length == 0) { 
+		     if (args.length == 0) {
 			 return 0;
 		     }
 		     var result = args[0];
@@ -1423,7 +1424,7 @@ PRIMITIVES['+'] =
 		 });
 
 
-PRIMITIVES['='] = 
+PRIMITIVES['='] =
     new PrimProc("=",
 		 2,
 		 true, false,
@@ -1455,14 +1456,14 @@ PRIMITIVES['/'] =
 		     true, false,
 		     function(aState, x, y, args) {
 		 	 var allArgs = [x, y].concat(args);
-		 	 arrayEach(allArgs, 
+		 	 arrayEach(allArgs,
                                    function(y, i) {
                                        check(aState, y, isNumber, '/', 'number', i+1, allArgs);
                                    });
        		         var handleError = function(offset) {
        			     var i, positionStack, locationList, func, exnMessage;
                              try {
-       			         positionStack = 
+       			         positionStack =
         			     state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
        			         locationList = positionStack[positionStack.length - 1];
        			         func = locationList.first();
@@ -1478,31 +1479,31 @@ PRIMITIVES['/'] =
        			         exnMessage = new types.Message(["/: cannot divide by zero"]);
                              }
                              raise(types.incompleteExn(
-                                 types.exnFailContractDivisionByZero, 
+                                 types.exnFailContractDivisionByZero,
 				 exnMessage,
 				 []))
        		         };
                          if (jsnums.equals(y, 0)) {
                              handleError(1);
                          }
-		 	 var res = jsnums.divide(x, y);		 	 
+		 	 var res = jsnums.divide(x, y);
 
 		 	 for (var i = 0; i < args.length; i++) {
 			     if (jsnums.equals(args[i], 0)) {
 				 handleError(2+i);
-			     }	
+			     }
 			     res = jsnums.divide(res, args[i]);
 		 	 }
 		 	 return res;
 		     });
 
- 
+
 
 PRIMITIVES['sub1'] =
     new PrimProc("sub1",
 		 1,
 		 false, false,
-		 function(aState, v){ 
+		 function(aState, v){
 	             check(aState, v, isNumber, 'sub1', 'number', 1, arguments);
 	             return jsnums.subtract(v, 1);
                  });
@@ -1518,7 +1519,7 @@ PRIMITIVES['add1'] =
                  });
 
 
-PRIMITIVES['<'] = 
+PRIMITIVES['<'] =
     new PrimProc('<',
 		 2,
 		 true, false,
@@ -1544,7 +1545,7 @@ PRIMITIVES['>'] =
 		 });
 
 
-PRIMITIVES['<='] = 
+PRIMITIVES['<='] =
     new PrimProc('<=',
 		 2,
 		 true, false,
@@ -1731,7 +1732,7 @@ PRIMITIVES['denominator'] =
 		 });
 
 
-PRIMITIVES['expt'] = 
+PRIMITIVES['expt'] =
     new PrimProc("expt",
 		 2,
 		 false, false,
@@ -2048,7 +2049,7 @@ PRIMITIVES['xml->s-exp'] =
 					var child = node.firstChild;
 					while (child != null) {
 						var nextResult = parse(child);
-						if (isString(nextResult) && 
+						if (isString(nextResult) &&
 						    !result.isEmpty() &&
 						    isString(result.first())) {
 							result = types.cons(result.first() + nextResult,
@@ -2083,12 +2084,12 @@ PRIMITIVES['xml->s-exp'] =
  *** Predicates ***
  ******************/
 
-PRIMITIVES['procedure?'] = new PrimProc('procedure?', 1, false, false, 
+PRIMITIVES['procedure?'] = new PrimProc('procedure?', 1, false, false,
                                         function(aState, v) { return isFunction(v); });
 
-PRIMITIVES['pair?'] = new PrimProc('pair?', 1, false, false, 
+PRIMITIVES['pair?'] = new PrimProc('pair?', 1, false, false,
                                    function(aState, v) { return isPair(v); } );
-PRIMITIVES['cons?'] = new PrimProc('cons?', 1, false, false, 
+PRIMITIVES['cons?'] = new PrimProc('cons?', 1, false, false,
                                    function(aState, v) { return isPair(v); });
 PRIMITIVES['empty?'] = new PrimProc('empty?', 1, false, false,
                                     function(aState, v) { return isEmpty(v); });
@@ -2098,17 +2099,17 @@ PRIMITIVES['null?'] = new PrimProc('null?', 1, false, false,
 PRIMITIVES['undefined?'] = new PrimProc('undefined?', 1, false, false, function(aState, x) { return x === types.UNDEFINED; });
 PRIMITIVES['void?'] = new PrimProc('void?', 1, false, false, function(aState, x) { return x === types.VOID; });
 
-PRIMITIVES['symbol?'] = new PrimProc('symbol?', 1, false, false, 
+PRIMITIVES['symbol?'] = new PrimProc('symbol?', 1, false, false,
                                      function(aState, v) { return isSymbol(v); });
 PRIMITIVES['string?'] = new PrimProc('string?', 1, false, false,
                                      function(aState, v) { return isString(v); });
-PRIMITIVES['char?'] = new PrimProc('char?', 1, false, false, 
+PRIMITIVES['char?'] = new PrimProc('char?', 1, false, false,
                                    function(aState, v){ return isChar(v); });
-PRIMITIVES['boolean?'] = new PrimProc('boolean?', 1, false, false, 
+PRIMITIVES['boolean?'] = new PrimProc('boolean?', 1, false, false,
                                       function(aState, v){ return isBoolean(v); });
 PRIMITIVES['vector?'] = new PrimProc('vector?', 1, false, false,
                                      function(aState, v) { return isVector(v); });
-PRIMITIVES['struct?'] = new PrimProc('struct?', 1, false, false, 
+PRIMITIVES['struct?'] = new PrimProc('struct?', 1, false, false,
                                      function(aState, v) { return types.isStruct(v); });
 PRIMITIVES['eof-object?'] = new PrimProc('eof-object?', 1, false, false,
                                          function(aState, x) { return x === types.EOF; });
@@ -2116,20 +2117,20 @@ PRIMITIVES['color?'] = new PrimProc('color?', 1, false, false,
                                     function(aState, v){ return types.isColor(v); });
 PRIMITIVES['posn?'] = new PrimProc('posn?', 1, false, false,
                                    function(aState, v){ return types.isPosn(v); });
-PRIMITIVES['bytes?'] = new PrimProc('bytes?', 1, false, false, 
+PRIMITIVES['bytes?'] = new PrimProc('bytes?', 1, false, false,
                                     function(aState, v){ return isByteString(v); });
 PRIMITIVES['byte?'] = new PrimProc('byte?', 1, false, false,
                                    function(aState, v) { return isByte(v); });
 
-PRIMITIVES['number?'] = new PrimProc('number?', 1, false, false, 
+PRIMITIVES['number?'] = new PrimProc('number?', 1, false, false,
                                      function(aState, v) { return isNumber(v); });
-PRIMITIVES['complex?'] = new PrimProc('complex?', 1, false, false, 
+PRIMITIVES['complex?'] = new PrimProc('complex?', 1, false, false,
                                       function(aState, v) { return isComplex(v); });
 PRIMITIVES['real?'] = new PrimProc('real?', 1, false, false,
                                    function(aState, v) { return isReal(v); });
-PRIMITIVES['rational?'] = new PrimProc('rational?', 1, false, false, 
+PRIMITIVES['rational?'] = new PrimProc('rational?', 1, false, false,
                                        function(aState, v) { return isRational(v); });
-PRIMITIVES['integer?'] = new PrimProc('integer?', 1, false, false, 
+PRIMITIVES['integer?'] = new PrimProc('integer?', 1, false, false,
                                       function(aState, v) { return isInteger(v); });
 
 PRIMITIVES['exact?'] =
@@ -2188,18 +2189,18 @@ PRIMITIVES['negative?'] =
 			return jsnums.lessThan(x, 0);
 		 });
 
-PRIMITIVES['box?'] = new PrimProc('box?', 1, false, false, 
+PRIMITIVES['box?'] = new PrimProc('box?', 1, false, false,
                                   function(aState, v) { return isBox(v); });
 
 PRIMITIVES['hash?'] = new PrimProc('hash?', 1, false, false,
                                    function(aState, v) { return isHash(v); });
 
 
-PRIMITIVES['eq?'] = new PrimProc('eq?', 2, false, false, 
+PRIMITIVES['eq?'] = new PrimProc('eq?', 2, false, false,
                                  function(aState, x, y) { return isEq(x, y); } );
-PRIMITIVES['eqv?'] = new PrimProc('eqv?', 2, false, false, 
+PRIMITIVES['eqv?'] = new PrimProc('eqv?', 2, false, false,
                                   function(aState, x, y) { return isEqv(x, y); });
-PRIMITIVES['equal?'] = new PrimProc('equal?', 2, false, false, 
+PRIMITIVES['equal?'] = new PrimProc('equal?', 2, false, false,
                                     function(aState, x, y) { return isEqual(x, y); });
 PRIMITIVES['equal~?'] =
     new PrimProc('equal~?',
@@ -2236,7 +2237,7 @@ PRIMITIVES['symbol=?'] =
 		 });
 
 
-PRIMITIVES['js-object?'] = new PrimProc('js-object?', 1, false, false, 
+PRIMITIVES['js-object?'] = new PrimProc('js-object?', 1, false, false,
                                         function(aState, v) { return isJsObject(v); });
 
 
@@ -2537,7 +2538,7 @@ PRIMITIVES['list*'] =
 		 	if (otherItems.length == 0) {
 				return items;
 			}
-		 
+
 		 	var lastListItem = otherItems.pop();
 		 	checkList(aState, lastListItem, 'list*', otherItems.length+2, allArgs);
 
@@ -2554,10 +2555,10 @@ PRIMITIVES['list-ref'] =
 		 	checkList(aState, origList, 'list-ref', 1, arguments);
 		 	check(aState, num, isNatural, 'list-ref', 'non-negative exact integer', 2, arguments);
 
-		 	var positionStack = 
+		 	var positionStack =
         		state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
-        
-       
+
+
        		  var locationList = positionStack[positionStack.length - 1];
 
 			var lst = origList;
@@ -2567,13 +2568,13 @@ PRIMITIVES['list-ref'] =
 					/*var msg = ('list-ref: index ' + n +
 						   ' is too large for list: ' +
 						   types.toWrittenString(origList));*/
-					raise( types.incompleteExn(types.exnFailContract, 
+					raise( types.incompleteExn(types.exnFailContract,
 												new types.Message([
 													new types.ColoredPart('list-ref', locationList.first()),
 													": index ",
 													new types.ColoredPart(n, locationList.rest().rest().first()) ,
 													' is too large for list: ',
-													new types.ColoredPart(types.toWrittenString(origList), locationList.rest().first())]), 
+													new types.ColoredPart(types.toWrittenString(origList), locationList.rest().first())]),
 												[]) );
 		 		}
 	  			lst = lst.rest();
@@ -2636,7 +2637,7 @@ PRIMITIVES['map'] =
 				if (args[0].isEmpty()) {
 				    return acc.reverse();
 				}
-				
+
 				var argsFirst = [];
 				var argsRest = [];
 				for (var i = 0; i < args.length; i++) {
@@ -2663,7 +2664,7 @@ PRIMITIVES['andmap'] =
 		  	check(aState, f, isFunction, 'andmap', 'function name', 1, allArgs);
 		  	arrayEach(arglists, function(x, i) {checkList(aState, x, 'andmap', i+2, allArgs);});
 			checkAllSameLength(aState, arglists, 'andmap', allArgs);
-  
+
 			var andmapHelp = function(f, args) {
 				if ( args[0].isEmpty() ) {
 					return true;
@@ -2910,7 +2911,7 @@ PRIMITIVES['foldl'] =
 		 	check(aState, f, isFunction, 'foldl', 'function name', 1, allArgs);
 			arrayEach(arglists, function(x, i) {checkList(aState, x, 'foldl', i+3, allArgs);});
 			checkAllSameLength(aState, arglists, 'foldl', allArgs);
-	
+
 			return foldHelp(f, initAcc, arglists);
 		});
 
@@ -2928,7 +2929,7 @@ PRIMITIVES['foldr'] =
 			for (var i = 0; i < arglists.length; i++) {
 				arglists[i] = arglists[i].reverse();
 			}
-			
+
 			return foldHelp(f, initAcc, arglists);
 		});
 
@@ -3033,7 +3034,7 @@ PRIMITIVES['build-list'] =
  **********************/
 
 
-PRIMITIVES['box'] = new PrimProc('box', 1, false, false, 
+PRIMITIVES['box'] = new PrimProc('box', 1, false, false,
                                  function(aState, v) { return types.box(v); });
 
 PRIMITIVES['box-immutable'] = new PrimProc('box-immutable', 1, false, false,
@@ -3067,7 +3068,7 @@ PRIMITIVES['set-box!'] =
 
 
 PRIMITIVES['make-hash'] =
-	new CasePrimitive('make-hash', 
+	new CasePrimitive('make-hash',
 	[new PrimProc('make-hash', 0, false, false, function() { return types.hash(types.EMPTY); }),
 	 new PrimProc('make-hash',
 		      1,
@@ -3108,14 +3109,14 @@ PRIMITIVES['hash-ref'] =
 
 			  if ( !obj.hash.containsKey(key) ) {
 			  	//var msg = 'hash-ref: no value found for key: ' + types.toWrittenString(key);
-			  	var positionStack = 
+			  	var positionStack =
 					state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
 			    var locationList = positionStack[positionStack.length - 1];
 
-			  	raise( types.incompleteExn(types.exnFailContract, 
+			  	raise( types.incompleteExn(types.exnFailContract,
 			  		new types.Message([new types.ColoredPart("hash-ref", locationList.first()),
 			  							": no value found for key ",
-			  							new types.ColoredPart(types.toWrittenString(key), locationList.rest().rest().first())]), 
+			  							new types.ColoredPart(types.toWrittenString(key), locationList.rest().rest().first())]),
 			  		[]) );
 			  }
 			  return obj.hash.get(key);
@@ -3155,7 +3156,7 @@ PRIMITIVES['hash-map'] =
 		 function(aState, ht, f) {
 		 	check(aState, ht, isHash, 'hash-map', 'hash', 1, arguments);
 			check(aState, f, isFunction, 'hash-map', 'function name', 2, arguments);
-			
+
 			var keys = ht.hash.keys();
 			var hashMapHelp = function(i, acc) {
 				if (i >= keys.length) {
@@ -3179,7 +3180,7 @@ PRIMITIVES['hash-for-each'] =
 		 function(aState, ht, f) {
 		 	check(aState, ht, isHash, 'hash-for-each', 'hash', 1, arguments);
 			check(aState, f, isFunction, 'hash-for-each', 'function name', 2, arguments);
-		     
+
 		 	var keys = ht.hash.keys();
 
 		 	var hashForEachHelp = function(i) {
@@ -3272,18 +3273,18 @@ PRIMITIVES['string-ref'] =
 				var msg = ('string-ref: index ' + n + ' out of range ' +
 					   '[0, ' + (str.length-1) + '] for string: ' +
 					   types.toWrittenString(str));
-				var positionStack = 
+				var positionStack =
 					state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
 			    var locationList = positionStack[positionStack.length - 1];
 
-			  	raise( types.incompleteExn(types.exnFailContract, 
+			  	raise( types.incompleteExn(types.exnFailContract,
 			  		new types.Message([new types.ColoredPart("string-ref", locationList.first()),
 			  							": index ",
 			  							n,
 			  							' out of range [0, ',
 										(str.length-1),
 										'] for string: ',
-			  							new types.ColoredPart(types.toWrittenString(str), locationList.rest().first())]), 
+			  							new types.ColoredPart(types.toWrittenString(str), locationList.rest().first())]),
 			  		[]) );
 			}
 			return types['char'](str.charAt(n));
@@ -3298,7 +3299,7 @@ PRIMITIVES['string=?'] =
 		 	strs.unshift(str2);
 		 	strs.unshift(str1);
 		 	arrayEach(strs, function(str, i) {check(aState, str, isString, 'string=?', 'string', i+1, strs);});
-		 	
+
 			return compare(strs, function(strA, strB) {return strA.toString() === strB.toString();});
 		 });
 
@@ -3442,18 +3443,18 @@ PRIMITIVES['string-ci>=?'] =
 
 
 PRIMITIVES['substring'] =
-	new CasePrimitive('substring', 
+	new CasePrimitive('substring',
 	[new PrimProc('substring',
 		      2,
 		      false, false,
 		      function(aState, str, theStart) {
 			  check(aState, str, isString, 'substring', 'string', 1, arguments);
 			  check(aState, theStart, isNatural, 'substring', 'non-negative exact integer', 2, arguments);
-			  
-			  var positionStack = 
+
+			  var positionStack =
         		state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
-        
-       
+
+
        		  var locationList = positionStack[positionStack.length - 1];
 
 			  var start = jsnums.toFixnum(theStart);
@@ -3466,10 +3467,10 @@ PRIMITIVES['substring'] =
 																new types.ColoredPart(start, locationList.rest().rest().first()),
 																' out of range ',
 																'[0, ',
-																 str.length, 
+																 str.length,
 																 '] for string: ',
 																 new types.ColoredPart(types.toWrittenString(str), locationList.rest().first())
-												]), 
+												]),
 											[]) );
 			  }
 			  else {
@@ -3484,9 +3485,9 @@ PRIMITIVES['substring'] =
 			  check(aState, theStart, isNatural, 'substring', 'non-negative exact integer', 2, arguments);
 			  check(aState, theEnd, isNatural, 'substring', 'non-negative exact integer', 3, arguments);
 
-			  var positionStack = 
+			  var positionStack =
         		state.captureCurrentContinuationMarks(aState).ref('moby-application-position-key');
-        
+
        		  var locationList = positionStack[positionStack.length - 1];
 
 			  var start = jsnums.toFixnum(theStart);
@@ -3500,32 +3501,32 @@ PRIMITIVES['substring'] =
 																new types.ColoredPart(start, locationList.rest().rest().first()),
 																' out of range ',
 																'[0, ',
-																 str.length, 
+																 str.length,
 																 '] for string: ',
 																 new types.ColoredPart(types.toWrittenString(str), locationList.rest().first())
-												]), 
+												]),
 											[]) );
 			  }
 			  if (end < start || end > str.length) {
 			   	/*var msg = ('substring: ending index ' + end + ' out of range ' + '[' + start +
-					   ', ' + str.length + '] for string: ' + types.toWrittenString(str));*/ 
+					   ', ' + str.length + '] for string: ' + types.toWrittenString(str));*/
 				raise( types.incompleteExn(types.exnFailContract,
 											new types.Message([ new types.ColoredPart('substring', locationList.first()),
 																': ending index ',
 																new types.ColoredPart(end, locationList.rest().rest().rest().first()),
 																' out of range ',
 																'[0, ',
-																 str.length, 
+																 str.length,
 																 '] for string: ',
 																 new types.ColoredPart(types.toWrittenString(str), locationList.rest().first())
-												]), 
+												]),
 											[]) );
 			  }
 			  return types.string( str.substring(start, end) );
 		      }) ]);
 
 
-PRIMITIVES['string-append'] = 
+PRIMITIVES['string-append'] =
     new PrimProc("string-append",
 		 0,
 		 true, false,
@@ -3534,7 +3535,7 @@ PRIMITIVES['string-append'] =
 				function(str, i) {
 					check(aState, str, isString, 'string-append', 'string', i+1, args);
 				});
-			
+
 			for (var i = 0; i < args.length; i++) {
 				args[i] = args[i].toString();
 			}
@@ -3831,7 +3832,7 @@ PRIMITIVES['make-bytes'] =
 		      false, false,
 		      function(aState, k) {
 			  check(aState, k, isNatural, 'make-bytes', 'non-negative exact integer', 1);
-			  
+
 			  var ret = [];
 			  for (var i = 0; i < jsnums.toFixnum(k); i++) {
 			  	ret.push(0);
@@ -3937,7 +3938,7 @@ PRIMITIVES['subbytes'] =
 		      function(aState, bstr, theStart) {
 		          	check(aState, bstr, isByteString, 'subbytes', 'bytes string', 1, arguments);
 			  		check(aState, theStart, isNatural, 'subbytes', 'non-negative exact integer', 2, arguments);
-			  
+
 			  var start = jsnums.toFixnum(theStart);
 			  if (start > bstr.length()) {
 			   	var msg = ('subbytes: starting index ' + start + ' out of range ' +
@@ -3995,7 +3996,7 @@ PRIMITIVES['bytes-fill!'] =
 		 	check(aState, bstr, function(x) { return isByteString(x) && x.mutable; },
 			      'bytes-fill!', 'mutable byte string', 1, arguments);
 			check(aState, b, isByte, 'bytes-fill!', 'byte', 2, arguments);
-			
+
 			for (var i = 0; i < bstr.length(); i++) {
 				bstr.set(i, b);
 			}
@@ -4542,7 +4543,7 @@ PRIMITIVES['make-color'] =
 		 	                    check(aState, r, isByte, 'make-color', 'exact number between 0 and 255', 1, arguments);
 		 	                    check(aState, g, isByte, 'make-color', 'exact number between 0 and 255', 2, arguments);
 		 	                    check(aState, b, isByte, 'make-color', 'exact number between 0 and 255', 3, arguments);
-                                            
+
 			                    return types.color(jsnums.toFixnum(r),
 					                       jsnums.toFixnum(g),
 					                       jsnums.toFixnum(b));
@@ -4555,7 +4556,7 @@ PRIMITIVES['make-color'] =
 		 	                    check(aState, g, isByte, 'make-color', 'exact number between 0 and 255', 2, arguments);
 		 	                    check(aState, b, isByte, 'make-color', 'exact number between 0 and 255', 3, arguments);
 		 	                    check(aState, a, isByte, 'make-color', 'exact number between 0 and 255', 4, arguments);
-                                            
+
 			                    return types.color(jsnums.toFixnum(r),
 					                       jsnums.toFixnum(g),
 					                       jsnums.toFixnum(b),
@@ -4770,15 +4771,15 @@ PRIMITIVES['star'] =
 	// implementation to match htdp/image
 	[new PrimProc('star',
 		      5,
-		      false, false,		      
+		      false, false,
 		      function(aState, n, outer, inner, m, c) {
-			  check(aState, n, isSideCount, "star", 
-				"positive integer greater than or equal to 3", 
+			  check(aState, n, isSideCount, "star",
+				"positive integer greater than or equal to 3",
 				1, arguments);
-			  check(aState, outer, isNonNegativeReal, "star", 
-				"non-negative number", 
+			  check(aState, outer, isNonNegativeReal, "star",
+				"non-negative number",
 				2, arguments);
-			  check(aState, inner, 
+			  check(aState, inner,
 				isNonNegativeReal, "star",
 				"non-negative number", 3, arguments);
 			  check(aState, m, isMode, "star", 'style ("solid" or "outline" or [0-255])', 4, arguments);
@@ -4793,7 +4794,7 @@ PRIMITIVES['star'] =
 							c);
 		      }),
 	 // implementation to match 2htdp/image
-	 new PrimProc('star', 
+	 new PrimProc('star',
 		      3,
 		      false, false,
 		      function(aState, sideLength, mode, color) {
@@ -4804,10 +4805,10 @@ PRIMITIVES['star'] =
 			  if (colorDb.get(color)) {
 			      color = colorDb.get(color);
 			  }
-			  return world.Kernel.polygonImage(jsnums.toFixnum(sideLength), 
-							   jsnums.toFixnum(5), 
-							   jsnums.toFixnum(2), 
-							   mode.toString(), 
+			  return world.Kernel.polygonImage(jsnums.toFixnum(sideLength),
+							   jsnums.toFixnum(5),
+							   jsnums.toFixnum(2),
+							   mode.toString(),
 							   color);
 		      })]);
 
@@ -4826,7 +4827,7 @@ new PrimProc('radial-star',
 									"radial-star", "positive number", 3, arguments);
 			 check(aState, aStyle, isMode, "radial-star", 'style ("solid" or "outline" or [0-255])', 4, arguments);
 			 check(aState, aColor, isColor, "radial-star", "color", 5, arguments);
-			 
+
 			 if (colorDb.get(aColor)) {
 			 aColor = colorDb.get(aColor);
 			 }
@@ -4865,7 +4866,7 @@ new PrimProc('polygon',
 			 check(aState, points,	isPosnList,	"polygon", "list of posns", 1, arguments);
 			 check(aState, s,		isMode, "polygon", 'style ("solid" or "outline" or [0-255])', 2, arguments);
 			 check(aState, c,		isColor, "polygon", "color", 3, arguments);
-			 
+
 			 if (colorDb.get(c)) { c = colorDb.get(c); }
 			 return world.Kernel.posnImage(helpers.flattenSchemeListToArray(points),
 											  s.toString(),
@@ -4881,14 +4882,14 @@ new PrimProc('regular-polygon',
 			 check(aState, count,	isSideCount,		"regular-polygon", "positive integer greater than or equal to 3", 2, arguments);
 			 check(aState, s,		isMode, "regular-polygon", 'style ("solid" or "outline" or [0-255])', 3, arguments);
 			 check(aState, c,		isColor, "regular-polygon", "color", 4, arguments);
-			 
+
 			 if (colorDb.get(c)) {
 			 c = colorDb.get(c);
 			 }
-			 return world.Kernel.polygonImage(jsnums.toFixnum(length), 
-											  jsnums.toFixnum(count), 
-											  jsnums.toFixnum(1), 
-											  s.toString(), 
+			 return world.Kernel.polygonImage(jsnums.toFixnum(length),
+											  jsnums.toFixnum(count),
+											  jsnums.toFixnum(1),
+											  s.toString(),
 											  c);
 			 });
 
@@ -4902,14 +4903,14 @@ new PrimProc('star-polygon',
 			 check(aState, step,	isStepCount,		"star-polygon", "positive integer greater than or equal to 1", 3, arguments);
 			 check(aState, s,		isMode,				"star-polygon", 'style ("solid" or "outline" or [0-255])', 4, arguments);
 			 check(aState, c,		isColor,			"star-polygon", "color", 5, arguments);
-			 
+
 			 if (colorDb.get(c)) {
 				c = colorDb.get(c);
 			 }
-			 return world.Kernel.polygonImage(jsnums.toFixnum(length), 
-											  jsnums.toFixnum(count), 
-											  jsnums.toFixnum(step), 
-											  s.toString(), 
+			 return world.Kernel.polygonImage(jsnums.toFixnum(length),
+											  jsnums.toFixnum(count),
+											  jsnums.toFixnum(step),
+											  s.toString(),
 											  c);
 			 });
 
@@ -4922,7 +4923,7 @@ new PrimProc('rhombus',
 			 check(aState, a, isNonNegativeReal, "rhombus", "non-negative number", 2, arguments);
 			 check(aState, s, isMode, "rhombus", 'style ("solid" or "outline" or [0-255])', 3, arguments);
 			 check(aState, c, isColor, "rhombus", "color", 4, arguments);
-			 
+
 			 if (colorDb.get(c)) {
 			 c = colorDb.get(c);
 			 }
@@ -4937,7 +4938,7 @@ new PrimProc('square',
 			 check(aState, l, isNonNegativeReal, "square", "non-negative number", 1, arguments);
 			 check(aState, s, isMode, "square", 'style ("solid" or "outline" or [0-255])', 2, arguments);
 			 check(aState, c, isColor, "square", "color", 3, arguments);
-			 
+
 			 if (colorDb.get(c)) {
 			 c = colorDb.get(c);
 			 }
@@ -4958,7 +4959,7 @@ PRIMITIVES['triangle'] =
                                         m.toString(),
                                         c);
       });
- 
+
 PRIMITIVES['triangle/sas'] =
     new PrimProc('triangle/sas',
       5,
@@ -4976,7 +4977,7 @@ PRIMITIVES['triangle/sas'] =
        sideC = jsnums.toFixnum(sideC);
        var sideB2 = cosRel(sideA, sideC, angleB);
        var sideB  = Math.sqrt(sideB2);
-              
+
        if (sideB2 <= 0) {
          raise( types.incompleteExn(types.exnFailContract, "The given side, angle and side will not form a triangle: "
                                     + sideA + ", " + angleB + ", " + sideC, []) );
@@ -4997,7 +4998,7 @@ PRIMITIVES['triangle/sas'] =
                                          style.toString(),
                                          color);
       });
- 
+
 PRIMITIVES['triangle/sss'] =
     new PrimProc('triangle/sss',
       5,
@@ -5025,7 +5026,7 @@ PRIMITIVES['triangle/sss'] =
                                          style.toString(),
                                          color);
       });
- 
+
 PRIMITIVES['triangle/ass'] =
     new PrimProc('triangle/ass',
       5,
@@ -5040,7 +5041,7 @@ PRIMITIVES['triangle/ass'] =
        angleA = jsnums.toFixnum(angleToProperRange(angleA));
        sideB = jsnums.toFixnum(sideB);
        sideC = jsnums.toFixnum(sideC);
-       
+
        if (colorDb.get(color)) { color = colorDb.get(color); }
        if (less(180, angleA)) {
          raise( types.incompleteExn(types.exnFailContract, "The given angle, side and side will not form a triangle: "
@@ -5052,7 +5053,7 @@ PRIMITIVES['triangle/ass'] =
                                         style.toString(),
                                         color);
       });
- 
+
 PRIMITIVES['triangle/ssa'] =
     new PrimProc('triangle/ssa',
       5,
@@ -5074,7 +5075,7 @@ PRIMITIVES['triangle/ssa'] =
          }
          var sideC2 = cosRel(sideA, sideB, angleC);
          var sideC  = Math.sqrt(sideC2);
-        
+
          if (sideC2 <= 0) {
            raise( types.incompleteExn(types.exnFailContract, "The given side, side and angle will not form a triangle: "
                                       + sideA + ", " + sideB + ", " + angleC, []) );
@@ -5094,7 +5095,7 @@ PRIMITIVES['triangle/ssa'] =
                                           style.toString(),
                                           color);
       });
- 
+
 PRIMITIVES['triangle/aas'] =
       new PrimProc('triangle/aas',
         5,
@@ -5123,7 +5124,7 @@ PRIMITIVES['triangle/aas'] =
                                          style.toString(),
                                          color);
         });
- 
+
 PRIMITIVES['triangle/asa'] =
        new PrimProc('triangle/asa',
           5,
@@ -5152,7 +5153,7 @@ PRIMITIVES['triangle/asa'] =
                                              style.toString(),
                                              color);
           });
- 
+
 PRIMITIVES['triangle/saa'] =
         new PrimProc('triangle/saa',
             5,
@@ -5228,7 +5229,7 @@ PRIMITIVES['ellipse'] =
 			check(aState, h, isNonNegativeReal, "ellipse", "non-negative number", 2, arguments);
 			check(aState, s, isMode, "ellipse", 'style ("solid" or "outline" or [0-255])', 3, arguments);
 			check(aState, c, isColor, "ellipse", "color", 4, arguments);
-			
+
 			if (colorDb.get(c)) {
 				c = colorDb.get(c);
 			}
@@ -5325,16 +5326,16 @@ new PrimProc('overlay/align',
 			 checkVarArity(aState, img1, isImage, "overlay/align", "image", 3, arguments);
 			 checkVarArity(aState, img2, isImage, "overlay/align", "image", 4, arguments);
 			 arrayEach(restImages, function(x, i) { check(aState, x, isImage, "overlay/align", "image", i+4); }, arguments);
-			 
+
 			 var img = world.Kernel.overlayImage(img1,
 							            img2,
 							            placeX.toString(),
 							            placeY.toString());
-			 
+
 			 for (var i = 0; i < restImages.length; i++)
 				img = world.Kernel.overlayImage(img,
-								       restImages[i], 
-								       placeX.toString(), 
+								       restImages[i],
+								       placeX.toString(),
 								       placeY.toString());
 
 		     return img;
@@ -5365,7 +5366,7 @@ PRIMITIVES['underlay/xy'] =
 		     check(aState, img1, isImage, "underlay/xy", "image", 1, arguments);
 		     check(aState, deltaX, isReal, "underlay/xy", "finite real number", 2, arguments);
 		     check(aState, deltaY, isReal, "underlay/xy", "finite real number", 3, arguments);
-		     check(aState, img2, isImage, "underlay/xy", "image", 4, arguments);                     
+		     check(aState, img2, isImage, "underlay/xy", "image", 4, arguments);
 		     return world.Kernel.overlayImage(img2,
                                           img1,
                                           -jsnums.toFixnum(deltaX),
@@ -5383,21 +5384,21 @@ PRIMITIVES['underlay/align'] =
 			 checkVarArity(aState, img1, isImage, "underlay/align", "image", 3, arguments);
 			 checkVarArity(aState, img2, isImage, "underlay/align", "image", 4, arguments);
 			 arrayEach(restImages, function(x, i) { check(aState, x, isImage, "underlay/align", "image", i+4); }, arguments);
-			 
+
 		         var img = world.Kernel.overlayImage(img2,
 						             img1,
 						             placeX.toString(),
 						             placeY.toString());
-		         
+
 		         for (var i = 0; i < restImages.length; i++)
-		             img = world.Kernel.overlayImage(restImages[i], 
+		             img = world.Kernel.overlayImage(restImages[i],
 						             img,
-						             placeX.toString(), 
+						             placeX.toString(),
 						             placeY.toString());
-		         
+
 		         return img;
 	             });
-    
+
 
 PRIMITIVES['beside'] =
 new PrimProc('beside',
@@ -5407,15 +5408,15 @@ new PrimProc('beside',
 			 checkVarArity(aState, img1, isImage, "beside", "image", 1, arguments);
 			 checkVarArity(aState, img2, isImage, "beside", "image", 2, arguments);
 			 arrayEach(restImages, function(x, i) { check(aState, x, isImage, "beside", "image", i+4); }, arguments);
-			 
+
 			 var img = world.Kernel.overlayImage(img1,
 												 img2,
 												 "beside",
 												 "middle");
-			 
+
 			 for (var i = 0; i < restImages.length; i++)
 			 img = world.Kernel.overlayImage(img,restImages[i], "beside", "middle");
-			 
+
 		     return img;
 			 });
 
@@ -5428,18 +5429,18 @@ new PrimProc('beside/align',
 			 checkVarArity(aState, img1, isImage, "beside/align", "image", 2, arguments);
 			 checkVarArity(aState, img2, isImage, "beside/align", "image", 3, arguments);
 			 arrayEach(restImages, function(x, i) { check(aState, x, isImage, "beside", "image", i+3); }, arguments);
-			 
+
 			 var img = world.Kernel.overlayImage(img1,
 												 img2,
 												 "beside",
 												 placeY.toString());
-			 
+
 			 for (var i = 0; i < restImages.length; i++)
 			 img = world.Kernel.overlayImage(img,
-											 restImages[i], 
+											 restImages[i],
 											 "beside",
 											 placeY.toString());
-			 
+
 		     return img;
 			 });
 
@@ -5451,18 +5452,18 @@ new PrimProc('above',
 			 checkVarArity(aState, img1, isImage, "above", "image", 1, arguments);
 			 checkVarArity(aState, img2, isImage, "above", "image", 2, arguments);
 			 arrayEach(restImages, function(x, i) { check(aState, x, isImage, "above", "image", i+4); }, arguments);
-			 
+
 			 var img = world.Kernel.overlayImage(img1,
 												 img2,
 												 "middle",
 												 "above");
-			 
+
 			 for (var i = 0; i < restImages.length; i++)
 			 img = world.Kernel.overlayImage(img,
-											 restImages[i], 
+											 restImages[i],
 											 "middle",
 											 "above");
-			 
+
 		     return img;
 			 });
 
@@ -5480,13 +5481,13 @@ PRIMITIVES['above/align'] =
 							     img2,
 							     placeX.toString(),
 							     "above");
-			 
+
 			 for (i = 0; i < restImages.length; i++)
 			     img = world.Kernel.overlayImage(img,
-							     restImages[i], 
+							     restImages[i],
 							     placeX.toString(),
 							     "above");
-			 
+
 		         return img;
 		     });
 
@@ -5583,7 +5584,7 @@ PRIMITIVES['text'] =
 		     check(aState, aSize, function(x) { return isNatural(x) && jsnums.greaterThan(x, 0) && isByte(x); },
 			   "text", "exact integer between 1 and 255", 2, arguments);
 		     check(aState, aColor, isColor, "text", "color", 3, arguments);
-                     
+
 		     if (colorDb.get(aColor)) {
 			 aColor = colorDb.get(aColor);
 		     }
@@ -5603,13 +5604,13 @@ PRIMITIVES['text/font'] =
 		     check(aState, aSize,	function(x) { return isNatural(x) && jsnums.greaterThan(x, 0) && isByte(x); },
 				   "text/font", "exact integer between 1 and 255",	2, arguments);
 			 check(aState, aColor,	isColor,		"text/font", "color",	3, arguments);
-			 check(aState, aFace,	function(x) {return isString(x) || !x;},		
+			 check(aState, aFace,	function(x) {return isString(x) || !x;},
 											"text/font", "face",	4, arguments);
 			 check(aState, aFamily,	isFontFamily,	"text/font", "family",	5, arguments);
 			 check(aState, aStyle,	isFontStyle,	"text/font", 'style ("solid" or "outline")',	6, arguments);
 			 check(aState, aWeight,	isFontWeight,	"text/font", "weight",	7, arguments);
 			 check(aState, aUnderline,isBoolean,	"text/font", "underline?",8, arguments);
-			 
+
 			 if (colorDb.get(aColor)) { aColor = colorDb.get(aColor); }
        return world.Kernel.textImage(aString.toString(), jsnums.toFixnum(aSize), aColor,
                                      aFace.toString(), aFamily.toString(), aStyle.toString(),
@@ -5624,21 +5625,21 @@ PRIMITIVES['text/font'] =
 		     check(aState, aSize,	function(x) { return isNatural(x) && jsnums.greaterThan(x, 0) && isByte(x); },
 				   "text/font", "exact integer between 1 and 255",	2, arguments);
 			 check(aState, aColor,	isColor,		"text/font", "color",	3, arguments);
-			 check(aState, aFace,	function(x) {return isString(x) || !x;},		
+			 check(aState, aFace,	function(x) {return isString(x) || !x;},
 											"text/font", "face",	4, arguments);
 			 check(aState, aFamily,	isFontFamily,	"text/font", "family",	5, arguments);
 			 check(aState, aStyle,	isFontStyle,	"text/font", 'style ("solid" or "outline")',	6, arguments);
 			 check(aState, aWeight,	isFontWeight,	"text/font", "weight",	7, arguments);
 			 check(aState, aUnderline,isBoolean,	"text/font", "underline?",8, arguments);
        check(aState, outline, isBoolean,	"text/font", "outline?",9, arguments);
-			 
+
 			 if (colorDb.get(aColor)) { aColor = colorDb.get(aColor); }
        return world.Kernel.textImage(aString.toString(), jsnums.toFixnum(aSize), aColor,
                                      aFace.toString(), aFamily.toString(), aStyle.toString(),
                                      aWeight.toString(), aUnderline, outline);
     })
    ]);
- 
+
 PRIMITIVES['play-sound'] =
     new PrimProc('play-sound',
 		 2,
@@ -5662,8 +5663,8 @@ PRIMITIVES['play-sound'] =
 										rawAudio.src = path.toString();
           });
 		 });
- 
-PRIMITIVES['bitmap/url'] = 
+
+PRIMITIVES['bitmap/url'] =
 PRIMITIVES['image-url'] =
     new PrimProc('image-url',
 		 1,
@@ -5756,7 +5757,7 @@ new PrimProc('image-baseline',
 			 });
 
 
-PRIMITIVES['image->color-list'] = 
+PRIMITIVES['image->color-list'] =
    new PrimProc('image->color-list',
 		 1,
 		 false, false,
@@ -5831,7 +5832,7 @@ var colorListToImage = function(aState, listOfColors, width, height, pinholeX, p
 };
 
 
-PRIMITIVES['color-list->image'] = 
+PRIMITIVES['color-list->image'] =
     new PrimProc('color-list->image',
 		 5,
 		 false, false,
@@ -5840,7 +5841,7 @@ PRIMITIVES['color-list->image'] =
                  });
 
 
-PRIMITIVES['color-list->bitmap'] = 
+PRIMITIVES['color-list->bitmap'] =
     new PrimProc('color-list->bitmap',
 		 3,
 		 false, false,
@@ -5851,13 +5852,13 @@ PRIMITIVES['color-list->bitmap'] =
 
 
 
-PRIMITIVES['mode?']		= new PrimProc('mode?', 1, false, false, 
+PRIMITIVES['mode?']		= new PrimProc('mode?', 1, false, false,
                                                function(aState, v) { return isMode(v); });
-PRIMITIVES['image-color?']      = new PrimProc('image-color?', 1, false, false, 
+PRIMITIVES['image-color?']      = new PrimProc('image-color?', 1, false, false,
                                                function(aState, v) { return isColor(v); });
 PRIMITIVES['name->color']       = new PrimProc('name->color', 1, false, false,
-                                               function(aState, x) { 
-                                                   return nameToColor(x) || false; 
+                                               function(aState, x) {
+                                                   return nameToColor(x) || false;
                                                });
 PRIMITIVES['x-place?']		= new PrimProc('x-place?', 1, false, false,
                                                function(aState, v) { return isPlaceX(v); });
@@ -5865,9 +5866,9 @@ PRIMITIVES['y-place?']		= new PrimProc('y-place?', 1, false, false,
                                                function(aState, v) { return isPlaceY(v); });
 PRIMITIVES['angle?']		= new PrimProc('angle?', 1, false, false,
                                                function(aState, v) { return isAngle(v); });
-PRIMITIVES['side-count?']	= new PrimProc('side-count?', 1, false, false, 
+PRIMITIVES['side-count?']	= new PrimProc('side-count?', 1, false, false,
                                                function(aState, v) { return isSideCount(v); });
-PRIMITIVES['step-count?']	= new PrimProc('step-count?', 1, false, false, 
+PRIMITIVES['step-count?']	= new PrimProc('step-count?', 1, false, false,
                                                function(aState, v) { return isStepCount(v); });
 
 
@@ -5877,48 +5878,51 @@ PRIMITIVES['step-count?']	= new PrimProc('step-count?', 1, false, false,
 /************************
  *** World Primitives ***
  ************************/
-var StopWhen = WorldConfigOption.extend({
-	init: function(handler, last_picture) {
-	    this._super('stop-when');
+class StopWhen extends WorldConfigOption {
+	constructor(handler, last_picture) {
+	    super('stop-when');
       this.handler = handler;
       this.last_picture = last_picture;
-	},
-                                            
-  configure: function(config) {
+	}
+
+  configure(config) {
       var newVals = {
         stopWhen: this.handler,
         lastPicture: this.last_picture
       };
       return config.updateAll(newVals);
-  }});
+  }
+}
 
 
-var OnTickBang = WorldConfigOption.extend({
-	init: function(handler, effectHandler, aDelay) {
+class OnTickBang extends WorldConfigOption {
+	constructor(handler, effectHandler, aDelay) {
 	    this._super('on-tick');
 	    this.handler = handler;
 	    this.effectHandler = effectHandler;
 	    this.aDelay = aDelay;
-	},
+	}
 
-	configure: function(config) {
-	    var newVals = { 
+	configure(config) {
+	    var newVals = {
         onTick: this.handler,
         onTickEffect: this.effectHandler,
         tickDelay: jsnums.toFixnum(jsnums.multiply(1000, this.aDelay))
 	    };
 	    return config.updateAll(newVals);
-	}});
+	}
+}
 
-var ToDraw = WorldConfigOption.extend({
-   init: function(handler) {
-       this._super('on-redraw');
+class ToDraw extends WorldConfigOption {
+   constructor(handler) {
+       super('on-redraw');
        this.handler = handler;
-   },
+   }
 
-   configure: function(config) {
+   configure(config) {
        return config.updateAll({onRedraw: this.handler});
-   }});
+   }
+}
 
  // The default tick delay is 28 times a second.
  // On slower browsers, we'll force all delays to be >= 1/10
@@ -5984,7 +5988,7 @@ PRIMITIVES['on-tilt'] = new PrimProc('on-tilt', 1, false, false, onEvent('on-til
 
 PRIMITIVES['on-key'] = new PrimProc('on-key', 1, false, false, onEvent('on-key', 'onKey', 2));
 PRIMITIVES['on-key!'] = new PrimProc('on-key!', 2, false, false, onEventBang('on-key!', 'onKey'));
- 
+
 PRIMITIVES['on-mouse'] = new PrimProc('on-mouse', 1, false, false, onEvent('on-mouse', 'onMouse', 3));
 
 
@@ -5993,8 +5997,8 @@ PRIMITIVES['mouse-event?'] =
 		 1,
 		 true, false,
      function(aState, v) { return isMouseEvent(v); });
- 
- 
+
+
 PRIMITIVES['mouse=?'] =
     new PrimProc('mouse=?',
 		 2,
@@ -6053,7 +6057,7 @@ PRIMITIVES['stop-when'] =
             return new StopWhen(handler, lastPicture);
         })
      ]);
- 
+
 PRIMITIVES['stop-when!'] = new PrimProc('stop-when!', 2, false, false,
 					onEventBang('stop-when!', 'stopWhen'));
 
@@ -6147,7 +6151,7 @@ var jsp = function(attribList) {
 PRIMITIVES['js-p'] =
     new CasePrimitive('js-p',
 	[new PrimProc('js-p', 0, false, false, function(aState) { return jsp(types.EMPTY); }),
-	 new PrimProc('js-p', 1, false, false, 
+	 new PrimProc('js-p', 1, false, false,
                       function(aState, v) { return jsp(v); })]);
 
 
@@ -6156,7 +6160,7 @@ var jsdiv = function(attribList) {
 
 	var attribs = assocListToHash(attribList);
 	var node = jsworld.MobyJsworld.div(attribs);
-	
+
 	node.toWrittenString = function(cache) { return "(js-div)"; };
 	node.toDisplayedString = node.toWrittenString;
 	node.toDomNode = function(cache) { return node; };
@@ -6165,7 +6169,7 @@ var jsdiv = function(attribList) {
 PRIMITIVES['js-div'] =
     new CasePrimitive('js-div',
 	[new PrimProc('js-div', 0, false, false, function(aState) { return jsdiv(types.EMPTY); }),
-	 new PrimProc('js-div', 1, false, false, 
+	 new PrimProc('js-div', 1, false, false,
                       function(aState, v) { return jsdiv(v); })]);
 
 
@@ -6216,8 +6220,8 @@ var jsInput = function(type, updateF, attribList) {
 	return helpers.wrapJsObject(node);
 };
 PRIMITIVES['js-input'] =
-	new CasePrimitive('js-input', 
-	[new PrimProc('js-input', 2, false, false, 
+	new CasePrimitive('js-input',
+	[new PrimProc('js-input', 2, false, false,
                       function(aState, type, updateF) { return jsInput(type, updateF); }),
 	 new PrimProc('js-input', 3, false, false,
                       function(aState, type, udpateF, attribList) { return jsInput(type, updateF, attribList); })]);
@@ -6289,7 +6293,7 @@ PRIMITIVES['js-big-bang'] =
 					check(aState, x, function(y) { return isWorldConfigOption(y) || isList(y) || types.isWorldConfig(y); },
 					      'big-bang', 'handler', i+2, [aState, initW].concat(handlers));
 				});
-		     var unwrappedConfigs = 
+		     var unwrappedConfigs =
 			 helpers.map(function(x) {
 					if ( isWorldConfigOption(x) ) {
 						return function(config) { return x.configure(config); };
@@ -6305,10 +6309,10 @@ PRIMITIVES['js-big-bang'] =
 			     bigBangController.breaker();
 			 }
 			 aState.addBreakRequestedListener(onBreak);
-			 bigBangController = jsworld.MobyJsworld.bigBang(initW, 
+			 bigBangController = jsworld.MobyJsworld.bigBang(initW,
 						     aState.getToplevelNodeHook()(),
 						     unwrappedConfigs,
-						     caller, 
+						     caller,
 						     function(v) {
 							 aState.removeBreakRequestedListener(onBreak);
 							 restarter(v);
@@ -6339,7 +6343,7 @@ PRIMITIVES['animate'] =
            bigBangController = jsworld.MobyJsworld.bigBang(100,
                      aState.getToplevelNodeHook()(),
                      unwrappedConfigs,
-                     caller, 
+                     caller,
                      function(v) {
                        aState.removeBreakRequestedListener(onBreak);
                        restarter(v);
@@ -6356,7 +6360,7 @@ PRIMITIVES['animate'] =
 
 	var attribs = assocListToHash(attribList);
 	var node = jsworld.MobyJsworld.emptyPage(attribs);
-	
+
 // 	node.toWrittenString = function(cache) { return "(js-div)"; };
 // 	node.toDisplayedString = node.toWrittenString;
 // 	node.toDomNode = function(cache) { return node; };
@@ -6366,13 +6370,13 @@ PRIMITIVES['animate'] =
 
     PRIMITIVES['empty-page'] =
 	new CasePrimitive('empty-page',
-			  [new PrimProc('empty-page', 0, false, false, 
+			  [new PrimProc('empty-page', 0, false, false,
 					function(aState) {  return emptyPage(types.EMPTY); }),
 			   new PrimProc('empty-page', 1, false, false,
                                         function(aState, v) { return emptyPage(v); })]);
 
-    
-    PRIMITIVES['place-on-page'] = 
+
+    PRIMITIVES['place-on-page'] =
 	new PrimProc('empty-page',
 		     4,
 		     false, false,
@@ -6381,7 +6385,7 @@ PRIMITIVES['animate'] =
 			 return jsworld.MobyJsworld.placeOnPage(
 			     elt, left, top, page);
 		     });
-					    
+
 
 
 
@@ -6471,7 +6475,7 @@ PRIMITIVES['make-effect-type'] =
 
 PRIMITIVES['effect-type?'] = new PrimProc('effect-type?', 1, false, false,
                                           function(aState, v) { return types.isEffectType(v); });
-PRIMITIVES['effect?'] = new PrimProc('effect?', 1, false, false, 
+PRIMITIVES['effect?'] = new PrimProc('effect?', 1, false, false,
                                      function(aState, v) { return types.isEffect(v); });
 
 //PRIMITIVES['make-effect:do-nothing'] = new PrimProc('make-effect:do-nothing', 0, false, false, types.EffectDoNothing.constructor);
@@ -6531,7 +6535,7 @@ PRIMITIVES['world-with-effects'] =
 
 
 
-PRIMITIVES['make-render-effect'] = new PrimProc('make-render-effect', 2, false, false, 
+PRIMITIVES['make-render-effect'] = new PrimProc('make-render-effect', 2, false, false,
                                                 function(aState, x, y) { return types.makeRenderEffect(x, y); });
 
 PRIMITIVES['render-effect?'] = new PrimProc('render-effect?', 1, false, false,
@@ -6768,7 +6772,7 @@ PRIMITIVES['js-call'] =
 			check(aState, parent, function(x) { return (x === false ||
 							    (isJsObject(x) && typeof(x.obj) == 'object')); },
 			      'js-call', 'javascript object or false', 2, allArgs);
-			
+
 			var args = helpers.map(function(x) { return (isJsObject(x) ? x.obj : x); }, initArgs);
 			var thisArg = parent ? parent.obj : null;
 			var jsCallReturn = fun.obj.apply(thisArg, args);

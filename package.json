@@ -38,13 +38,6 @@
   "babel": {
     "presets": [
       "es2015"
-    ],
-    "only": [
-      "src/wescheme.js",
-      "src/structures.js",
-      "src/analyzer.js",
-      "example/*",
-      "test/*"
     ]
   },
   "homepage": "https://github.com/pcardune/wescheme-js"

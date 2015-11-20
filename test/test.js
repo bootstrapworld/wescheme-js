@@ -5,6 +5,7 @@ import {compileREPL, getError, repl2_setup} from './repl2'
 import {parse} from '../src/parser'
 import {lex} from '../src/lex'
 import * as analyzer from '../src/analyzer'
+import * as structures from '../src/structures'
 import types from '../src/runtime/types'
 // TODO: currently the bytecode evaluation relies on types being in the global namespace
 // le sigh...
@@ -331,7 +332,7 @@ function runTests(verbose){
     try {
       recieved    = JSON.stringify(plt.compiler.compile(program, pinfo2))
     } catch (recieved) {
-      if (recieved instanceof unimplementedException){
+      if (recieved instanceof structures.unimplementedException){
         throw recieved.str + " NOT IMPLEMENTED"
       }
       throw Error("COMPILATION ERROR\n"+getError(recieved).toString())
