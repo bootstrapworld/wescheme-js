@@ -43,4 +43,5 @@ then browse to
 
 and click around on that page as you wish.
 
+[build-badge]: https://travis-ci.org/react-bootstrap/react-bootstrap.svg?branch=master
 [build]: https://travis-ci.org/pcardune/wescheme-js
