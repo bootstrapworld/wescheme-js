@@ -1,6 +1,8 @@
 # wescheme-js
 wescheme javascript compiler
 
+[![Travis Build Status][build-badge]][build]
+
 # Installation
 
 This package has not been published to npm yet, so you have to install it from
@@ -40,3 +42,5 @@ then browse to
     http://localhost:8085/webpack-dev-server
 
 and click around on that page as you wish.
+
+[build]: https://travis-ci.org/pcardune/wescheme-js
