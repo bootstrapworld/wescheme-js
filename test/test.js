@@ -139,6 +139,7 @@ function sameResults(x, y){
 // a diff of the expected and recieved output
 function setTestFailureLink(test, expected, recieved){
   if(typeof recieved !== "string") recieved = JSON.stringify(recieved)
+  if(typeof expected !== "string") expected = JSON.stringify(expected)
   recieved = recieved.replace(/\s/g,'')
   expected = expected.replace(/\s/g,'')
   test.style.background = 'pink'

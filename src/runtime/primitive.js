@@ -5897,7 +5897,7 @@ class StopWhen extends WorldConfigOption {
 
 class OnTickBang extends WorldConfigOption {
 	constructor(handler, effectHandler, aDelay) {
-	    this._super('on-tick');
+	    super('on-tick');
 	    this.handler = handler;
 	    this.effectHandler = effectHandler;
 	    this.aDelay = aDelay;
@@ -6082,54 +6082,58 @@ PRIMITIVES['to-draw'] =
 		 });
 
 
-PRIMITIVES['on-draw'] =
-    new CasePrimitive('on-draw',
-	[new PrimProc('on-draw',
-		      1,
-		      false, false,
-		      function(aState, domHandler) {
-			  check(aState, domHandler, isFunction, 'on-draw', "function name", 1);
-			  return new (WorldConfigOption.extend({
-				    init: function() {
-					this._super('on-draw');
-				    },
-				    configure: function(config) {
-					return config.updateAll({'onDraw': domHandler});
-				    }
-				}))();
-		      }),
-	 new PrimProc('on-draw',
-		      2,
-		      false, false,
-		      function(aState, domHandler, styleHandler) {
-		 	  check(aState, domHandler, isFunction, 'on-draw', "function name", 1, arguments);
-			  check(aState, styleHandler, isFunction, 'on-draw', "function name", 2, arguments);
-			  return new (WorldConfigOption.extend({
-				    init: function() {
-					this._super('on-draw');
-				    },
-				    configure: function(config) {
-					return config.updateAll({'onDraw': domHandler,
-								 'onDrawCss': styleHandler});
-				    }
-				}))();
-		      }) ]);
-
-
-PRIMITIVES['initial-effect'] =
-    new PrimProc('initial-effect',
-		 1,
+PRIMITIVES['on-draw'] = new CasePrimitive(
+  'on-draw',
+	[new PrimProc(
+    'on-draw',
+		1,
+		false, false,
+		function(aState, domHandler) {
+			check(aState, domHandler, isFunction, 'on-draw', "function name", 1);
+      return new (class extends WorldConfigOption {
+        constructor() {
+          super('on-draw');
+        }
+        configure(config) {
+          return config.updateAll({onDraw: domHandler});
+        }
+      });
+		}),
+	 new PrimProc(
+     'on-draw',
+		 2,
 		 false, false,
-		 function(aState, effect) {
-		     return new (WorldConfigOption.extend({
-				 init: function() {
-				     this._super("initial-effect");
-				 },
-				 configure: function(config) {
-					return config.updateAll({'initialEffect': effect});
+		 function(aState, domHandler, styleHandler) {
+		 	 check(aState, domHandler, isFunction, 'on-draw', "function name", 1, arguments);
+			 check(aState, styleHandler, isFunction, 'on-draw', "function name", 2, arguments);
+			 return new (class extends WorldConfigOption {
+				 constructor() {
+					 super('on-draw');
 				 }
-			     }))();
-		 });
+				 configure(config) {
+					 return config.updateAll({'onDraw': domHandler,
+								                    'onDrawCss': styleHandler});
+				 }
+			 })();
+		 })
+  ]
+);
+
+PRIMITIVES['initial-effect'] = new PrimProc(
+  'initial-effect',
+	1,
+	false, false,
+	function(aState, effect) {
+		return new (class extends WorldConfigOption {
+			constructor() {
+				super("initial-effect");
+			}
+			configure(config) {
+				return config.updateAll({'initialEffect': effect});
+			}
+		})();
+	}
+);
 
 
 
