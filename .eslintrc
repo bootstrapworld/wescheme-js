@@ -8,6 +8,10 @@
     "linebreak-style": [
       2,
       "unix"
+    ],
+    "no-unused-vars": [
+      2,
+      {"argsIgnorePattern": "^unused.*"}
     ]
   },
   "env": {
@@ -26,7 +30,7 @@
     "generators": true,
     "modules": true,
     "spread": true,
-    "templateStrings": true,
+    "templateStrings": true
   },
   "plugins": [
   ]

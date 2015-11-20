@@ -4,7 +4,7 @@
 import {compileREPL, getError, repl2_setup} from './repl2'
 import {parse} from '../src/parser'
 import {lex} from '../src/lex'
-import analyzer from '../src/analyzer'
+import * as analyzer from '../src/analyzer'
 import types from '../src/runtime/types'
 // TODO: currently the bytecode evaluation relies on types being in the global namespace
 // le sigh...
