@@ -24,7 +24,8 @@
   "scripts": {
     "compile": "webpack --config webpack-package.config.js && ./node_modules/babel-cli/bin/babel.js -D -d lib/ src/",
     "prepublish": "npm run compile",
-    "test": "jest && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "test": "jest",
+    "test-coverage": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "start": "webpack-dev-server --content-base example/",
     "start-test": "webpack-dev-server --port 8085 --content-base test/",
     "lint": "eslint . --ext .js || true"
@@ -61,17 +62,17 @@
       "<rootDir>/src",
       "<rootDir>/test"
     ],
-    "collectCoverage": true,
+    "collectCoverage": false,
     "collectCoverageOnlyFrom": {
-      "src/analyzer.js": true,
-      "src/compiler.js": true,
-      "src/lex.js": true,
-      "src/modules.js": true,
-      "src/optimizer.js": true,
-      "src/parser.js": true,
-      "src/structures.js": true,
-      "src/toPyretAST.js": true,
-      "src/toPyretString.js": true
+      "src/analyzer.js": false,
+      "src/compiler.js": false,
+      "src/lex.js": false,
+      "src/modules.js": false,
+      "src/optimizer.js": false,
+      "src/parser.js": false,
+      "TODO: src/structures.js bug in instanbul makes this blow up?": false,
+      "src/toPyretAST.js": false,
+      "src/toPyretString.js": false
     }
   },
   "homepage": "https://github.com/pcardune/wescheme-js"
