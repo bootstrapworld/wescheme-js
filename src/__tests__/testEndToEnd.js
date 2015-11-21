@@ -2,6 +2,7 @@
 import {compileREPL, getError, repl2_setup} from '../../test/repl2';
 import {lex} from '../lex'
 import {parse} from '../parser'
+import * as analyzer from '../analyzer'
 
 var suiteData = require('./suite.json');
 
@@ -121,8 +122,8 @@ describe('testing everything', function() {
 
   suiteData.forEach(function(testData, index) {
     it('should properly handle test #'+index, function() {
-//      test(testData.expr, testData.server, testData.desugar, testData.bytecode,
-//           testData.pyretSrc, testData.pyretAST);
+      //      test(testData.expr, testData.server, testData.desugar, testData.bytecode,
+      //           testData.pyretSrc, testData.pyretAST);
 
       // LEX: If we pass when we shouldn't, set to pink and return false.
       // Catch: If we fail better than the server, set to blue and return true.
@@ -142,16 +143,16 @@ describe('testing everything', function() {
           return true
         }
         if (testData.server === "PASS") {
-          fail("didn't work")
-          //return setTestFailureLink(row, expected, recieved)
+          fail("failed during lex")
+            //return setTestFailureLink(row, expected, recieved)
         } else {
           let localJSON = JSON.parse(recieved["structured-error"]);
           let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
           if (sameResults(localJSON, serverJSON)) {
             return true
           } else {
-            fail("didn't work")
-            //return setTestFailureLink(row, expected, recieved);
+            fail("failed during lex")
+              //return setTestFailureLink(row, expected, recieved);
           }
         }
       }
@@ -174,7 +175,7 @@ describe('testing everything', function() {
           return true;
         }
         if(testData.server === "PASS"){
-          fail("it didn't work");
+          fail("failed during parse");
         }
         else{
           let localJSON = JSON.parse(recieved["structured-error"]);
@@ -182,7 +183,7 @@ describe('testing everything', function() {
           if(sameResults(localJSON, serverJSON)){
             return true;
           } else {
-            fail("it didn't work");
+            fail("failed during parse");
           }
         }
       }
@@ -192,35 +193,34 @@ describe('testing everything', function() {
       //// Catch: If we fail better than the server, set to blue and return true.
       //// Catch: If we fail equal to the server, set to green and return true.
       //// Catch: If we fail when we shoulnd't, set to pink and return false
-      //desugar.innerHTML = 'desugar'
-      //try{
-      //  var desugared = analyzer.desugar(AST)
-      //    var recieved  = desugared[0]
-      //  var program = desugared[0]
-      //  var pinfo     = desugared[1]
-      //  var pinfo2    = analyzer.analyze(program)
-      //} catch (e) {
-      //  if (e instanceof Error) {
-      //    throw e
-      //  }
-      //  recieved = JSON.parse(e)
-      //    if(recieved.betterThanServer){
-      //      desugar.style.background = 'lightblue'
-      //      return true
-      //    }
-      //  if(testData.server === "LOCAL IS BETTER"){
-      //    desugar.style.background = 'lightblue'
-      //    return true
-      //  }
-      //  if(testData.server === "PASS"){ return setTestFailureLink(row, testData.server, recieved)}
-      //  let localJSON = JSON.parse(recieved["structured-error"])
-      //    let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"])
-      //    if(sameResults(localJSON, serverJSON)){
-      //      lexEl.style.background = 'lightgreen'
-      //      return true
-      //    }
-      //  else{ return setTestFailureLink(row, testData.server, recieved)}
-      //}
+      try{
+        var desugared = analyzer.desugar(AST);
+        recieved  = desugared[0];
+        var program = desugared[0];
+        var pinfo     = desugared[1];
+        var pinfo2    = analyzer.analyze(program);
+      } catch (e) {
+        if (e instanceof Error) {
+          throw e;
+        }
+        recieved = JSON.parse(e);
+        if(recieved.betterThanServer){
+          return true;
+        }
+        if(testData.server === "LOCAL IS BETTER"){
+          return true;
+        }
+        if(testData.server === "PASS"){
+          fail("Failed during desugar and analyze");
+        }
+        let localJSON = JSON.parse(recieved["structured-error"]);
+        let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
+        if(sameResults(localJSON, serverJSON)){
+          return true;
+        } else {
+          fail("failed during desugar and analyze");
+        }
+      }
       //// if we don't have a desugarRef for this test, call it a questinonable pass move on
       //if(desugarRef === undefined) {
       //  desugar.style.background = 'rgb(194, 288, 194)'
