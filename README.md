@@ -3,6 +3,8 @@ wescheme javascript compiler
 
 [![Travis Build Status][build-badge]][build]
 
+[![Coverage Status](https://coveralls.io/repos/pcardune/wescheme-js/badge.svg?branch=master&service=github)](https://coveralls.io/github/pcardune/wescheme-js?branch=master)
+
 # Installation
 
 This package has not been published to npm yet, so you have to install it from

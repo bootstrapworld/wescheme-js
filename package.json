@@ -11,6 +11,7 @@
     "babel-loader": "^6.1.0",
     "babel-preset-es2015": "^6.1.18",
     "codemirror": "^5.8.0",
+    "coveralls": "^2.11.4",
     "css-loader": "^0.23.0",
     "eslint": "^1.9.0",
     "eslint-loader": "^1.1.1",
@@ -23,7 +24,7 @@
   "scripts": {
     "compile": "webpack --config webpack-package.config.js && ./node_modules/babel-cli/bin/babel.js -D -d lib/ src/",
     "prepublish": "npm run compile",
-    "test": "jest",
+    "test": "jest && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "start": "webpack-dev-server --content-base example/",
     "start-test": "webpack-dev-server --port 8085 --content-base test/",
     "lint": "eslint . --ext .js || true"
@@ -60,8 +61,10 @@
       "<rootDir>/src",
       "<rootDir>/test"
     ],
-    "collectCoverage": false,
-    "collectCoverageOnlyFrom": {}
+    "collectCoverage": true,
+    "collectCoverageOnlyFrom": {
+      "src/lex.js": true
+    }
   },
   "homepage": "https://github.com/pcardune/wescheme-js"
 }
