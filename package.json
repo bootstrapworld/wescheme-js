@@ -63,7 +63,15 @@
     ],
     "collectCoverage": true,
     "collectCoverageOnlyFrom": {
-      "src/lex.js": true
+      "src/analyzer.js": true,
+      "src/compiler.js": true,
+      "src/lex.js": true,
+      "src/modules.js": true,
+      "src/optimizer.js": true,
+      "src/parser.js": true,
+      "src/structures.js": true,
+      "src/toPyretAST.js": true,
+      "src/toPyretString.js": true
     }
   },
   "homepage": "https://github.com/pcardune/wescheme-js"
