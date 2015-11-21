@@ -1,6 +1,7 @@
 /*globals describe it expect fail*/
 import {compileREPL, getError, repl2_setup} from '../../test/repl2';
 import {lex} from '../lex'
+import {parse} from '../parser'
 
 var suiteData = require('./suite.json');
 
@@ -145,7 +146,7 @@ describe('testing everything', function() {
           //return setTestFailureLink(row, expected, recieved)
         } else {
           let localJSON = JSON.parse(recieved["structured-error"]);
-          let serverJSON = JSON.parse(JSON.parse(testData.sever)["structured-error"]);
+          let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
           if (sameResults(localJSON, serverJSON)) {
             return true
           } else {
@@ -159,34 +160,33 @@ describe('testing everything', function() {
       // Catch: If we fail better than the server, set to blue and return true.
       // Catch: If we fail equal to the server, set to green and return true.
       // Catch: If we fail when we shoulnd't, set to pink and return false
-      //parseEl.innerHTML = 'parse'
-      //try{
-      //  var AST = parse(sexp)
-      //} catch (e) {
-      //  if (e instanceof Error) {
-      //    throw e
-      //  }
-      //  recieved = JSON.parse(e)
-      //    if(recieved.betterThanServer){
-      //      parseEl.style.background = 'lightblue'
-      //      return true
-      //    }
-      //  if(expected === "LOCAL IS BETTER"){
-      //    parseEl.style.background = 'lightblue'
-      //    return true
-      //  }
-      //  if(expected === "PASS"){ return setTestFailureLink(row, expected, recieved)}
-      //  else{
-      //    let localJSON = JSON.parse(recieved["structured-error"])
-      //      let serverJSON = JSON.parse(JSON.parse(expected)["structured-error"])
-      //      if(sameResults(localJSON, serverJSON)){
-      //        lexEl.style.background = 'lightgreen'
-      //        return true
-      //      }
-      //    else{ return setTestFailureLink(row, expected, recieved)}
-      //  }
-      //}
-      //parseEl.style.background = 'lightgreen'
+      try{
+        var AST = parse(sexp);
+      } catch (e) {
+        if (e instanceof Error) {
+          throw e;
+        }
+        recieved = JSON.parse(e);
+        if(recieved.betterThanServer){
+          return true;
+        }
+        if(testData.server === "LOCAL IS BETTER"){
+          return true;
+        }
+        if(testData.server === "PASS"){
+          fail("it didn't work");
+        }
+        else{
+          let localJSON = JSON.parse(recieved["structured-error"]);
+          let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
+          if(sameResults(localJSON, serverJSON)){
+            return true;
+          } else {
+            fail("it didn't work");
+          }
+        }
+      }
+
       //
       //// DESUGAR AND ANALYZE: If we pass when we shouldn't, set to pink and return false.
       //// Catch: If we fail better than the server, set to blue and return true.
@@ -208,28 +208,28 @@ describe('testing everything', function() {
       //      desugar.style.background = 'lightblue'
       //      return true
       //    }
-      //  if(expected === "LOCAL IS BETTER"){
+      //  if(testData.server === "LOCAL IS BETTER"){
       //    desugar.style.background = 'lightblue'
       //    return true
       //  }
-      //  if(expected === "PASS"){ return setTestFailureLink(row, expected, recieved)}
+      //  if(testData.server === "PASS"){ return setTestFailureLink(row, testData.server, recieved)}
       //  let localJSON = JSON.parse(recieved["structured-error"])
-      //    let serverJSON = JSON.parse(JSON.parse(expected)["structured-error"])
+      //    let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"])
       //    if(sameResults(localJSON, serverJSON)){
       //      lexEl.style.background = 'lightgreen'
       //      return true
       //    }
-      //  else{ return setTestFailureLink(row, expected, recieved)}
+      //  else{ return setTestFailureLink(row, testData.server, recieved)}
       //}
       //// if we don't have a desugarRef for this test, call it a questinonable pass move on
       //if(desugarRef === undefined) {
       //  desugar.style.background = 'rgb(194, 288, 194)'
       //  return true
       //}
-      //expected = desugarRef.replace(/\s*/g,"")     // remove whitespace fom desugar reference
+      //testData.server = desugarRef.replace(/\s*/g,"")     // remove whitespace fom desugar reference
       //  recieved = recieved.toString().replace(/\s*/g,"")// remove whitespace from test output
-      //  if(sameResults(recieved, expected)) { desugar.style.background = 'lightgreen' }
-      //else { return setTestFailureLink(row, expected, recieved)}
+      //  if(sameResults(recieved, testData.server)) { desugar.style.background = 'lightgreen' }
+      //else { return setTestFailureLink(row, testData.server, recieved)}
       //
       //
       //bytecode.innerHTML = 'bytecode'
@@ -246,15 +246,15 @@ describe('testing everything', function() {
       //  desugar.style.background = 'rgb(194, 288, 194)'
       //  return true
       //}
-      //var expected_bc = JSON.parse(bytecodeRef)
+      //var testData.server_bc = JSON.parse(bytecodeRef)
       //  var recieved_bc = JSON.parse(recieved)
-      //  expected_bc.bytecode = (0,eval)('('+expected_bc.bytecode+')')
+      //  testData.server_bc.bytecode = (0,eval)('('+testData.server_bc.bytecode+')')
       //  try { recieved_bc.bytecode = (0,eval)('('+recieved_bc.bytecode+')') }
       //catch(e){
       //  console.log('MALFORMED BYTECODE:\n'+recieved_bc.bytecode)
-      //    return setTestFailureLink(row, expected_bc.bytecode, recieved_bc.bytecode)
+      //    return setTestFailureLink(row, testData.server_bc.bytecode, recieved_bc.bytecode)
       //}
-      //if(sameResults(recieved_bc, expected_bc)) {
+      //if(sameResults(recieved_bc, testData.server_bc)) {
       //  desugar.style.background = 'lightgreen'
       //} else {
       //  return setTestFailureLink(row, bytecodeRef, recieved)
@@ -287,9 +287,9 @@ describe('testing everything', function() {
       //  pyretSrc.style.background = 'lightblue'
       //  return true
       //}
-      //expected = pyretSrcRef
-      //if(sameResults(recieved, expected)) { pyretSrc.style.background = 'lightgreen' }
-      //else { return setTestFailureLink(row, expected, recieved)}
+      //testData.server = pyretSrcRef
+      //if(sameResults(recieved, testData.server)) { pyretSrc.style.background = 'lightgreen' }
+      //else { return setTestFailureLink(row, testData.server, recieved)}
       //
       //// for now, we're only checking the source translation
       //return true
