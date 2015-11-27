@@ -134,7 +134,7 @@ describe('testing everything', function() {
   repl2_setup();
 
   //TODO: get the rest of the tests to pass...
-  SUITE_DATA = SUITE_DATA.slice(0,11);
+  SUITE_DATA = SUITE_DATA.slice(0,67);
   SUITE_DATA.forEach(function(testData, index) {
     it('should properly handle test #'+index, function() {
       //      test(testData.expr, testData.server, testData.desugar, testData.bytecode,
@@ -157,19 +157,11 @@ describe('testing everything', function() {
         if (testData.server === "LOCAL IS BETTER"){
           return true
         }
-        if (testData.server === "PASS") {
-          return fail("failed during lex")
-            //return setTestFailureLink(row, expected, recieved)
-        } else {
-          let localJSON = JSON.parse(recieved["structured-error"]);
-          let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
-          if (sameResults(localJSON, serverJSON)) {
-            return true
-          } else {
-            return fail("failed during lex")
-              //return setTestFailureLink(row, expected, recieved);
-          }
-        }
+        expect(testData.server).not.toBe("PASS");
+        let localJSON = JSON.parse(recieved["structured-error"]);
+        let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
+        expect(sameResults(localJSON, serverJSON)).toBe(true);
+        return true;
       }
 
       // PARSE: If we pass when we shouldn't, set to pink and return false.
@@ -189,18 +181,11 @@ describe('testing everything', function() {
         if(testData.server === "LOCAL IS BETTER"){
           return true;
         }
-        if(testData.server === "PASS"){
-          return fail("failed during parse");
-        }
-        else{
-          let localJSON = JSON.parse(recieved["structured-error"]);
-          let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
-          if(sameResults(localJSON, serverJSON)){
-            return true;
-          } else {
-            return fail("failed during parse");
-          }
-        }
+        expect(testData.server).toBe("PASS");
+        let localJSON = JSON.parse(recieved["structured-error"]);
+        let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
+        expect(sameResults(localJSON, serverJSON)).toBe(true);
+        return true;
       }
 
       //
@@ -225,18 +210,11 @@ describe('testing everything', function() {
         if(testData.server === "LOCAL IS BETTER"){
           return true;
         }
-        if(testData.server === "PASS"){
-          // TODO: the line below doesn't work for some reason
-          //return fail("Failed during desugar and analyze");
-          return true;
-        }
+        expect(testData.server).not.toBe("PASS");
         let localJSON = JSON.parse(recieved["structured-error"]);
         let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
-        if(sameResults(localJSON, serverJSON)){
-          return true;
-        } else {
-          return fail("failed during desugar and analyze");
-        }
+        expect(sameResults(localJSON, serverJSON)).toBe(true);
+        return true;
       }
       //// if we don't have a desugarRef for this test, call it a questinonable pass move on
       if(testData.desugar === undefined) {
@@ -244,9 +222,7 @@ describe('testing everything', function() {
       }
       testData.server = testData.desugar.replace(/\s*/g,"");     // remove whitespace fom desugar reference
       recieved = recieved.toString().replace(/\s*/g,"");// remove whitespace from test output
-      if(!sameResults(recieved, testData.server)){
-        return fail("failed during desugar");
-      }
+      expect(sameResults(recieved, testData.server)).toBe(true);
 
       try {
         recieved    = JSON.stringify(compile(program, pinfo2))
@@ -263,14 +239,13 @@ describe('testing everything', function() {
       var expected_bc = JSON.parse(testData.bytecode);
       var recieved_bc = JSON.parse(recieved);
       expected_bc.bytecode = (0,eval)('('+expected_bc.bytecode+')');
-      try { recieved_bc.bytecode = (0,eval)('('+recieved_bc.bytecode+')') }
-      catch(e){
+      try {
+        recieved_bc.bytecode = (0,eval)('('+recieved_bc.bytecode+')')
+      } catch(e) {
         console.log('MALFORMED BYTECODE:\n'+recieved_bc.bytecode);
-        return fail("failed during compile")
+        throw e;
       }
-      if(!sameResults(recieved_bc, expected_bc)) {
-        return fail("failed during compile")
-      }
+      expect(sameResults(recieved_bc, expected_bc)).toBe(true);
 
       // EVERYTHING PASSED! WHOOPIE!
 
@@ -283,7 +258,7 @@ describe('testing everything', function() {
         recieved = toPyretString(AST, pinfo2).join("\n")
       } catch (translationError) {
         console.log(translationError);
-        return fail("failed during pyret translation");
+        throw translationError;
       }
       // if we don't have a JSONRef for this test, call it a questinonable pass move on
       if(testData.pyretSrc === undefined) {
@@ -294,9 +269,7 @@ describe('testing everything', function() {
         return true;
       }
       testData.server = testData.pyretSrc;
-      if(!sameResults(recieved, testData.server)) {
-        return fail("failed during pyret translation");
-      }
+      expect(sameResults(recieved, testData.server)).toBe(true);
 
       // for now, we're only checking the source translation
       return true;

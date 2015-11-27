@@ -82,10 +82,15 @@ plt.compiler = plt.compiler || {};
       return 'types[\'char\'](String.fromCharCode('+this.val.charCodeAt(0)+'))';
     };
     // STACKREF STRUCTS ////////////////////////////////////////////////////////////////
-    class baseStackReference{}
+    class baseStackReference {
+      constructor() {
+        this.type = 'base';
+      }
+    }
     class localStackReference extends baseStackReference {
       constructor(name, isBoxed, depth){
         super();
+        this.type = 'local';
         this.name = name;
         this.isBoxed = isBoxed;
         this.depth = depth;
@@ -94,6 +99,7 @@ plt.compiler = plt.compiler || {};
     class globalStackReference extends baseStackReference {
       constructor(name, depth, pos){
         super();
+        this.type = 'global';
         this.name = name;
         this.pos = pos;
         this.depth = depth;
@@ -102,9 +108,23 @@ plt.compiler = plt.compiler || {};
     class unboundStackReference extends baseStackReference {
       constructor(name){
         super();
+        this.type = 'unbound';
         this.name = name;
       }
     }
+  var isLocalStackRef   = function(r){
+    return r.type === 'local';
+    // TODO: figure out why the below doesn't work.
+    return r instanceof localStackReference;
+  };
+  var isGlobalStackRef  = function(r){
+    return r.type === 'global';
+    return r instanceof globalStackReference;
+  };
+  var isUnboundStackRef = function(r){
+    return r.type === 'unbound'
+    return r instanceof unboundStackReference;
+  };
 
 
     /**************************************************************************
@@ -889,9 +909,6 @@ plt.compiler = plt.compiler || {};
         var freeVariableRefs = freeVariables.map(function(v){return originalEnv.lookup(v.val, 0);}),
             // some utility functions
             ormap = function(f, l){return (l.length===0)? false : f(l[0])? l[0] : ormap(f, l.slice(1));},
-            isLocalStackRef   = function(r){return r instanceof localStackReference;},
-            isGlobalStackRef  = function(r){return r instanceof globalStackReference;},
-            isUnboundStackRef = function(r){return r instanceof unboundStackReference;},
             getDepthFromRef   = function(r){return r.depth;},
             // this will either be #f, or the first unboundStackRef
             anyUnboundStackRefs = ormap(isUnboundStackRef, freeVariableRefs);
@@ -1041,11 +1058,11 @@ plt.compiler = plt.compiler || {};
    symbolExpr.prototype.compile = function(env, pinfo){
      var stackReference = env.lookup(this.val, 0);
      var bytecode;
-     if(stackReference instanceof localStackReference){
+     if(isLocalStackRef(stackReference)){
        bytecode = new localRef(stackReference.isBoxed, stackReference.depth, false, false, false);
-     } else if(stackReference instanceof globalStackReference){
+     } else if(isGlobalStackRef(stackReference)){
        bytecode = new topLevel(stackReference.depth, stackReference.pos, false, false, this.location);
-     } else if(stackReference instanceof unboundStackReference){
+     } else if(isUnboundStackRef(stackReference)){
        throw "Couldn't find '"+this.val+"' in the environment";
      } else {
        throw "IMPOSSIBLE: env.lookup failed for '"+this.val+"'! A reference should be added to the environment!";
