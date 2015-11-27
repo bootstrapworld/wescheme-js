@@ -82,26 +82,29 @@ plt.compiler = plt.compiler || {};
       return 'types[\'char\'](String.fromCharCode('+this.val.charCodeAt(0)+'))';
     };
     // STACKREF STRUCTS ////////////////////////////////////////////////////////////////
-    function stackReference(){}
-    function localStackReference(name, isBoxed, depth){
-      stackReference.call(this);
-      this.name = name;
-      this.isBoxed = isBoxed;
-      this.depth = depth;
+    class baseStackReference{}
+    class localStackReference extends baseStackReference {
+      constructor(name, isBoxed, depth){
+        super();
+        this.name = name;
+        this.isBoxed = isBoxed;
+        this.depth = depth;
+      }
     }
-    localStackReference.prototype = heir(stackReference.prototype);
-    function globalStackReference(name, depth, pos){
-      stackReference.call(this);
-      this.name = name;
-      this.pos = pos;
-      this.depth = depth;
+    class globalStackReference extends baseStackReference {
+      constructor(name, depth, pos){
+        super();
+        this.name = name;
+        this.pos = pos;
+        this.depth = depth;
+      }
     }
-    globalStackReference.prototype = heir(stackReference.prototype);
-    function unboundStackReference(name){
-      stackReference.call(this);
-      this.name = name;
+    class unboundStackReference extends baseStackReference {
+      constructor(name){
+        super();
+        this.name = name;
+      }
     }
-    unboundStackReference.prototype = heir(stackReference.prototype);
 
 
     /**************************************************************************
@@ -1036,17 +1039,18 @@ plt.compiler = plt.compiler || {};
    };
 
    symbolExpr.prototype.compile = function(env, pinfo){
-     var stackReference = env.lookup(this.val, 0), bytecode;
-      if(stackReference instanceof localStackReference){
-        bytecode = new localRef(stackReference.isBoxed, stackReference.depth, false, false, false);
-      } else if(stackReference instanceof globalStackReference){
-        bytecode = new topLevel(stackReference.depth, stackReference.pos, false, false, this.location);
-      } else if(stackReference instanceof unboundStackReference){
-        throw "Couldn't find '"+this.val+"' in the environment";
-      } else {
-        throw "IMPOSSIBLE: env.lookup failed for '"+this.val+"'! A reference should be added to the environment!";
-      }
-      return [bytecode, pinfo];
+     var stackReference = env.lookup(this.val, 0);
+     var bytecode;
+     if(stackReference instanceof localStackReference){
+       bytecode = new localRef(stackReference.isBoxed, stackReference.depth, false, false, false);
+     } else if(stackReference instanceof globalStackReference){
+       bytecode = new topLevel(stackReference.depth, stackReference.pos, false, false, this.location);
+     } else if(stackReference instanceof unboundStackReference){
+       throw "Couldn't find '"+this.val+"' in the environment";
+     } else {
+       throw "IMPOSSIBLE: env.lookup failed for '"+this.val+"'! A reference should be added to the environment!";
+     }
+     return [bytecode, pinfo];
    };
 
    // a quotedExpr is a literal version of the raw stx object
@@ -1085,14 +1089,18 @@ plt.compiler = plt.compiler || {};
                                                             (b.imported)? false : modulePathIndexJoin(false, false))
                                       , new symbolExpr(b.name), -1, 0);
             };
-        var globalNames = pinfo.freeVariables.concat(pinfo.definedNames.keys()),
+        var globalNames = pinfo.freeVariables.concat(pinfo.definedNames.keys());
         // FIXME: we have to make uniqueGlobalNames because a function name can also be a free variable,
         // due to a bug in analyze-lambda-expression in which the base pinfo is used for the function body.
-            uniqueGlobalNames = sortAndUnique(globalNames, function(a,b){return a<b;}, function(a,b){return a==b;}),
-            topLevels         = [false].concat(uniqueGlobalNames.map(makeGlobalBucket)
-                                               ,allModuleBindings.map(makeModuleVariablefromBinding)),
-            globals           = [false].concat(uniqueGlobalNames
-                                               ,allModuleBindings.map(function(b){return b.name;}));
+        var uniqueGlobalNames = sortAndUnique(globalNames, function(a,b){return a<b;}, function(a,b){return a==b;});
+        var topLevels         = [false].concat(
+          uniqueGlobalNames.map(makeGlobalBucket),
+          allModuleBindings.map(makeModuleVariablefromBinding)
+        );
+        var globals           = [false].concat(
+          uniqueGlobalNames,
+          allModuleBindings.map(function(b){return b.name;})
+        );
         return [new prefix(0, topLevels ,[])
                , new plt.compiler.globalEnv(globals, false, new plt.compiler.emptyEnv())];
       };
