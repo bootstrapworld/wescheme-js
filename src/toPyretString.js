@@ -1,3 +1,5 @@
+/*global plt, goog */
+
 require('./structures');
 var types = require('./runtime/types');
 

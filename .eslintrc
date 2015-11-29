@@ -35,6 +35,5 @@
     "templateStrings": true
   },
   "plugins": [
-  ],
-  "globals":{plt: true, goog: true}
+  ]
 }

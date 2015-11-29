@@ -1,3 +1,5 @@
+/*global plt, goog*/
+
 import * as structures from './structures'
 import {
   literal,

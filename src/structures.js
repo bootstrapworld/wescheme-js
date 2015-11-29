@@ -1,3 +1,5 @@
+/*global plt, goog*/
+
 var types = require('./runtime/types');
 var Vector = types.Vector;
 

@@ -1,3 +1,5 @@
+/*global plt, goog*/
+
 goog.provide('plt.compiler.toPyretAST');
 
 goog.require("plt.compiler.literal");

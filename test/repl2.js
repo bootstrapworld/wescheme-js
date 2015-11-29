@@ -1,4 +1,6 @@
 /*eslint no-console: 0*/
+/* global plt */
+
 import {
   sexpToString
 }

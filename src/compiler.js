@@ -1,3 +1,6 @@
+/*eslint no-console: 0*/
+/*global plt, goog*/
+
 require('./structures');
 var jsnums = require('./runtime/js-numbers');
 var types = require('./runtime/types');

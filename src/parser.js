@@ -1,3 +1,5 @@
+/*global plt, goog*/
+
 // if not defined, declare the compiler object as part of plt
 window.plt = window.plt || {};
 plt.compiler = require('./structures');
