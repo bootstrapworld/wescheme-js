@@ -1,4 +1,4 @@
-/*global plt, goog*/
+/*global plt*/
 
 // if not defined, declare the compiler object as part of plt
 window.plt = window.plt || {};
@@ -125,11 +125,6 @@ var jsnums = require('./runtime/js-numbers');
   // this is returned when a comment is read
   function Comment(txt) {
     this.txt = txt;
-  }
-
-  // determines if the character is valid as a part of a symbol
-  function isValidSymbolCharP(x) {
-    return !isDelim(x) && !isWhiteSpace(x) && x !== '"' && x !== ',' && x !== "'" && x !== '`' && x !== ';';
   }
 
   // determines if they are matching delimiter pairs

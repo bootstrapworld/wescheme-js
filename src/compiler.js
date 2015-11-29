@@ -172,7 +172,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"global-bucket","value":"' + escapeSym(this.name) + '"}';
     };
-  };
+  }
   globalBucket.prototype = heir(Bytecode.prototype);
 
   // Module variable
@@ -186,13 +186,13 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"module-variable","sym":' + this.sym.toBytecode() + ',"modidx":' + this.modidx.toBytecode() + ',"pos":' + this.pos + ',"phase":' + this.phase + '}';
     };
-  };
+  }
   moduleVariable.prototype = heir(Bytecode.prototype);
 
   // Wrap syntax object
   function wrap() {
     Bytecode.call(this);
-  };
+  }
   wrap.prototype = heir(Bytecode.prototype);
 
   // Wrapped syntax object
@@ -201,14 +201,14 @@ plt.compiler = plt.compiler || {};
     this.datum = datum; // any
     this.wraps = wraps; // list of wrap
     this.certs = certs; // list or false
-  };
+  }
   wrapped.prototype = heir(Bytecode.prototype);
 
   // Stx
   function stx(encoded) {
     this.encoded = encoded; // wrapped
     Bytecode.call(this);
-  };
+  }
   stx.prototype = heir(Bytecode.prototype);
 
   // prefix
@@ -222,19 +222,19 @@ plt.compiler = plt.compiler || {};
         return convertToBytecode(v);
       }).join(',') + '],"stxs":[' + this.stxs.map(convertToBytecode) + ']}';
     };
-  };
+  }
   prefix.prototype = heir(Bytecode.prototype);
 
   // form
   function form() {
     Bytecode.call(this);
-  };
+  }
   form.prototype = heir(Bytecode.prototype);
 
   // expr
   function expr(form) {
     Bytecode.call(this);
-  };
+  }
   expr.prototype = heir(Bytecode.prototype);
 
   // Indirect
@@ -244,7 +244,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"indirect","v":' + this.v.toBytecode() + '}';
     };
-  };
+  }
   indirect.prototype = heir(Bytecode.prototype);
 
   // compilationTop
@@ -256,7 +256,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"compilation-top","max-let-depth":' + this.maxLetDepth + ',"prefix":' + this.prefix.toBytecode() + ',"compiled-indirects":[],"code":' + this.code.toBytecode() + '}';
     };
-  };
+  }
   compilationTop.prototype = heir(Bytecode.prototype);
 
   // provided
@@ -269,7 +269,7 @@ plt.compiler = plt.compiler || {};
     this.srcPhase = srcPhase; // 0/1
     this.insp = insp; // boolean or void
     this.isProtected = isProtected; // boolean
-  };
+  }
   provided.prototype = heir(Bytecode.prototype);
 
   // topLevel
@@ -283,7 +283,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"toplevel","depth":' + this.depth.toString() + ',"pos":' + this.pos.toString() + ',"const?":' + this.constant + ',"ready?":' + this.ready + ',"loc":' + (this.loc && this.loc.toVector().toBytecode()) + '}';
     };
-  };
+  }
   topLevel.prototype = heir(Bytecode.prototype);
 
   // seq
@@ -293,7 +293,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"seq","forms":[' + this.forms.map(convertToBytecode).join(',') + ']}';
     };
-  };
+  }
   seq.prototype = heir(Bytecode.prototype);
 
   // defValues
@@ -304,7 +304,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"def-values","ids":[' + this.ids.map(convertToBytecode).join(',') + '],"body":' + this.rhs.toBytecode() + '}';
     };
-  };
+  }
   defValues.prototype = heir(Bytecode.prototype);
 
   // defSyntaxes
@@ -318,7 +318,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"def-values","ids":[' + this.ids.toBytecode().join(',') + '],"rhs":' + this.rhs.toBytecode() + ',"prefix":' + this.prefix.toBytecode() + ',"max-let-depth":' + this.maxLetDepth.toBytecode() + '}';
     };
-  };
+  }
   defSyntaxes.prototype = heir(Bytecode.prototype);
 
   // defForSyntax
@@ -328,7 +328,7 @@ plt.compiler = plt.compiler || {};
     this.rhs = rhs; // expr, indirect, seq, any
     this.prefix = prefix; // prefix
     this.maxLetDepth = maxLetDepth; // exact, non-negative integer
-  };
+  }
   defForSyntax.prototype = heir(Bytecode.prototype);
 
   // mod
@@ -351,7 +351,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"mod","name":' + this.name.toBytecode() + ',"self-modidx":' + this.selfModidx.toBytecode() + ',"prefix":' + this.prefix.toBytecode() + ',"provides":' + this.provides.toBytecode() + ',"requires":' + (this.requires && this.requires.toVector().toBytecode()) + ',"body":' + this.body.toBytecode() + ',"stx-body":' + this.syntaxBody.toBytecode() + ',"max-let-depth":' + this.maxLetDepth.toBytecode() + '}';
     };
-  };
+  }
   mod.prototype = heir(Bytecode.prototype);
 
   // lam
@@ -375,7 +375,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"lam","name":' + this.name.toBytecode() + ',"locs":[' + this.operatorAndRandLocs.map(convertToBytecode).join(',') + '],"flags":[' + this.flags.map(convertToBytecode).join(',') + '],"num-params":' + this.numParams + ',"param-types":[' + this.paramTypes.map(convertToBytecode).join(',') + '],"rest?":' + this.rest + ',"closure-map":[' + this.closureMap.map(convertToBytecode).join(',') + '],"closure-types":[' + this.closureTypes.map(convertToBytecode).join(',') + '],"max-let-depth":' + this.maxLetDepth + ',"body":' + this.body.toBytecode() + '}';
     };
-  };
+  }
   lam.prototype = heir(Bytecode.prototype);
 
 
@@ -387,7 +387,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"closure","code":' + this.code.toBytecode() + ',"gen-id":' + this.genId.toBytecode() + '}';
     };
-  };
+  }
   closure.prototype = heir(Bytecode.prototype);
 
   // caseLam: each clause is a lam (added indirect)
@@ -398,7 +398,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"case-lam","name":' + this.name.toBytecode() + ',"clauses":' + this.clauses.toBytecode() + '}';
     };
-  };
+  }
   caseLam.prototype = heir(Bytecode.prototype);
 
   // letOne
@@ -410,7 +410,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$": "let-one","rhs":' + this.rhs.toBytecode() + ',"body":' + this.body.toBytecode() + ',"flonum":' + this.flonum.toBytecode() + '}';
     };
-  };
+  }
   letOne.prototype = heir(Bytecode.prototype);
 
   // letVoid
@@ -422,7 +422,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"let-void","count":' + convertToBytecode(this.count) + ',"boxes?":' + convertToBytecode(this.boxes) + ',"body":' + this.body.toBytecode() + '}';
     };
-  };
+  }
   letVoid.prototype = heir(Bytecode.prototype);
 
   // letRec: put `letrec'-bound closures into existing stack slots
@@ -433,7 +433,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"let-rec","procs":' + this.procs.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
     };
-  };
+  }
   letRec.prototype = heir(Bytecode.prototype);
 
   // installValue
@@ -447,7 +447,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"install-value","count":' + convertToBytecode(this.count) + ',"pos":' + convertToBytecode(this.pos) + ',"boxes?":' + convertToBytecode(this.boxes) + ',"rhs":' + this.rhs.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
     };
-  };
+  }
   installValue.prototype = heir(Bytecode.prototype);
 
   // boxEnv: box existing stack element
@@ -458,7 +458,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"boxenv","pos":' + this.pos.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
     };
-  };
+  }
   boxEnv.prototype = heir(Bytecode.prototype);
 
   // localRef: access local via stack
@@ -472,7 +472,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"localref","unbox?":' + this.unbox + ',"pos":' + this.pos + ',"clear":' + this.clear + ',"other-clears?":' + this.otherClears + ',"flonum?":' + this.flonum + '}';
     };
-  };
+  }
   localRef.prototype = heir(Bytecode.prototype);
 
   // topSyntax : access syntax object via prefix array (which is on stack)
@@ -481,7 +481,7 @@ plt.compiler = plt.compiler || {};
     this.depth = depth; // exact, non-negative integer
     this.pos = pos; // exact, non-negative integer
     this.midpt = midpt; // exact, non-negative integer
-  };
+  }
   topSyntax.prototype = heir(Bytecode.prototype);
 
   // application: function call
@@ -492,7 +492,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"application","rator":' + this.rator.toBytecode() + ',"rands":[' + this.rands.map(convertToBytecode).join(',') + ']}';
     };
-  };
+  }
   application.prototype = heir(Bytecode.prototype);
 
   // branch
@@ -504,7 +504,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"branch","test":' + this.testExpr.toBytecode() + ',"then":' + this.thenExpr.toBytecode() + ',"else":' + this.elseExpr.toBytecode() + '}';
     };
-  };
+  }
   branch.prototype = heir(Bytecode.prototype);
 
   // withContMark:'with-cont-mark'
@@ -517,7 +517,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"with-cont-mark","key":' + new literal(new symbolExpr(this.key)).toBytecode() + ',"val":' + new literal(this.val).toBytecode() + ',"body":' + this.body.toBytecode() + '}';
     };
-  };
+  }
   withContMark.prototype = heir(Bytecode.prototype);
 
   // beg0: begin0
@@ -527,7 +527,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"beg0","seq":' + this.seq.toBytecode() + '}';
     };
-  };
+  }
   beg0.prototype = heir(Bytecode.prototype);
 
   // splice: top-level 'begin'
@@ -537,7 +537,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"splice","forms":' + this.forms.toBytecode() + '}';
     };
-  };
+  }
   splice.prototype = heir(Bytecode.prototype);
 
   // varRef: `#%variable-reference'
@@ -547,7 +547,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"varref","top-level":' + this.topLevel.toBytecode() + '}';
     };
-  };
+  }
   varRef.prototype = heir(Bytecode.prototype);
 
   // assign: top-level or module-level set!
@@ -559,7 +559,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"assign","id":' + this.id.toBytecode() + ',"rhs":' + this.rhs.toBytecode() + ',"undef-ok":' + this.undefOk.toBytecode() + '}';
     };
-  };
+  }
   assign.prototype = heir(Bytecode.prototype);
 
   // applyValues: `(call-with-values (lambda () ,args-expr) ,proc)
@@ -570,7 +570,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"apply-values","proc":' + this.proc.toBytecode() + ',"args":' + this.args.toBytecode() + '}';
     };
-  };
+  }
   applyValues.prototype = heir(Bytecode.prototype);
 
   // primVal: direct preference to a kernel primitive
@@ -580,7 +580,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"primval","id":' + this.id.toBytecode() + '}';
     };
-  };
+  }
   primVal.prototype = heir(Bytecode.prototype);
 
   // req
@@ -593,7 +593,7 @@ plt.compiler = plt.compiler || {};
       var reqBytecode = (this.reqs instanceof literal) ? '"' + this.reqs.val + '"' : this.reqs.toBytecode();
       return '{"$":"req","reqs":' + reqBytecode + ',"dummy":' + this.dummy.toBytecode() + '}';
     };
-  };
+  }
   req.prototype = heir(Bytecode.prototype);
 
   // lexicalRename
@@ -602,7 +602,7 @@ plt.compiler = plt.compiler || {};
     this.bool2 = bool2; // boolean
     this.alist = alist; // should be list of (cons symbol, symbol)
     Bytecode.call(this);
-  };
+  }
   lexicalRename.prototype = heir(Bytecode.prototype);
 
   // phaseShift
@@ -611,21 +611,21 @@ plt.compiler = plt.compiler || {};
     this.src = src; // false or modulePathIndex
     this.dest = dest; // false or modulePathIndex
     Bytecode.call(this);
-  };
+  }
   phaseShift.prototype = heir(Bytecode.prototype);
 
   // wrapMark
   function wrapMark(val) {
     this.val = val; // exact integer
     Bytecode.call(this);
-  };
+  }
   wrapMark.prototype = heir(Bytecode.prototype);
 
   // prune
   function prune(sym) {
     this.sym = sym; // any
     Bytecode.call(this);
-  };
+  }
   prune.prototype = heir(Bytecode.prototype);
 
   // allFromModule
@@ -636,20 +636,20 @@ plt.compiler = plt.compiler || {};
     this.prefix = prefix; // false or symbol
     this.exceptions = exceptions; // list of symbols
     Bytecode.call(this);
-  };
+  }
   allFromModule.prototype = heir(Bytecode.prototype);
 
   // nominalPath
   function nominalPath() {
     Bytecode.call(this);
-  };
+  }
   nominalPath.prototype = heir(Bytecode.prototype);
 
   // simpleNominalPath
   function simpleNominalPath(value) {
     this.value = value; // modulePathIndex
     Bytecode.call(this);
-  };
+  }
   simpleNominalPath.prototype = heir(Bytecode.prototype);
 
   /*    // moduleBinding
@@ -665,7 +665,7 @@ plt.compiler = plt.compiler || {};
     this.exportName = nominalPath; // nominalPath
     this.nominalExportName = nominalExportName; // any
     Bytecode.call(this);
-  };
+  }
   phasedModuleBinding.prototype = heir(Bytecode.prototype);
 
   // exportedNominalModuleBinding
@@ -675,7 +675,7 @@ plt.compiler = plt.compiler || {};
     this.nominalPath = nominalPath; // nominalPath
     this.nominalExportName = nominalExportName; // any
     Bytecode.call(this);
-  };
+  }
   exportedNominalModuleBinding.prototype = heir(Bytecode.prototype);
 
   // nominalModuleBinding
@@ -683,7 +683,7 @@ plt.compiler = plt.compiler || {};
     this.path = path; // modulePathIndex
     this.nominalPath = nominalPath; // any
     Bytecode.call(this);
-  };
+  }
   nominalModuleBinding.prototype = heir(Bytecode.prototype);
 
   // exportedModuleBinding
@@ -691,14 +691,14 @@ plt.compiler = plt.compiler || {};
     this.path = path; // modulePathIndex
     this.exportName = exportName; // any
     Bytecode.call(this);
-  };
+  }
   exportedModuleBinding.prototype = heir(Bytecode.prototype);
 
   // simpleModuleBinding
   function simpleModuleBinding(path) {
     this.path = path; // modulePathIndex
     Bytecode.call(this);
-  };
+  }
   simpleModuleBinding.prototype = heir(Bytecode.prototype);
 
   // ModuleRename
@@ -710,7 +710,7 @@ plt.compiler = plt.compiler || {};
     this.markRenames = markRenames; // any
     this.plusKern = plusKern; // boolean
     Bytecode.call(this);
-  };
+  }
   ModuleRename.prototype = heir(Bytecode.prototype);
 
   // HACK: module-path
@@ -721,7 +721,7 @@ plt.compiler = plt.compiler || {};
     this.toBytecode = function() {
       return '{"$":"module-path","path":' + convertToBytecode(this.path) + ',"base":' + convertToBytecode(this.base) + '}';
     };
-  };
+  }
   modulePath.prototype = heir(Bytecode.prototype);
 
   // freeVariables : [listof symbols] env -> [list of symbols]
@@ -730,16 +730,16 @@ plt.compiler = plt.compiler || {};
   }
   ifExpr.prototype.freeVariables = function(acc, env) {
     return this.alternative.freeVariables(this.consequence.freeVariables(this.predicate.freeVariables(acc, env), env), env);
-  };
+  }
   beginExpr.prototype.freeVariables = function(acc, env) {
     return this.exprs.reduceRight(function(acc, expr) {
       return expr.freeVariables(acc, env);
     }, acc);
-  };
+  }
   // if it's an unbound variable that we haven't seen before, add it to acc
   symbolExpr.prototype.freeVariables = function(acc, env) {
     return ((env.lookup(this.val, 0) instanceof unboundStackReference) && (acc.indexOf(this) == -1)) ? acc.concat([this]) : acc;
-  };
+  }
   localExpr.prototype.freeVariables = function(acc, env) {
     // helper functions
     var pushLocalBoxedFromSym = function(env, sym) {
@@ -1191,7 +1191,7 @@ plt.compiler = plt.compiler || {};
       return [new prefix(0, topLevels, [])
         , new plt.compiler.globalEnv(globals, false, new plt.compiler.emptyEnv())
       ];
-    };
+    }
     // The toplevel is going to include all of the defined identifiers in the pinfo
     // The environment will refer to elements in the toplevel.
     var toplevelPrefixAndEnv = makeModulePrefixAndEnv(pinfo)

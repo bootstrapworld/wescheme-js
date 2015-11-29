@@ -1,4 +1,4 @@
-/*global plt, goog */
+/*global plt */
 
 require('./structures');
 var types = require('./runtime/types');
@@ -26,8 +26,6 @@ plt.compiler = plt.compiler || {};
   // import frequently-used bindings
   var literal = plt.compiler.literal;
   var symbolExpr = plt.compiler.symbolExpr;
-  var Program = plt.compiler.Program;
-  var couple = plt.compiler.couple;
   var ifExpr = plt.compiler.ifExpr;
   var beginExpr = plt.compiler.beginExpr;
   var letExpr = plt.compiler.letExpr;
@@ -40,9 +38,7 @@ plt.compiler = plt.compiler || {};
   var caseExpr = plt.compiler.caseExpr;
   var lambdaExpr = plt.compiler.lambdaExpr;
   var quotedExpr = plt.compiler.quotedExpr;
-  var unquotedExpr = plt.compiler.unquotedExpr;
   var quasiquotedExpr = plt.compiler.quasiquotedExpr;
-  var unquoteSplice = plt.compiler.unquoteSplice;
   var callExpr = plt.compiler.callExpr;
   var whenUnlessExpr = plt.compiler.whenUnlessExpr;
   var defFunc = plt.compiler.defFunc;
@@ -50,9 +46,6 @@ plt.compiler = plt.compiler || {};
   var defVars = plt.compiler.defVars;
   var defStruct = plt.compiler.defStruct;
   var requireExpr = plt.compiler.requireExpr;
-  var provideStatement = plt.compiler.provideStatement;
-  var unsupportedExpr = plt.compiler.unsupportedExpr;
-  var throwError = plt.compiler.throwError;
   var structBinding = plt.compiler.structBinding;
 
   var _pinfo = null,
@@ -105,8 +98,6 @@ plt.compiler = plt.compiler || {};
   ////////////////////////// FUNCTION MAPPINGS ///////////////////////
   // pyret functions that are infix
   var infix = ["+", "-", "*", "/", "=", ">", "<", ">=", "<=", "and", "or", "append", "string"];
-  // racket functions for which there is no known translation
-  var noTranslation = ["eval"];
 
   // racket->pyret function name mapping
   var symbolMap = {};

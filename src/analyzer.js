@@ -1,4 +1,4 @@
-/*global plt, goog*/
+/*global */
 
 import * as structures from './structures'
 import {
@@ -421,8 +421,7 @@ orExpr.prototype.desugar = function(pinfo) {
 
   // recursively walk through the exprs
   function desugarOrExprs(exprs, pinfo) {
-    var firstExpr = exprs[0],
-      exprLoc = firstExpr.location;
+    var firstExpr = exprs[0];
     var pinfoAndTempSym = pinfo.gensym('tmp');
     var firstExprSym = pinfoAndTempSym[1];
     var ifStx = new symbolExpr("if");

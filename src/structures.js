@@ -1,4 +1,4 @@
-/*global plt, goog*/
+/*global */
 
 var types = require('./runtime/types');
 var Vector = types.Vector;
@@ -25,7 +25,6 @@ export function throwError(msg, loc, errorClass) {
       return part;
     } else if(part instanceof symbolExpr){
       return '["span", [["class", "SchemeValue-Symbol"]], '+part.val+']';
-      return part.val;
     } else if(part.location !== undefined){
       return {text: part.text, type: 'ColoredPart', loc: part.location.toString()
         , toString: function(){return part.text;}};
@@ -595,7 +594,6 @@ export function globalEnv(names, boxed, parent){
   this.names  = names;
   this.boxed  = boxed;
   this.parent = parent;
-  var that = this;
   this.lookup = function(name, depth){
     var pos = this.names.indexOf(name);
     // TODO: fix this circular dependency
@@ -663,11 +661,6 @@ export var moduleGuess = function(wrongName){
 // default-module-path-resolver: module-path module-path -> module-name
 // Provides a default module resolver.
 export var defaultModulePathResolver = function(path, parentPath){
-  /*    var name = (path instanceof symbolExpr)? path : modulePathJoin(parentPath, path)),
-    moduleName = knownModules.reduceRight(function(name, km){
-    return (km.source === modulePathJoin(parentPath, path))? km.name : name;}
-    , name);
-  */
   // anything of the form wescheme/w+, or that has a known collection AND module
   var parts = path.toString().split("/"),
     collectionName = parts[0],

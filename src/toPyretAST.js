@@ -1,4 +1,4 @@
-/*global plt, goog*/
+/*global plt, goog, jsnums, Char*/
 
 goog.provide('plt.compiler.toPyretAST');
 
@@ -18,20 +18,13 @@ goog.require("plt.compiler.condExpr");
 goog.require("plt.compiler.caseExpr");
 goog.require("plt.compiler.lambdaExpr");
 goog.require("plt.compiler.quotedExpr");
-goog.require("plt.compiler.unquotedExpr");
 goog.require("plt.compiler.quasiquotedExpr");
-goog.require("plt.compiler.unquoteSplice");
 goog.require("plt.compiler.callExpr");
 goog.require("plt.compiler.whenUnlessExpr");
 goog.require("plt.compiler.defFunc");
 goog.require("plt.compiler.defVar");
 goog.require("plt.compiler.defVars");
 goog.require("plt.compiler.defStruct");
-goog.require("plt.compiler.requireExpr");
-goog.require("plt.compiler.provideStatement");
-goog.require("plt.compiler.unsupportedExpr");
-goog.require("plt.compiler.throwError");
-goog.require("plt.compiler.structBinding");
 
 // if not defined, declare the compiler object as part of plt
 window.plt = window.plt || {};
@@ -58,8 +51,6 @@ plt.compiler = plt.compiler || {};
   // import frequently-used bindings
   var literal = plt.compiler.literal;
   var symbolExpr = plt.compiler.symbolExpr;
-  var Program = plt.compiler.Program;
-  var couple = plt.compiler.couple;
   var ifExpr = plt.compiler.ifExpr;
   var beginExpr = plt.compiler.beginExpr;
   var letExpr = plt.compiler.letExpr;
@@ -72,20 +63,13 @@ plt.compiler = plt.compiler || {};
   var caseExpr = plt.compiler.caseExpr;
   var lambdaExpr = plt.compiler.lambdaExpr;
   var quotedExpr = plt.compiler.quotedExpr;
-  var unquotedExpr = plt.compiler.unquotedExpr;
   var quasiquotedExpr = plt.compiler.quasiquotedExpr;
-  var unquoteSplice = plt.compiler.unquoteSplice;
   var callExpr = plt.compiler.callExpr;
   var whenUnlessExpr = plt.compiler.whenUnlessExpr;
   var defFunc = plt.compiler.defFunc;
   var defVar = plt.compiler.defVar;
   var defVars = plt.compiler.defVars;
   var defStruct = plt.compiler.defStruct;
-  var requireExpr = plt.compiler.requireExpr;
-  var provideStatement = plt.compiler.provideStatement;
-  var unsupportedExpr = plt.compiler.unsupportedExpr;
-  var throwError = plt.compiler.throwError;
-  var structBinding = plt.compiler.structBinding;
 
   // empty location
   var blankLoc = {
@@ -965,7 +949,7 @@ plt.compiler = plt.compiler || {};
   letStarExpr.prototype.toPyret = function() {
     var loc = this.location,
       stmts = this.bindings.map(makeLetExprFromCouple);
-    stmts = stms.push(this.body.toPyret());
+    stmts = stmts.push(this.body.toPyret());
     return {
       name: "expr",
       kids: [{

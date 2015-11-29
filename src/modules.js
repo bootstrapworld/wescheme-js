@@ -1,4 +1,4 @@
-/*global plt, goog*/
+/*global plt*/
 
 // if not defined, declare the compiler object as part of plt
 window.plt = window.plt || {};
@@ -628,7 +628,7 @@ plt.compiler = require('./structures');
 
   // The core environment includes the baseConstants, the topLevel bindings, and the world bindings
   // NOTE: worldModule *includes* worldEffects and worldHandlers, according to Danny's modules.ss file
-  plt.compiler.topLevelModules = [topLevelModule, kernelMiscModule, , jsWorldModule, worldModule];
+  plt.compiler.topLevelModules = [topLevelModule, kernelMiscModule, jsWorldModule, worldModule];
   plt.compiler.knownCollections = ["bootstrap", "bootstrap2011", "bootstrap2012", "bootstrap2014", "bootstrap2015"];
 
 

@@ -1,4 +1,4 @@
-/*global plt, goog*/
+/*global plt*/
 
 // if not defined, declare the compiler object as part of plt
 window.plt = window.plt || {};
@@ -27,7 +27,6 @@ var types = require('./runtime/types');
   // import frequently-used bindings
   var literal = plt.compiler.literal;
   var symbolExpr = plt.compiler.symbolExpr;
-  var Program = plt.compiler.Program;
   var couple = plt.compiler.couple;
   var ifExpr = plt.compiler.ifExpr;
   var beginExpr = plt.compiler.beginExpr;
@@ -862,16 +861,8 @@ var types = require('./runtime/types');
       throwError(new types.Message(["ID"]), sexp.location);
   }
 
-  function isTupleStartingWithOfLength(sexp, symbol, n) {
-    return ((isCons(sexp)) && (sexp.length === n) && (isSymbol(sexp[0])) && (isSymbolEqualTo(sexp[0], symbol)));
-  }
-
   function sexpIsCouple(sexp) {
     return ((isCons(sexp)) && ((sexp.length === 2)));
-  }
-
-  function sexpIsCondListP(sexp) {
-    return ((isCons(sexp)) && (sexp.length >= 2) && (isSymbol(sexp[0])) && (isSymbolEqualTo(sexp[0], "cond")));
   }
 
   //////////////////////////////////////// REQUIRE PARSING ////////////////////////////////
