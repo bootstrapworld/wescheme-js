@@ -599,7 +599,7 @@ export function globalEnv(names, boxed, parent){
     // TODO: fix this circular dependency
     var compiler = require('./compiler')
     return (pos > -1)? new compiler.globalStackReference(name, depth, pos)
-    : this.parent.lookup(name, depth+1);
+                    : this.parent.lookup(name, depth+1);
   };
 }
 globalEnv.prototype = heir(env.prototype);
