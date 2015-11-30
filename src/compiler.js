@@ -1,5 +1,5 @@
 /*eslint no-console: 0*/
-/*global plt, goog*/
+/*global plt*/
 
 require('./structures');
 var jsnums = require('./runtime/js-numbers');
@@ -58,7 +58,7 @@ plt.compiler = plt.compiler || {};
   types.Vector.prototype.toBytecode = function() {
     return 'types.vector([' + this.elts.join(',') + '])';
   };
-  Array.prototype.toBytecode = function(quoted) {
+  Array.prototype.toBytecode = function() {
     return 'types.' + (this.length === 0 ? 'EMPTY' : 'list([' + this.map(convertToBytecode).join(',') + '])');
   };
   // Bytecode generation for jsnums types
@@ -226,15 +226,11 @@ plt.compiler = plt.compiler || {};
   prefix.prototype = heir(Bytecode.prototype);
 
   // form
-  function form() {
-    Bytecode.call(this);
-  }
+  function form() { Bytecode.call(this); }
   form.prototype = heir(Bytecode.prototype);
 
   // expr
-  function expr(form) {
-    Bytecode.call(this);
-  }
+  function expr(form) { Bytecode.call(this); }
   expr.prototype = heir(Bytecode.prototype);
 
   // Indirect
@@ -786,16 +782,16 @@ plt.compiler = plt.compiler || {};
     }, acc);
   };
   orExpr.prototype.freeVariables = function(acc, env) {
-      return this.exprs.reduceRight(function(acc, expr) {
-        return expr.freeVariables(acc, env);
-      }, acc);
-    }
-    // be careful to make a copy of the array before reversing!
+    return this.exprs.reduceRight(function(acc, expr) {
+      return expr.freeVariables(acc, env);
+    }, acc);
+  }
+  // be careful to make a copy of the array before reversing!
   lambdaExpr.prototype.freeVariables = function(acc, env) {
     var pushLocalFromSym = function(env, sym) {
         return new plt.compiler.localEnv(sym.val, false, env);
       }
-      , envWithArgs = this.args.slice(0).reverse().reduce(pushLocalFromSym, env);
+    , envWithArgs = this.args.slice(0).reverse().reduce(pushLocalFromSym, env);
     return this.body.freeVariables(acc, envWithArgs);
 
   };
@@ -1070,13 +1066,12 @@ plt.compiler = plt.compiler || {};
 
   callExpr.prototype.compile = function(env, pinfo) {
     // add space to the stack for each argument, then build the bytecode for the application itself
-    var makeSpace = function(env, operand) {
+    var makeSpace = function(env) {
         return new plt.compiler.unnamedEnv(env);
       }
       , extendedEnv = this.args.reduce(makeSpace, env);
     var compiledOperatorAndPinfo = this.func.compile(extendedEnv, pinfo)
-      , compiledOperator = compiledOperatorAndPinfo[0]
-      , pinfo1 = compiledOperatorAndPinfo[1];
+      , compiledOperator = compiledOperatorAndPinfo[0]; // toss out the returned pinfo
     var compiledOperandsAndPinfo = this.args.reduceRight(compilePrograms, [
         [], pinfo, extendedEnv
       ])
@@ -1099,11 +1094,9 @@ plt.compiler = plt.compiler || {};
 
   ifExpr.prototype.compile = function(env, pinfo) {
     var compiledPredicateAndPinfo = this.predicate.compile(env, pinfo)
-      , compiledPredicate = compiledPredicateAndPinfo[0]
-      , pinfo1 = compiledPredicateAndPinfo[1];
+      , compiledPredicate = compiledPredicateAndPinfo[0]; // toss out the returned pinfo
     var compiledConsequenceAndPinfo = this.consequence.compile(env, pinfo)
-      , compiledConsequence = compiledConsequenceAndPinfo[0]
-      , pinfo2 = compiledConsequenceAndPinfo[1];
+      , compiledConsequence = compiledConsequenceAndPinfo[0]; // toss out the returned pinfo
     var compiledAlternateAndPinfo = this.alternative.compile(env, pinfo)
       , compiledAlternate = compiledAlternateAndPinfo[0]
       , pinfo3 = compiledAlternateAndPinfo[1];

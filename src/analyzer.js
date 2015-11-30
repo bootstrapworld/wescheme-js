@@ -138,7 +138,7 @@ defFunc.prototype.desugar = function(pinfo) {
   // check for non-symbol arguments
   this.args.forEach(function(arg) {
     if (!(arg instanceof symbolExpr)) {
-      throwError(new types.Message([new types.ColoredPart(this.stx.val, this.stx.location), ": expected a variable but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
+      throwError(new types.Message([new types.ColoredPart(this.stx.val, this.stx.location), ": expected a variable but found ", new types.ColoredPart("something else", arg.location)]), arg.location);
     }
   });
   var bodyAndPinfo = this.body.desugar(pinfo);
@@ -463,7 +463,7 @@ orExpr.prototype.desugar = function(pinfo) {
 
 quotedExpr.prototype.desugar = function(pinfo) {
   if (typeof this.location === 'undefined') {
-    throwError(new types.Message(["ASSERTION ERROR: Every quotedExpr should have a location"]), loc)
+    throwError(new types.Message(["ASSERTION ERROR: Every quotedExpr should have a location"]))
   }
   // Sexp-lists (arrays) become lists
   // literals and symbols stay themselves

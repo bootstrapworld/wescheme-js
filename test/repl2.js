@@ -1,5 +1,5 @@
 /*eslint no-console: 0*/
-/* global plt */
+/* global plt, sameResults */
 
 import {
   sexpToString
@@ -44,19 +44,16 @@ export function popElementFromHistory(dir, current) {
 }
 
 // pyretAST contains the actual AST node from the Pyret parser
-var pyretAST
 export function pyretCheck(racketAST, pinfo) {
   // Source2Source translate and transpile into Pyret
   var pyretSrc = plt.compiler.toPyretString(racketAST, pinfo)
   console.log('TRANSLATED PYRET SOURCE:\n' + pyretSrc)
-  var transpiledAST = plt.compiler.toPyretAST(racketAST, pinfo),
-    transpiledAST_str = JSON.stringify(transpiledAST, null, 2)
+  var transpiledAST = plt.compiler.toPyretAST(racketAST, pinfo)
   var url = "http://localhost:3000/" + encodeURI(pyretSrc[0])
   var request = new XMLHttpRequest()
   request.onloadend = function() {
     console.log(this.responseText)
-    var pyretAST = JSON.parse(this.responseText),
-      pyretAST_str = JSON.stringify(pyretAST, null, 2)
+    var pyretAST = JSON.parse(this.responseText)
 
     console.log('Translated Pyret AST is ')
     console.log(pyretAST)
@@ -105,14 +102,12 @@ export function readFromRepl(event) {
 export function compileREPL(makeTeachpack) {
   var programName = makeTeachpack ? prompt("What is the name of the teachpack?") : undefined
   var aSource = repl_input.value
-  var progres
     // run the local compiler
   var debug = true
   var sexp = plt.compiler.lex(aSource, programName, debug)
   var AST = plt.compiler.parse(sexp, debug)
   var ASTandPinfo = plt.compiler.desugar(AST, undefined, debug)
-  program = ASTandPinfo[0],
-    pinfo = ASTandPinfo[1]
+  var program = ASTandPinfo[0], pinfo = ASTandPinfo[1]
   var pinfo = plt.compiler.analyze(program, debug)
     //    var optimized   = plt.compiler.optimize(program)
   var response = plt.compiler.compile(program, pinfo, debug)

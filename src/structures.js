@@ -723,6 +723,8 @@ export function pinfo(env, modules, usedBindingsHash, freeVariables, gensymCount
     return this;
   };
 
+  // stub - AFAICT, this is unused by the compiler
+  function makeLabeledTranslation(){}
   this.accumulateSharedExpression = function(expression, translation){
     var labeledTranslation = makeLabeledTranslation(this.gensymCounter, translation);
     this.sharedExpressions.put(labeledTranslation, expression);

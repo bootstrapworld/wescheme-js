@@ -196,6 +196,7 @@ var types = require('./runtime/types');
     }
 
     function parseDef(sexp) {
+      var extraLocs, wording;
       // is it just (define)?
       if (sexp.length < 2) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a variable, or a function name and its variables " + "(in parentheses), after define, but nothing's there"]), sexp.location);
@@ -222,10 +223,8 @@ var types = require('./runtime/types');
         }
         // too many parts?
         if (sexp.length > 3) {
-          var extraLocs = sexp.slice(3).map(function(sexp) {
-              return sexp.location;
-            }),
-            wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
+          extraLocs = sexp.slice(3).map(function(sexp) { return sexp.location; });
+          wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected only one expression for the function body" + ", but found ", new types.MultiPart(wording, extraLocs, false)]), sexp.location);
         }
         var args = rest(sexp[1]).map(parseIdExpr);
@@ -240,10 +239,8 @@ var types = require('./runtime/types');
         }
         // too many parts?
         if (sexp.length > 3) {
-          var extraLocs = sexp.slice(3).map(function(sexp) {
-              return sexp.location;
-            }),
-            wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
+          extraLocs = sexp.slice(3).map(function(sexp) { return sexp.location; });
+          wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected only one expression after the variable ", new types.ColoredPart(sexp[1].val, sexp[1].location), ", but found ", new types.MultiPart(wording, extraLocs, false)]), sexp.location);
         }
         return new defVar(parseIdExpr(sexp[1]), parseExpr(sexp[2]), sexp);
@@ -643,34 +640,35 @@ var types = require('./runtime/types');
   }
 
   function parseCaseExpr(sexp) {
+    var msg;
     // is it just (case)?
     if (sexp.length === 1) {
-      var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one clause after case, but nothing's there"]);
+      msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one clause after case, but nothing's there"]);
       throwError(msg, sexp.location);
     }
     var caseLocs = [sexp[0].location, sexp.location.start(), sexp.location.end()];
     if (sexp.length === 2) {
-      var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses)" + " and an answer after the expression, but nothing's there"]);
+      msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses)" + " and an answer after the expression, but nothing's there"]);
       throwError(msg, sexp.location);
     }
 
     function checkCaseCouple(clause) {
       var clauseLocations = [clause.location.start(), clause.location.end()];
       if (!(clause instanceof Array)) {
-        var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses), but found ", new types.ColoredPart("something else", clause.location)]);
+        msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses), but found ", new types.ColoredPart("something else", clause.location)]);
         throwError(msg, sexp.location);
       }
       if (clause.length === 0) {
-        var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected at least one choice (in parentheses) and an answer, but found an ", new types.ColoredPart("empty part", clause.location)]);
+        msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected at least one choice (in parentheses) and an answer, but found an ", new types.ColoredPart("empty part", clause.location)]);
         throwError(msg, sexp.location);
       }
       if (!((clause[0] instanceof Array) ||
           ((clause[0] instanceof symbolExpr) && isSymbolEqualTo(clause[0], "else")))) {
-        var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected 'else', or at least one choice in parentheses, but found ", new types.ColoredPart("something else", clause.location)]);
+        msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected 'else', or at least one choice in parentheses, but found ", new types.ColoredPart("something else", clause.location)]);
         throwError(msg, sexp.location);
       }
       if (clause.length === 1) {
-        var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with a question and an answer, but found a ", new types.MultiPart("clause", clauseLocations, true), " with only ", new types.ColoredPart("one part", clause[0].location)]);
+        msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with a question and an answer, but found a ", new types.MultiPart("clause", clauseLocations, true), " with only ", new types.ColoredPart("one part", clause[0].location)]);
         throwError(msg, sexp.location);
       }
       if (clause.length > 2) {
@@ -729,16 +727,17 @@ var types = require('./runtime/types');
   }
 
   function parseUnquoteExpr(sexp, depth) {
+    var result;
     if (typeof depth === 'undefined') {
       throwError(new types.Message(["misuse of a comma or 'unquote, not under a quasiquoting backquote"]), sexp.location, "Error-GenericSyntacticError");
     } else if ((sexp.length !== 2)) {
       throwError(new types.Message(["Inside an unquote, expected to find a single argument, but found " + (sexp.length - 1)]), sexp.location);
     } else if (depth === 1) {
-      var result = new unquotedExpr(parseExpr(sexp[1]))
+      result = new unquotedExpr(parseExpr(sexp[1]))
       result.location = sexp[1].location
       return result;
     } else if (depth > 1) {
-      var result = new unquotedExpr(parseQuasiQuotedItem(sexp[1], depth - 1))
+      result = new unquotedExpr(parseQuasiQuotedItem(sexp[1], depth - 1))
       result.location = sexp[1].location
       return result;
     } else {
@@ -747,16 +746,17 @@ var types = require('./runtime/types');
   }
 
   function parseUnquoteSplicingExpr(sexp, depth) {
+    var result;
     if (typeof depth === 'undefined') {
       throwError(new types.Message(["misuse of a ,@ or unquote-splicing, not under a quasiquoting backquote"]), sexp.location, "Error-GenericSyntacticError");
     } else if ((sexp.length !== 2)) {
       throwError(new types.Message(["Inside an unquote-splicing, expected to find a single argument, but found " + (sexp.length - 1)]), sexp.location);
     } else if (depth === 1) {
-      var result = new unquoteSplice(parseExpr(sexp[1]))
+      result = new unquoteSplice(parseExpr(sexp[1]))
       result.location = sexp[1].location
       return result;
     } else if (depth > 1) {
-      var result = new unquoteSplice(parseQuasiQuotedItem(sexp[1], depth - 1))
+      result = new unquoteSplice(parseQuasiQuotedItem(sexp[1], depth - 1))
       result.location = sexp[1].location
       return result;
     } else {
@@ -871,9 +871,10 @@ var types = require('./runtime/types');
   }
 
   function parseRequire(sexp) {
+    var msg;
     // is it (require)?
     if (sexp.length < 2) {
-      var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name after `require', but found nothing"]);
+      msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name after `require', but found nothing"]);
       throwError(msg, sexp.location);
     }
     // if it's (require (lib...))
@@ -881,24 +882,24 @@ var types = require('./runtime/types');
       // is it (require (lib)) or (require (lib <string>))
       if (sexp[1].length < 3) {
         var partsNum = sexp[1].slice(1).length,
-          partsStr = partsNum + ((partsNum === 1) ? " part" : " parts"),
-          msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least two strings after ", new types.ColoredPart("lib", sexp[1][0].location), " but found only ", partsStr]);
+          partsStr = partsNum + ((partsNum === 1) ? " part" : " parts");
+        msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least two strings after ", new types.ColoredPart("lib", sexp[1][0].location), " but found only ", partsStr]);
         throwError(msg, sexp.location);
       }
       // is it (require (lib not-strings))?
       rest(sexp[1]).forEach(function(lit) {
         if (!(isString(lit))) {
-          var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", str.location)]);
+          msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", lit.location)]);
           throwError(msg, sexp.location);
         }
       });
       // if it's (require (planet...))
     } else if ((sexp[1] instanceof Array) && isSymbolEqualTo(sexp[1][0], "planet")) {
-      var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": Importing PLaneT pacakges is not supported at this time"]);
+      msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": Importing PLaneT pacakges is not supported at this time"]);
       throwError(msg, sexp.location);
       // if it's (require <not-a-string-or-symbol>)
     } else if (!((sexp[1] instanceof symbolExpr) || isString(sexp[1]))) {
-      var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name as a string or a `(lib ...)' form, but found ", new types.ColoredPart("something else", sexp[1].location)]);
+      msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name as a string or a `(lib ...)' form, but found ", new types.ColoredPart("something else", sexp[1].location)]);
       throwError(msg, sexp.location);
     }
     var req = new requireExpr(sexp[1], sexp[0]);

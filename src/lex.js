@@ -63,7 +63,7 @@ var jsnums = require('./runtime/js-numbers');
     , oct3 = new RegExp("^([0-7]{1,3})", "i");
 
   // the delimiters encountered so far, line and column, and case-sensitivity
-  var delims, line, column, startCol, startRow, source, caseSensitiveSymbols, i;
+  var delims, line, column, startCol, startRow, source, caseSensitiveSymbols;
   // UGLY HACK to track index if an error occurs. We should remove this if we can make i entirely stateful
   var endOfError;
 
@@ -201,42 +201,6 @@ var jsnums = require('./runtime/js-numbers');
     return sexps;
   }
 
-  // readSSFile : String String -> SExp
-  // removes the first three lines of the string that contain DrScheme meta data
-  function readSSFile(str, strSource) {
-    var i = 0;
-    startCol = column = 0;
-    startRow = line = 1, // initialize all position indices
-      caseSensitiveSymbols = true; // initialize case sensitivity
-    source = strSource || "<definitions>";
-    var crs = 0;
-
-    while (i < str.length && crs < 3) {
-      if (str.charAt(i++) === "\n") {
-        crs++;
-      }
-    }
-
-    var sexp, sexps = [];
-    delims = [];
-    while (i < str.length) {
-      sexp = readSExpByIndex(str, i);
-      if (!(sexp instanceof Comment)) {
-        sexps.push(sexp);
-      }
-      i = chewWhiteSpace(str, sexp.location.startChar + sexp.location.span);
-    }
-    return sexps;
-  }
-
-  // readSExp : String String -> SExp
-  // reads the first sexp encoded in this string and converts it to a SExp datum
-  function readSExp(str, source) {
-    delims = [];
-    var sexp = readSExpByIndex(str, 0);
-    return sexp instanceof Comment ? null : sexp;
-  }
-
   // readSExpByIndex : String Number -> SExp
   // reads a sexp encoded as a string starting at the i'th character and converts
   // it to a SExp datum
@@ -276,9 +240,10 @@ var jsnums = require('./runtime/js-numbers');
       , errorLocation = new Location(startCol, startRow, iStart, 1)
       , openingDelim = str.charAt(i++)
       , dot1Idx = false
-      , dot2Idx = false; // indices of the dot operator
+      , dot2Idx = false // indices of the dot operator
+      , msg;
     column++; // move forward to count the closing delimeter
-    var sexp, list = [];
+    var list = [];
     delims.push(openingDelim);
     i = chewWhiteSpace(str, i);
 
@@ -310,12 +275,12 @@ var jsnums = require('./runtime/js-numbers');
     function processDots(list, dot1Idx, dot2Idx) {
       // if the dot is the first element in the list, throw an error
       if (dot1Idx === 0) {
-        var msg = new types.Message(["A `.' cannot be the first element in a syntax list"]);
+        msg = new types.Message(["A `.' cannot be the first element in a syntax list"]);
         throwError(msg, list[dot1Idx].location);
       }
       // if a dot is the last element in the list, throw an error
       if (dot1Idx === (list.length - 1) || dot2Idx === (list.length - 1)) {
-        var msg = new types.Message(["A `.' cannot be the last element in a syntax list"]);
+        msg = new types.Message(["A `.' cannot be the last element in a syntax list"]);
         throwError(msg, list[dot2Idx || dot1Idx].location);
       }
 
@@ -323,7 +288,7 @@ var jsnums = require('./runtime/js-numbers');
       if (dot2Idx) {
         // if they are not surrounding a single element, throw an error
         if (dot2Idx - dot1Idx !== 2) {
-          var msg = new types.Message(["Two `.'s may only surround one syntax item"]);
+          msg = new types.Message(["Two `.'s may only surround one syntax item"]);
           throwError(msg, list[dot2Idx].location);
           // if they are, move that element to the front of the list and remove the dots
         } else {
@@ -332,11 +297,11 @@ var jsnums = require('./runtime/js-numbers');
       }
       // okay, we know there's just one dot, so the next element had better be a list AND the last element of the outer list
       if (!(list[dot1Idx + 1] instanceof Array)) {
-        var msg = new types.Message(["A `.' must be followed by a syntax list, but found ", new types.ColoredPart("something else", list[dot1Idx + 1].location)])
+        msg = new types.Message(["A `.' must be followed by a syntax list, but found ", new types.ColoredPart("something else", list[dot1Idx + 1].location)])
         throwError(msg, list[dot1Idx + 1].location);
       }
       if (list.length > dot1Idx + 2) {
-        var msg = new types.Message(["A `.' followed by a syntax list must be followed by a closing delimeter, but found ", new types.ColoredPart("something else", list[dot1Idx + 2].location)])
+        msg = new types.Message(["A `.' followed by a syntax list must be followed by a closing delimeter, but found ", new types.ColoredPart("something else", list[dot1Idx + 2].location)])
         throwError(msg, list[dot1Idx + 1].location);
         // splice that element into the list, removing the dots
       } else {
@@ -376,14 +341,14 @@ var jsnums = require('./runtime/js-numbers');
         i = readListItem(str, i, list);
       } // read a list item, hopefully without error
       catch (e) {
-        var i = handleError(e);
+        i = handleError(e);
       } // try to keep reading from endOfError...
       // move reader to the next token
       i = chewWhiteSpace(str, i);
     }
     // if we reached the end of an otherwise-successful list but there's no closing delim...
     if (i >= str.length) {
-      var msg = new types.Message(["read: expected a ", otherDelim(openingDelim)
+      msg = new types.Message(["read: expected a ", otherDelim(openingDelim)
         , " to close "
         , new types.ColoredPart(openingDelim.toString()
           , new Location(startCol, startRow, iStart, 1))
@@ -393,7 +358,7 @@ var jsnums = require('./runtime/js-numbers');
     }
     // if we reached the end of an otherwise-successful list and it's the wrong closing delim...
     if (!matchingDelims(openingDelim, str.charAt(i))) {
-      var msg = new types.Message(["read: expected a ", otherDelim(openingDelim)
+      msg = new types.Message(["read: expected a ", otherDelim(openingDelim)
         , " to close "
         , new types.ColoredPart(openingDelim.toString()
           , new Location(startCol, startRow, iStart, 1))
@@ -424,7 +389,8 @@ var jsnums = require('./runtime/js-numbers');
   function readString(str, i) {
     var startCol = column
       , startRow = line
-      , iStart = i;
+      , iStart = i
+      , match;
     // greedily match to the end of the string, before examining escape sequences
     var closedString = /^\"[^\"]*(\\\"[^\"]*)*[^\\]\"|\"\"/.test(str.slice(i))
       , greedy = /^\"[^\"]*(\\"[^\"]*)*/.exec(str.slice(iStart))[0];
@@ -485,13 +451,13 @@ var jsnums = require('./runtime/js-numbers');
               endOfError = iStart + greedy.length + 1;
               throwError(new types.Message([source, ":", startRow.toString(), ":", startCol.toString(), ": read: no hex digit following \\" + chr + " in string"]), new Location(startCol, startRow, iStart, i - iStart + 1), "Error-GenericReadError");
             }
-            var match = regexp.exec(str.slice(i))[1];
+            match = regexp.exec(str.slice(i))[1];
             chr = String.fromCharCode(parseInt(match, 16));
             i += match.length;
             column += match.length;
             break;
           case oct3.test(str.slice(i - 1)):
-            var match = oct3.exec(str.slice(i - 1))[1];
+            match = oct3.exec(str.slice(i - 1))[1];
             chr = String.fromCharCode(parseInt(match, 8));
             i += match.length - 1;
             column += match.length - 1;
@@ -524,15 +490,14 @@ var jsnums = require('./runtime/js-numbers');
     var startCol = column
       , startRow = line
       , iStart = i
-      , datum;
+      , datum
+      , msg;
     i++;
     column++; // skip over the pound sign
-    // construct an unsupported error string
-    var unsupportedError;
 
     // throwUnsupportedError : ErrorString token -> Error
     function throwUnsupportedError(errorStr, token) {
-      var msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), errorStr]);
+      msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), errorStr]);
       throwError(msg, new Location(startCol, startRow, iStart, token.length + 1), "Error-GenericReadError");
     }
 
@@ -575,8 +540,8 @@ var jsnums = require('./runtime/js-numbers');
           default:
             throw "IMPOSSIBLE: unsupportedMatch captured something it shouldn't: " + base;
         }
-        var error = new types.Message([source, ":", line.toString(), ":", "0", ": read-syntax: literal " + kind + " not allowed"]);
-        datum = new unsupportedExpr(sexp, error, span);
+        msg = new types.Message([source, ":", line.toString(), ":", "0", ": read-syntax: literal " + kind + " not allowed"]);
+        datum = new unsupportedExpr(sexp, msg, span);
         datum.location = new Location(startCol, startRow, iStart, unsupportedTest[0].length + sexp.location.span);
         return datum;
       } else if (badExtensionTest && badExtensionTest[0].length > 0) {
@@ -595,7 +560,7 @@ var jsnums = require('./runtime/js-numbers');
           , len = size === "" ? elts.length : parseInt(vectorTest[1]); // set the size to a number
         // test vector size
         if (elts.length > len) {
-          var msg = new types.Message(["read: vector length " + len + " is too small, "
+          msg = new types.Message(["read: vector length " + len + " is too small, "
             , elts.length + " value" + ((elts.length > 1) ? "s" : "")
             , " provided"
           ]);
@@ -612,7 +577,7 @@ var jsnums = require('./runtime/js-numbers');
           , chunk = poundChunk.exec(str.slice(i))[0], // match the next character
           nextChar = str.charAt(i + chunk.length);
         // grab the first non-whitespace character
-        var p = chunk.charAt(0).toLowerCase();
+        p = chunk.charAt(0).toLowerCase();
         switch (p) {
           // CHARACTERS
           case '\\':
@@ -622,6 +587,7 @@ var jsnums = require('./runtime/js-numbers');
             // BYTE-STRINGS (unsupported)
           case '"':
             throwUnsupportedError(": byte strings are not supported in WeScheme", "#\"");
+            break;
             // SYMBOLS
           case '%':
             datum = readSymbolOrNumber(str, i);
@@ -631,8 +597,8 @@ var jsnums = require('./runtime/js-numbers');
             // KEYWORDS (lex to a symbol, then strip out the contents)
           case ':':
             datum = readSymbolOrNumber(str, i - 1);
-            var error = new types.Message([source, ":", line.toString(), ":", "0", ": read-syntax: Keyword internment is not supported in WeScheme"]);
-            datum = new unsupportedExpr(datum.val, error, datum.location.span);
+            msg = new types.Message([source, ":", line.toString(), ":", "0", ": read-syntax: Keyword internment is not supported in WeScheme"]);
+            datum = new unsupportedExpr(datum.val, msg, datum.location.span);
             i += datum.val.length - 1;
             break;
             // BOXES
@@ -668,7 +634,7 @@ var jsnums = require('./runtime/js-numbers');
             datum.location.startChar--;
             datum.location.span++; // expand the datum to include leading '#'
             endOfError = i + datum.location.span;
-            var msg = new types.Message([source, ":", startRow.toString(), ":", (column - 1).toString(), " read: WeScheme does not support the '#" + p + "' notation for ", (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax")]);
+            msg = new types.Message([source, ":", startRow.toString(), ":", (column - 1).toString(), " read: WeScheme does not support the '#" + p + "' notation for ", (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax")]);
             throwError(msg, datum.location);
             break;
             // STRINGS
@@ -700,7 +666,7 @@ var jsnums = require('./runtime/js-numbers');
             }
           default:
             endOfError = i; // remember where we are, so readList can pick up reading
-            var msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#", (chunk + nextChar), "'"]);
+            msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#", (chunk + nextChar), "'"]);
             throwError(msg, new Location(startCol, startRow, iStart, (chunk + nextChar).length + 1), "Error-GenericReadError");
         }
       }
@@ -719,7 +685,8 @@ var jsnums = require('./runtime/js-numbers');
   function readChar(str, i) {
     var startCol = column
       , startRow = line
-      , iStart = i;
+      , iStart = i
+      , match;
     i += 2;
     column++; // skip over the #\\
     var datum = ""
@@ -754,7 +721,7 @@ var jsnums = require('./runtime/js-numbers');
       && (parseInt(oct3.exec(datum)[0], 8) < 256) // and less than 256...
       && (parseInt(oct3.exec(datum)[0], 8) > 31) // and greater than 31,
     ) {
-      var match = /[0-7]+/.exec(datum)[0];
+      match = /[0-7]+/.exec(datum)[0];
       datum = String.fromCharCode(parseInt(match, 8));
       i = iStart + 2 + match.length; // set the reader to the end of the char
 
@@ -763,7 +730,7 @@ var jsnums = require('./runtime/js-numbers');
       && (regexp = datum.charAt(0) === "u" ? hex4 : hex6) // and we have a regexp for it...
       && regexp.test(datum.slice(1)) // and it's a valid hex code for that regexp...
     ) {
-      var match = regexp.exec(datum.slice(1))[0];
+      match = regexp.exec(datum.slice(1))[0];
       column += (match.length - datum.length) + 1; // adjust column if only a subset of the datum matched
       datum = String.fromCharCode(parseInt(match, 16));
       i = iStart + 3 + match.length; // fast-forward past (1) hash, (2) backslash, (3) u and (4) number
@@ -943,7 +910,8 @@ var jsnums = require('./runtime/js-numbers');
   function readSymbolOrNumber(str, i) {
     var startCol = column
       , startRow = line
-      , iStart = i;
+      , iStart = i
+      , j;
     // match anything consisting of stuff between two |bars|, **OR**
     // non-whitespace characters that do not include:  ( ) { } [ ] , ' ` | \\ " ;
     var symOrNum = new RegExp("(\\|(.|\\n)*\\||\\\\(.|\\n)|[^\\(\\)\\{\\}\\[\\]\\,\\'\\`\\s\\\"\\;])+", 'mg');
@@ -963,7 +931,7 @@ var jsnums = require('./runtime/js-numbers');
 
     // remove escapes
     var unescaped = "";
-    for (var j = 0; j < chunk.length; j++) {
+    for (j = 0; j < chunk.length; j++) {
       if (chunk.charAt(j) == "\\") {
         j++;
       } // if it's an escape char, skip over it and add the next one
@@ -980,7 +948,7 @@ var jsnums = require('./runtime/js-numbers');
         , lastVerbatimMarkerIndex = iStart + strBeforeLastChunk.length;
       // We need to go back and get more precise location information
       column = startCol;
-      for (var j = 0; j < strBeforeLastChunk.length; j++) {
+      for (j = 0; j < strBeforeLastChunk.length; j++) {
         if (str.charAt(i) === "\n") {
           line++;
           column = 0;
