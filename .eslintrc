@@ -3,16 +3,19 @@
   "rules": {
     "indent": [
       2,
-      2
+      2,
+      {"SwitchCase": 1}
     ],
     "linebreak-style": [
       2,
       "unix"
     ],
+    "no-console": 0,
     "no-unused-vars": [
       2,
       {"argsIgnorePattern": "^unused.*"}
-    ]
+    ],
+    "no-fallthrough": 1
   },
   "env": {
     "es6": true,

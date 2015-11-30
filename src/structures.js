@@ -1,3 +1,5 @@
+/*global */
+
 var types = require('./runtime/types');
 var Vector = types.Vector;
 
@@ -23,7 +25,6 @@ export function throwError(msg, loc, errorClass) {
       return part;
     } else if(part instanceof symbolExpr){
       return '["span", [["class", "SchemeValue-Symbol"]], '+part.val+']';
-      return part.val;
     } else if(part.location !== undefined){
       return {text: part.text, type: 'ColoredPart', loc: part.location.toString()
         , toString: function(){return part.text;}};
@@ -562,7 +563,7 @@ export function emptyEnv(){
   env.call(this);
   // TODO: fix this circular dependency
   var compiler = require('./compiler')
-  this.lookup = function(name, depth){ return new compiler.unboundStackReference(name); };
+  this.lookup = function(name){ return new compiler.unboundStackReference(name); };
 }
 emptyEnv.prototype = heir(env.prototype);
 
@@ -593,13 +594,12 @@ export function globalEnv(names, boxed, parent){
   this.names  = names;
   this.boxed  = boxed;
   this.parent = parent;
-  var that = this;
   this.lookup = function(name, depth){
     var pos = this.names.indexOf(name);
     // TODO: fix this circular dependency
     var compiler = require('./compiler')
     return (pos > -1)? new compiler.globalStackReference(name, depth, pos)
-    : this.parent.lookup(name, depth+1);
+                    : this.parent.lookup(name, depth+1);
   };
 }
 globalEnv.prototype = heir(env.prototype);
@@ -660,16 +660,10 @@ export var moduleGuess = function(wrongName){
 
 // default-module-path-resolver: module-path module-path -> module-name
 // Provides a default module resolver.
-export var defaultModulePathResolver = function(path, parentPath){
-  /*    var name = (path instanceof symbolExpr)? path : modulePathJoin(parentPath, path)),
-    moduleName = knownModules.reduceRight(function(name, km){
-    return (km.source === modulePathJoin(parentPath, path))? km.name : name;}
-    , name);
-  */
+export var defaultModulePathResolver = function(path){
   // anything of the form wescheme/w+, or that has a known collection AND module
   var parts = path.toString().split("/"),
-    collectionName = parts[0],
-    moduleName = parts.slice(1).join();
+    collectionName = parts[0];
   // TODO: fix this circular dependency
   var modules = require('./modules')
   return ((modules.knownCollections.indexOf(collectionName) > -1)
@@ -728,6 +722,8 @@ export function pinfo(env, modules, usedBindingsHash, freeVariables, gensymCount
     return this;
   };
 
+  // stub - AFAICT, this is unused by the compiler
+  function makeLabeledTranslation(){}
   this.accumulateSharedExpression = function(expression, translation){
     var labeledTranslation = makeLabeledTranslation(this.gensymCounter, translation);
     this.sharedExpressions.put(labeledTranslation, expression);

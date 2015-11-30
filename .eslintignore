@@ -1,0 +1,5 @@
+src/runtime/*
+lib/*
+src/optimizer.js
+coverage/*
+src/toPyret*
