@@ -62,7 +62,7 @@
       "<rootDir>/src",
       "<rootDir>/test"
     ],
-    "collectCoverage": false,
+    "collectCoverage": true,
     "collectCoverageOnlyFrom": {
       "src/analyzer.js": false,
       "src/compiler.js": false,
