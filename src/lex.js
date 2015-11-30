@@ -606,7 +606,7 @@ var jsnums = require('./runtime/js-numbers');
             column++;
             sexp = readSExpByIndex(str, i + 1);
             var boxCall = new symbolExpr("box")
-              , datum = [boxCall, sexp];
+            datum = [boxCall, sexp];
             i += sexp.location.span + 1;
             boxCall.location = new Location(startCol, startRow, iStart, i - iStart);
             break;
@@ -703,7 +703,7 @@ var jsnums = require('./runtime/js-numbers');
     // a special char is one of the following, as long as the next char is not alphabetic
     // unlike DrRacket, there is no JS equivalent for nul, null, page and rubout
     var special = new RegExp("(backspace|tab|newline|space|vtab)[^a-zA-Z]*", "i")
-      , match = special.exec(datum);
+    match = special.exec(datum);
     // check for special chars
     if (special.test(datum)) {
       datum = datum === 'backspace' ? '\b' :

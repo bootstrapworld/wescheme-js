@@ -563,7 +563,7 @@ export function emptyEnv(){
   env.call(this);
   // TODO: fix this circular dependency
   var compiler = require('./compiler')
-  this.lookup = function(name, depth){ return new compiler.unboundStackReference(name); };
+  this.lookup = function(name){ return new compiler.unboundStackReference(name); };
 }
 emptyEnv.prototype = heir(env.prototype);
 
@@ -660,11 +660,10 @@ export var moduleGuess = function(wrongName){
 
 // default-module-path-resolver: module-path module-path -> module-name
 // Provides a default module resolver.
-export var defaultModulePathResolver = function(path, parentPath){
+export var defaultModulePathResolver = function(path){
   // anything of the form wescheme/w+, or that has a known collection AND module
   var parts = path.toString().split("/"),
-    collectionName = parts[0],
-    moduleName = parts.slice(1).join();
+    collectionName = parts[0];
   // TODO: fix this circular dependency
   var modules = require('./modules')
   return ((modules.knownCollections.indexOf(collectionName) > -1)
