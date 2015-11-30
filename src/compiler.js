@@ -230,7 +230,7 @@ plt.compiler = plt.compiler || {};
   form.prototype = heir(Bytecode.prototype);
 
   // expr
-  function expr(form) { Bytecode.call(this); }
+  function expr() { Bytecode.call(this); }
   expr.prototype = heir(Bytecode.prototype);
 
   // Indirect
@@ -721,9 +721,7 @@ plt.compiler = plt.compiler || {};
   modulePath.prototype = heir(Bytecode.prototype);
 
   // freeVariables : [listof symbols] env -> [list of symbols]
-  Program.prototype.freeVariables = function(acc, env) {
-    return acc;
-  }
+  Program.prototype.freeVariables = function(acc) { return acc; }
   ifExpr.prototype.freeVariables = function(acc, env) {
     return this.alternative.freeVariables(this.consequence.freeVariables(this.predicate.freeVariables(acc, env), env), env);
   }
@@ -795,9 +793,7 @@ plt.compiler = plt.compiler || {};
     return this.body.freeVariables(acc, envWithArgs);
 
   };
-  quotedExpr.prototype.freeVariables = function(acc, env) {
-    return acc;
-  };
+  quotedExpr.prototype.freeVariables = function(acc) { return acc; };
   callExpr.prototype.freeVariables = function(acc, env) {
     return this.func.freeVariables(acc, env).concat(this.args).reduceRight(function(acc, expr) {
       return expr.freeVariables(acc, env);
@@ -1127,11 +1123,11 @@ plt.compiler = plt.compiler || {};
     var result = new literal(unwrapLiterals(this.val));
     return [result, pinfo];
   };
-
-  provideStatement.prototype.compile = function(env, pinfo) {};
   requireExpr.prototype.compile = function(env, pinfo) {
     return [new req(this.spec, new topLevel(0, 0, false, false, false)), pinfo];
   };
+  // nothing to compile here!
+  provideStatement.prototype.compile = function() {};
 
   // compile-compilation-top: program pinfo -> bytecode
   function compileCompilationTop(program, pinfo) {
