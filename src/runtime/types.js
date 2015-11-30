@@ -38,7 +38,6 @@ var getEqHashCode = function(x) {
 	  return x;
   }
   if (x && !x._eqHashCode) {
-    console.log("hashing", x);
 	  x._eqHashCode = makeEqHashCode();
   }
   if (x && x._eqHashCode) {
