@@ -27,7 +27,7 @@ plt.compiler = require('./structures');
   }
 
   // kernel-misc-module
-  var kernelMiscModule = new moduleBinding("moby/runtime/kernel/misc", [
+  var kernelMiscModule = new moduleBinding("moby/runtime/kernel/misc", 'moby/runtime/kernel/misc', [
     ["verify-boolean-branch-value", 2]
     , ["throw-cond-exhausted-error", 1]
     , ["'check-operator-is-function", 3]
@@ -35,12 +35,12 @@ plt.compiler = require('./structures');
   ].map(makeFunctionBinding('"moby/runtime/kernel/misc"')));
 
   // foreign-module
-  var foreignModule = new moduleBinding("moby/foreign", [
+  var foreignModule = new moduleBinding("moby/foreign", 'moby/foreign', [
     ["get-js-object", 2, false, ["android.permission.FOREIGN-FUNCTION-INTERFACE"]]
   ].map(makeFunctionBinding('"moby/foreign"')));
 
   // world-effects-module
-  var worldEffectsModule = new moduleBinding("world-effects", [
+  var worldEffectsModule = new moduleBinding("world-effects", "moby/world-effects", [
     ["make-effect:none", 0, false]
     , ["make-effect:beep", 0, false, ["android.permission.VIBRATE"]]
     , ["make-effect:play-dtmf-tone", 2, false]
@@ -59,7 +59,7 @@ plt.compiler = require('./structures');
   ].map(makeFunctionBinding('"moby/world-effects"')));
 
   // world-handlers-module
-  var worldHandlersModule = new moduleBinding("world-config", [
+  var worldHandlersModule = new moduleBinding("world-config", 'moby/world-handlers', [
     ["on-tick", 1, true]
     , ["initial-effect", 1, false]
     , ["on-key", 1, false]
@@ -81,56 +81,56 @@ plt.compiler = require('./structures');
     , ["cosine", 1, false]
     , ["tangent", 1, false]
   ];
-  var bootstrapTeachpack = new moduleBinding("bootstrap/bootstrap-teachpack"
+  var bootstrapTeachpack = new moduleBinding("bootstrap/bootstrap-teachpack", 'bootstrap/bootstrap-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap/bootstrap-teachpack"')))
-    , bootstrapTeachpack2011 = new moduleBinding("bootstrap2011/bootstrap-teachpack"
+    , bootstrapTeachpack2011 = new moduleBinding("bootstrap2011/bootstrap-teachpack", 'bootstrap2011/bootstrap-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2011/bootstrap-teachpack"')))
-    , bootstrapTeachpack2012 = new moduleBinding("bootstrap2012/bootstrap-teachpack"
+    , bootstrapTeachpack2012 = new moduleBinding("bootstrap2012/bootstrap-teachpack", 'bootstrap2012/bootstrap-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2012/bootstrap-teachpack"')))
-    , bootstrapTiltTeachpack2012 = new moduleBinding("bootstrap2012/bootstrap-tilt-teachpack"
+    , bootstrapTiltTeachpack2012 = new moduleBinding("bootstrap2012/bootstrap-tilt-teachpack", 'bootstrap2012/bootstrap-tilt-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2012/bootstrap-tilt-teachpack"')))
-    , bootstrapTeachpack2014 = new moduleBinding("bootstrap2014/bootstrap-teachpack"
+    , bootstrapTeachpack2014 = new moduleBinding("bootstrap2014/bootstrap-teachpack", 'bootstrap2014/bootstrap-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2014/bootstrap-teachpack"')))
-    , bootstrapTiltTeachpack2014 = new moduleBinding("bootstrap2014/bootstrap-tilt-teachpack"
+    , bootstrapTiltTeachpack2014 = new moduleBinding("bootstrap2014/bootstrap-tilt-teachpack", 'bootstrap2014/bootstrap-tilt-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2014/bootstrap-tilt-teachpack"')))
-    , bootstrapTeachpack2015 = new moduleBinding("bootstrap2015/bootstrap-teachpack"
+    , bootstrapTeachpack2015 = new moduleBinding("bootstrap2015/bootstrap-teachpack", 'bootstrap2015/bootstrap-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2015/bootstrap-teachpack"')))
-    , bootstrapTiltTeachpack2015 = new moduleBinding("bootstrap2015/bootstrap-tilt-teachpack"
+    , bootstrapTiltTeachpack2015 = new moduleBinding("bootstrap2015/bootstrap-tilt-teachpack", 'bootstrap2015/bootstrap-tilt-teachpack'
       , bootstrapTeachpackFunctions.map(makeFunctionBinding('"bootstrap2015/bootstrap-tilt-teachpack"')));
 
   // cage-teachpack
-  var cageTeachpack = new moduleBinding("bootstrap/cage-teachpack", [
+  var cageTeachpack = new moduleBinding("bootstrap/cage-teachpack", 'bootstrap/cage-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap/cage-teachpack"')))
-    , cageTeachpack2011 = new moduleBinding("bootstrap2011/cage-teachpack", [
+    , cageTeachpack2011 = new moduleBinding("bootstrap2011/cage-teachpack", 'bootstrap2011/cage-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2011/cage-teachpack"')))
-    , cageTeachpack2012 = new moduleBinding("bootstrap2012/cage-teachpack", [
+    , cageTeachpack2012 = new moduleBinding("bootstrap2012/cage-teachpack", 'bootstrap2012/cage-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2012/cage-teachpack"')))
-    , cageTeachpack2014 = new moduleBinding("bootstrap2014/cage-teachpack", [
+    , cageTeachpack2014 = new moduleBinding("bootstrap2014/cage-teachpack", 'bootstrap2014/cage-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2014/cage-teachpack"')));
 
   // function-teachpack
-  var functionTeachpack = new moduleBinding("bootstrap/function-teachpack", [
+  var functionTeachpack = new moduleBinding("bootstrap/function-teachpack", 'bootstrap/function-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap/function-teachpack"')))
-    , functionTeachpack2011 = new moduleBinding("bootstrap2011/function-teachpack", [
+    , functionTeachpack2011 = new moduleBinding("bootstrap2011/function-teachpack", 'bootstrap2011/function-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2011/function-teachpack"')))
-    , functionTeachpack2012 = new moduleBinding("bootstrap2012/function-teachpack", [
+    , functionTeachpack2012 = new moduleBinding("bootstrap2012/function-teachpack", 'bootstrap2012/function-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2012/function-teachpack"')))
-    , functionTeachpack2014 = new moduleBinding("bootstrap2014/function-teachpack", [
+    , functionTeachpack2014 = new moduleBinding("bootstrap2014/function-teachpack", 'bootstrap2014/function-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2014/function-teachpack"')))
-    , functionTeachpack2015 = new moduleBinding("bootstrap2015/function-teachpack", [
+    , functionTeachpack2015 = new moduleBinding("bootstrap2015/function-teachpack", 'bootstrap2015/function-teachpack', [
       ["start", 1, false]
     ].map(makeFunctionBinding('"bootstrap2015/function-teachpack"')));
 
   // location module
-  var locationModule = new moduleBinding("location", [
+  var locationModule = new moduleBinding("location", 'moby/geolocation', [
     ["get-latitude", 0, false, ["android.permission.LOCATION"]]
     , ["get-longitude", 0, false, ["android.permission.LOCATION"]]
     , ["get-altitude", 0, false, ["android.permission.LOCATION"]]
@@ -140,7 +140,7 @@ plt.compiler = require('./structures');
   ].map(makeFunctionBinding('"moby/geolocation"')));
 
   // accelerometer library
-  var tiltModule = new moduleBinding("tilt", [
+  var tiltModule = new moduleBinding("tilt", 'moby/tilt', [
     ["get-x-acceleration", 0, false, ["android.permission.TILT"]]
     , ["get-y-acceleration", 0, false, ["android.permission.TILT"]]
     , ["get-z-acceleration", 0, false, ["android.permission.TILT"]]
@@ -150,22 +150,22 @@ plt.compiler = require('./structures');
   ].map(makeFunctionBinding('"moby/tilt"')));
 
   // telephony module
-  var telephonyModule = new moduleBinding("telephony", [
+  var telephonyModule = new moduleBinding("telephony", 'moby/telephony', [
     ["get-signal-strength", 0, false, ["android.permission.TELEPHONY"]]
-  ].map(makeFunctionBinding('"moby/net"')));
+  ].map(makeFunctionBinding('"moby/telephony"')));
 
   // net module
-  var netModule = new moduleBinding("net", [
+  var netModule = new moduleBinding("net", 'moby/net', [
     ["get-url", 1, false, ["android.permission.INTERNET"]]
   ].map(makeFunctionBinding('"moby/net"')));
 
   // parser module
-  var parserModule = new moduleBinding("parser", [
+  var parserModule = new moduleBinding("parser", 'moby/parser', [
     ["xml->s-sexp", 1, false]
   ].map(makeFunctionBinding('"moby/parser"')));
 
   // js-world module
-  var jsWorldModule = new moduleBinding("jsworld", [
+  var jsWorldModule = new moduleBinding("jsworld", 'moby/parser', [
     ["js-big-bang", 1, false]
     , ["big-bang", 1, false]
     , ["js-div", 0, false]
@@ -178,51 +178,40 @@ plt.compiler = require('./structures');
     , ["js-img", 1, false, ["android.permission.INTERNET"]]
   ].map(makeFunctionBinding('"moby/jsworld"')));
 
-  // world
-  var worldModule = new moduleBinding("world"
-    , worldHandlersModule.bindings.concat(worldEffectsModule.bindings, ["key=?", "play-sound", "animate", "big-bang"
+  function makeWorldModule(modulePath){
+    return new moduleBinding("world", modulePath,
+      worldHandlersModule.bindings.concat(worldEffectsModule.bindings, ["key=?", "play-sound", "animate", "big-bang"
       // colors
-      
       , "make-color", "color?", "color-red", "color-green", "color-blue", "color-alpha"
-
-      
       , "empty-scene", "empty-image", "scene+line", "put-image", "place-image", "place-image/align", "put-pinhole", "circle", "star", "polygon", "radial-star", "star-polygon", "nw:rectangle", "rectangle", "regular-polygon", "rhombus", "square", "triangle", "triangle/sas", "triangle/sss", "triangle/ass", "triangle/ssa", "triangle/aas", "triangle/asa", "triangle/saa", "right-triangle", "isosceles-triangle", "ellipse", "line", "add-line", "overlay", "overlay/xy", "overlay/align", "underlay", "underlay/xy", "underlay/align", "beside", "beside/align", "above", "above/align", "rotate", "scale", "scale/xy", "crop", "frame", "flip-horizontal", "flip-vertical", "text", "text/font", "video-url" // needs network
-      
-      , "video/url" // needs network
-      
-      , "bitmap/url" // needs network
-      
-      , "image-url" // needs network
-      
+      , "video/url"     // needs network
+      , "bitmap/url"    // needs network
+      , "image-url"     // needs network
       , "open-image-url" // needs network
-      
       , "image?", "image=?", "image-width", "image-height"
-
       // mouse-events
-      
       , "mouse-event?", "mouse=?"
-
-      
       , "image->color-list", "color-list->image", "color-list->bitmap"
-
-      
       , "image-baseline", "mode?", "image-color?", "name->color", "x-place?", "y-place?", "angle?", "side-count?", "step-count?"
     ].map(function(binding) {
       var needsPermission = ["video/url", "bitmap/url", "image-url", "open-image-url"];
       var permissions = (needsPermission.indexOf(binding) > -1) ? ["android.permission.INTERNET"] : [];
       return new constantBinding(binding, '"moby/world"', permissions, false);
-    }))
-  );
-
+    })));
+  }
+ 
+  // world module
+  var worldModule = makeWorldModule('moby/world');
+  // world stub module
+  var worldStubModule = makeWorldModule('moby/world');
+ 
   // top-level
-  var topLevelModule = new moduleBinding("moby/topLevel", [
-    ["<", 2, true] // Numerics
-    
+  var topLevelModule = new moduleBinding("moby/topLevel", 'moby/topLevel', [
+      ["<", 2, true] // Numerics
     , ["<=", 2, true]
     , ["=", 2, true]
     , [">", 2, true]
     , [">=", 2, true]
-
     
     , ["=~", 3]
     , ["number->string", 1]
@@ -270,7 +259,6 @@ plt.compiler = require('./structures');
     , ["log", 1]
     , ["magnitude", 1]
     , ["make-polar", 2] // *
-    
     , ["make-rectangular", 2] // *
     
     , ["max", 1, true]
@@ -290,41 +278,32 @@ plt.compiler = require('./structures');
     , ["sin", 1]
     , ["sinh", 1]
     //,["sq", 1]
-    
     , ["sqr", 1]
     , ["sqrt", 1]
     , ["sub1", 1]
     , ["tan", 1]
     , ["zero?", 1]
-
-    
     , ["+", 0, true]
     , ["-", 1, true]
     , ["*", 0, true]
     , ["/", 1, true]
 
     // Logic
-    
     , ["not", 1]
     , ["false?", 1]
     , ["boolean?", 1]
     , ["boolean=?", 2]
 
     // Symbols
-    
     , ["symbol->string", 1]
     , ["symbol=?", 2]
     , ["symbol?", 1]
 
     // Lists
-    
     , ["append", 0, true]
     , ["assq", 2] // *
-    
     , ["assv", 2] // *
-    
     , ["assoc", 2] // *
-    
     , ["caaar", 1]
     , ["caadr", 1]
     , ["caar", 1]
@@ -372,21 +351,18 @@ plt.compiler = require('./structures');
     //;,["set-cdr! 2]
 
     // Box
-    
     , ["box", 1]
     , ["unbox", 1]
     , ["set-box!", 2]
     , ["box?", 1]
 
     // Posn
-    
     , ["make-posn", 2]
     , ["posn-x", 1]
     , ["posn-y", 1]
     , ["posn?", 1]
 
     // Characters
-    
     , ["char->integer", 1]
     , ["char-alphabetic?", 1]
     , ["char-ci<=?", 2, true]
@@ -408,7 +384,6 @@ plt.compiler = require('./structures');
     , ["char?", 1]
 
     // Strings
-    
     , ["format", 1, true]
     , ["list->string", 1]
     , ["make-string", 2]
@@ -427,12 +402,9 @@ plt.compiler = require('./structures');
     , ["string-copy", 1]
     , ["string-length", 1]
     , ["string-lower-case?", 1] // *
-    
     , ["string-numeric?", 1] // *
-    
     , ["string-ref", 2]
     , ["string-upper-case?", 1] // *
-    
     , ["string-whitespace?", 1] // *
     
     , ["string<=?", 2, true]
@@ -449,19 +421,15 @@ plt.compiler = require('./structures');
     , ["implode", 1]
 
     // Eof
-    
     , ["eof-object?", 1]
 
     // Misc
-    
     , ["=~", 3]
     , ["eq?", 2]
     , ["equal?", 2]
     , ["equal~?", 3]
     , ["eqv?", 2]
     , ["error", 2]
-
-    
     , ["identity", 1]
     , ["struct?", 1]
     , ["current-seconds", 0]
@@ -470,42 +438,27 @@ plt.compiler = require('./structures');
     
     , ["andmap", 1, true]
     , ["apply", 2, true] // *
-    
     , ["argmax", 2] // *
-    
     , ["argmin", 2] // *
-    
     , ["build-list", 2]
     , ["build-string", 2] // *
-    
     , ["compose", 0, true] // *
-    
     , ["filter", 2] // *
-    
     , ["foldl", 2, true]
     , ["foldr", 2, true] // *
-    
     , ["map", 1, true]
     , ["for-each", 1, true]
     , ["memf", 2] // *
-    
     , ["ormap", 1, true] // *
-    
     , ["procedure?", 1] // *
-    
     , ["quicksort", 2] // *
-    
     , ["sort", 2] // *
-
-    
     , ["void", 0, true]
 
     // Parsing
-    
     , ["xml->s-exp", 1]
 
     // Vectors
-    
     , ["build-vector", 2]
     // FIXME: should only take one or two arguments", not vararity
     
@@ -517,7 +470,6 @@ plt.compiler = require('./structures');
     , ["vector->list", 1]
     , ["list->vector", 1]
     , ["vector?", 1]
-
     
     , ["printf", 1, true]
     , ["display", 1]
@@ -526,11 +478,9 @@ plt.compiler = require('./structures');
     , ["call/cc", 1]
     , ["procedure-arity", 1]
 
-
     // Testing functions.
     // NOTE: the desugar.ss module converts use of check-expect into ones that
-    // thunk its arguments", and pass an additional location argument.
-    
+    // thunk its arguments, and pass an additional location argument.
     , ["check-expect", 2]
     , ["EXAMPLE", 2]
     , ["check-within", 3]
@@ -545,31 +495,25 @@ plt.compiler = require('./structures');
     , ["hash?", 1]
 
     // Exception raising
-    
     , ["raise", 1]
 
     // Checking for undefined
-    
     , ["undefined?", 1]
 
     // values for multiple value definition
-    
     , ["values", 0, true]
 
     // structures
-    
     , ["make-struct-type", 4, true]
     , ["make-struct-field-accessor", 2, true]
     , ["make-struct-field-mutator", 2, true]
 
     // continuation mark stuff
     // FIXME: add support for prompt optional argument
-    
     , ["current-continuation-marks", 0, false]
     , ["continuation-mark-set->list", 2, false]
 
     // Things for javascript FFI and world
-    
     , ["scheme->prim-js", 1, false]
     , ["prim-js->scheme", 1, false]
     , ["procedure->cps-js-fun", 1, false]
@@ -625,14 +569,19 @@ plt.compiler = require('./structures');
     , ["exn-message", 1, false]
     , ["exn-continuation-marks", 1, false]
   ].map(makeFunctionBinding('"moby/toplevel"')));
+ 
+ // mody-module-binding
+ var mobyModuleBinding = new moduleBinding("moby", 'moby/moby', jsWorldModule.bindings.concat(worldStubModule.bindings));
+
 
   // The core environment includes the baseConstants, the topLevel bindings, and the world bindings
   // NOTE: worldModule *includes* worldEffects and worldHandlers, according to Danny's modules.ss file
   plt.compiler.topLevelModules = [topLevelModule, kernelMiscModule, jsWorldModule, worldModule];
   plt.compiler.knownCollections = ["bootstrap", "bootstrap2011", "bootstrap2012", "bootstrap2014", "bootstrap2015"];
+  plt.compiler.mobyModuleBinding = mobyModuleBinding;
 
 
-  plt.compiler.knownModules = [kernelMiscModule, jsWorldModule, foreignModule, worldModule, bootstrapTeachpack, bootstrapTeachpack2011, bootstrapTeachpack2012, bootstrapTeachpack2014, bootstrapTeachpack2015, bootstrapTiltTeachpack2012, bootstrapTiltTeachpack2014, bootstrapTiltTeachpack2015, cageTeachpack, cageTeachpack2011, cageTeachpack2012, cageTeachpack2014, functionTeachpack, functionTeachpack2011, functionTeachpack2012, functionTeachpack2014, functionTeachpack2015, locationModule, tiltModule, telephonyModule, netModule, parserModule, topLevelModule];
+  plt.compiler.knownModules = [kernelMiscModule, jsWorldModule, foreignModule, worldModule, worldStubModule, bootstrapTeachpack, bootstrapTeachpack2011, bootstrapTeachpack2012, bootstrapTeachpack2014, bootstrapTeachpack2015, bootstrapTiltTeachpack2012, bootstrapTiltTeachpack2014, bootstrapTiltTeachpack2015, cageTeachpack, cageTeachpack2011, cageTeachpack2012, cageTeachpack2014, functionTeachpack, functionTeachpack2011, functionTeachpack2012, functionTeachpack2014, functionTeachpack2015, locationModule, tiltModule, telephonyModule, netModule, mobyModuleBinding, parserModule, topLevelModule];
 })();
 
 module.exports = plt.compiler;
