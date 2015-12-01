@@ -732,7 +732,7 @@ plt.compiler = plt.compiler || {};
   }
   // if it's an unbound variable that we haven't seen before, add it to acc
   symbolExpr.prototype.freeVariables = function(acc, env) {
-    return ((env.lookup(this.val, 0) instanceof unboundStackReference) && (acc.indexOf(this) == -1)) ? acc.concat([this]) : acc;
+    return (isUnboundStackRef(env.lookup(this.val, 0)) && (acc.indexOf(this) == -1)) ? acc.concat([this]) : acc;
   }
   localExpr.prototype.freeVariables = function(acc, env) {
     // helper functions
@@ -928,6 +928,7 @@ plt.compiler = plt.compiler || {};
         }
         , // this will either be #f, or the first unboundStackRef
         anyUnboundStackRefs = ormap(isUnboundStackRef, freeVariableRefs);
+
       // if any of the references are unbound, freak out!
       if (anyUnboundStackRefs) {
         throw "Can't produce closure; I don't know where " + anyUnboundStackRefs.name + " is bound.";
@@ -953,7 +954,6 @@ plt.compiler = plt.compiler || {};
         var env1 = args.reverse().map(function(s) {
           return s.val;
         }).reduce(pushLocal, originalEnv);
-
         // Add the lexical free variables (in reverse order)
         var env2 = lexicalFreeRefs.reverse().reduce(function(env, ref) {
           return ref.isBoxed ? pushLocalBoxed(env, ref.name) : pushLocal(env, ref.name);
