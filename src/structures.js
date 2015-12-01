@@ -879,9 +879,9 @@ export function pinfo(env, modules, usedBindingsHash, freeVariables, gensymCount
       }
     }
 
-    // for each provide binding, ensure it's defined and then decorate with permissions
+    // for each provided binding, ensure it's defined and then decorate with permissions
     // concat all the permissions and bindings together, and return
-    bindings = bindings.reduce(function(acc, b){ return acc.concat(lookupProvideBindingInDefinitionBindings(b)); }, []);
+    var bindings = that.providedNames.reduce(function(acc, b){ return acc.concat(lookupProvideBindingInDefinitionBindings(b)); }, []);
     return bindings.map(decorateWithPermissions);
   } ;
 

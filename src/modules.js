@@ -570,9 +570,8 @@ plt.compiler = require('./structures');
     , ["exn-continuation-marks", 1, false]
   ].map(makeFunctionBinding('"moby/toplevel"')));
  
- // mody-module-binding
- var mobyModuleBinding = new moduleBinding("moby", 'moby/moby', jsWorldModule.bindings.concat(worldStubModule.bindings));
-
+  // mody-module-binding
+  var mobyModuleBinding = new moduleBinding("moby", 'moby/moby', jsWorldModule.bindings.concat(worldStubModule.bindings));
 
   // The core environment includes the baseConstants, the topLevel bindings, and the world bindings
   // NOTE: worldModule *includes* worldEffects and worldHandlers, according to Danny's modules.ss file
