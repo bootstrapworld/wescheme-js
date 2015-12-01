@@ -108,9 +108,9 @@ export function compileREPL(makeTeachpack) {
   var AST = plt.compiler.parse(sexp, debug)
   var ASTandPinfo = plt.compiler.desugar(AST, undefined, debug)
   var program = ASTandPinfo[0], pinfo = ASTandPinfo[1]
-  var pinfo = plt.compiler.analyze(program, debug)
+  var pinfo2 = plt.compiler.analyze(program, debug)
     //    var optimized   = plt.compiler.optimize(program)
-  var response = plt.compiler.compile(program, pinfo, debug)
+  var response = plt.compiler.compile(program, pinfo2, debug)
   if (makeTeachpack) {
     var teachpack = "window.COLLECTIONS = window.COLLECTIONS || {};\n" + "window.COLLECTIONS[\"" + programName + "\"]={\"name\":\"" + programName + "\"" + ",\"bytecode\":"
     teachpack += unescape(response.bytecode)

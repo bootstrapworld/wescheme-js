@@ -664,6 +664,7 @@ var jsnums = require('./runtime/js-numbers');
               column += chunk.length; // move i/col ahead by the char
               break;
             }
+            // otherwise fallthrough
           default:
             endOfError = i; // remember where we are, so readList can pick up reading
             msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#", (chunk + nextChar), "'"]);
