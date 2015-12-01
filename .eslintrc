@@ -14,8 +14,7 @@
     "no-unused-vars": [
       2,
       {"argsIgnorePattern": "^unused.*"}
-    ],
-    "no-fallthrough": 1
+    ]
   },
   "env": {
     "es6": true,
