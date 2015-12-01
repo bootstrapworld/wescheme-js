@@ -1,5 +1,17 @@
 var path = require("path")
 
+var envConfig = require('./env-config.js');
+
+var preLoaders = [];
+if (envConfig.runCoverage) {
+  preLoaders.push({
+    test: /\.js/,
+    loader: 'isparta',
+    include: path.resolve(__dirname, 'src'),
+    exclude: /node_modules/
+  });
+}
+
 module.exports = {
   devtool: 'source-map',
   entry: {
@@ -14,7 +26,9 @@ module.exports = {
   module: {
     loaders: [
       { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"},
-      { test: /\.css$/, loaders: ["style", "css"] }
-    ]
+      { test: /\.css$/, loaders: ["style", "css"] },
+      { test: /\.json$/, loaders: ["json"] }
+    ],
+    preLoaders: preLoaders
   }
 }

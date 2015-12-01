@@ -1,14 +1,14 @@
 /*globals describe it expect fail*/
-import {compileREPL, getError, repl2_setup} from '../../test/repl2';
-import {lex} from '../lex';
-import {parse} from '../parser';
-import {compile} from '../compiler';
-import {toPyretString} from '../toPyretString';
-import * as structures from '../structures';
-import * as analyzer from '../analyzer';
+import {compileREPL, getError, repl2_setup} from '../test/repl2';
+import {lex} from '../src/lex';
+import {parse} from '../src/parser';
+import {compile} from '../src/compiler';
+import {toPyretString} from '../src/toPyretString';
+import * as structures from '../src/structures';
+import * as analyzer from '../src/analyzer';
 
 //TODO: le sigh, converting to pyret requires types to be in the globals.
-global.types = require('../runtime/types');
+global.types = require('../src/runtime/types');
 
 var SUITE_DATA = require('./suite.json');
 
