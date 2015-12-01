@@ -441,8 +441,9 @@ export function isDefinition(node){
  **************************************************************************/
 
 // moduleBinding: records an id and its associated JS implementation.
-export function moduleBinding(name, bindings){
+export function moduleBinding(name, source, bindings){
   this.name     = name;
+  this.source   = source;
   this.bindings = bindings;
 }
 
@@ -734,25 +735,25 @@ export function pinfo(env, modules, usedBindingsHash, freeVariables, gensymCount
   // Adds a new defined binding to a pinfo's set.
   this.accumulateDefinedBinding = function(binding, loc){
     if(keywords.indexOf(binding.name) > -1){
-      throwError(new types.Message([new types.ColoredPart(binding.name, binding.loc),
+      throwError(new types.Message([new types.ColoredPart(binding.name, loc),
         ": this is a reserved keyword and cannot be used"+
         " as a variable or function name"])
-        ,binding.loc);
+        ,loc);
     } else if(!this.allowRedefinition && this.isRedefinition(binding.name)){
       var prevBinding = this.env.lookup(binding.name);
       if(prevBinding.loc){
-        throwError(new types.Message([new types.ColoredPart(binding.name, binding.loc),
+        throwError(new types.Message([new types.ColoredPart(binding.name, loc),
           ": this name has a ",
           new types.ColoredPart("previous definition", prevBinding.loc),
           " and cannot be re-defined"])
-          ,binding.loc);
+          ,loc);
 
       } else {
-        throwError(new types.Message([new types.ColoredPart(binding.name, binding.loc),
+        throwError(new types.Message([new types.ColoredPart(binding.name, loc),
           ": this name has a ",
           "previous definition",
           " and cannot be re-defined"])
-          ,binding.loc);
+          ,loc);
 
       }
     } else {
@@ -882,7 +883,7 @@ export function pinfo(env, modules, usedBindingsHash, freeVariables, gensymCount
     // concat all the permissions and bindings together, and return
     bindings = bindings.reduce(function(acc, b){ return acc.concat(lookupProvideBindingInDefinitionBindings(b)); }, []);
     return bindings.map(decorateWithPermissions);
-  };
+  } ;
 
   this.toString = function(){
     var s = "pinfo-------------";
@@ -917,7 +918,7 @@ export function getBasePinfo(language){
     return env.extendEnv_moduleBinding(mod);
   }, baseConstantsEnv);
   if(language === "moby"){
-    info.env = topLevelEnv.extendEnv_moduleBinding(mobyModuleBinding);
+    info.env = topLevelEnv.extendEnv_moduleBinding(modules.mobyModuleBinding);
   } else if(language === "base"){
     info.env = topLevelEnv;
   }
