@@ -181,7 +181,7 @@ describe('testing everything', function() {
         if(testData.server === "LOCAL IS BETTER"){
           return true;
         }
-        expect(testData.server).toBe("PASS");
+        expect(testData.server).not.toBe("PASS");
         let localJSON = JSON.parse(recieved["structured-error"]);
         let serverJSON = JSON.parse(JSON.parse(testData.server)["structured-error"]);
         expect(sameResults(localJSON, serverJSON)).toBe(true);
