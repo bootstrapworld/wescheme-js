@@ -68,11 +68,8 @@
       "src/compiler.js": false,
       "src/lex.js": false,
       "src/modules.js": false,
-      "src/optimizer.js": false,
       "src/parser.js": false,
-      "TODO: src/structures.js bug in instanbul makes this blow up?": false,
-      "src/toPyretAST.js": false,
-      "src/toPyretString.js": false
+      "TODO: src/structures.js bug in instanbul makes this blow up?": false
     }
   },
   "homepage": "https://github.com/pcardune/wescheme-js"
