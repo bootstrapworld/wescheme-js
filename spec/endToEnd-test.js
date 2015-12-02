@@ -3,7 +3,6 @@ import {compileREPL, getError, repl2_setup} from '../test/repl2';
 import {lex} from '../src/lex';
 import {parse} from '../src/parser';
 import {compile} from '../src/compiler';
-import {toPyretString} from '../src/toPyretString';
 import * as structures from '../src/structures';
 import * as analyzer from '../src/analyzer';
 
@@ -248,30 +247,6 @@ describe('testing everything', function() {
       expect(sameResults(recieved_bc, expected_bc)).toBe(true);
 
       // EVERYTHING PASSED! WHOOPIE!
-
-      // do we move on to testing the Pyret Translation?
-      // let's skip it for now
-      return true;
-
-      // TRANSLATE TO PYRET SRC
-      try{
-        recieved = toPyretString(AST, pinfo2).join("\n")
-      } catch (translationError) {
-        console.log(translationError);
-        throw translationError;
-      }
-      // if we don't have a JSONRef for this test, call it a questinonable pass move on
-      if(testData.pyretSrc === undefined) {
-        return true;
-      }
-      // if there's no translation, it's a pass by default
-      if(testData.pyretSrc === "NOTRANSLATE") {
-        return true;
-      }
-      testData.server = testData.pyretSrc;
-      expect(sameResults(recieved, testData.server)).toBe(true);
-
-      // for now, we're only checking the source translation
       return true;
     })
   });
