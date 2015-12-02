@@ -491,7 +491,7 @@ unquotedExpr.prototype.desugar = function(pinfo, depth) {
     return this.val.desugar(pinfo);
   } else if (depth > 1) {
     if (this.val instanceof Array) {
-      return desugarQuasiQuotedList(element, pinfo, depth - 1);
+      return desugarQuasiQuotedList(this.val, pinfo, depth - 1);
     } else {
       var uSym = new quotedExpr(new symbolExpr('unquote'));
       var listSym = new symbolExpr('list');
@@ -516,7 +516,7 @@ unquoteSplice.prototype.desugar = function(pinfo, depth) {
     return this.val.desugar(pinfo);
   } else if (depth > 1) {
     if (this.val instanceof Array) {
-      return desugarQuasiQuotedList(element, pinfo, depth - 1);
+      return desugarQuasiQuotedList(this.val, pinfo, depth - 1);
     } else {
       var usSym = new quotedExpr(new symbolExpr('unquote-splicing'));
       var listSym = new symbolExpr('list');
