@@ -828,9 +828,9 @@ plt.compiler = plt.compiler || {};
       , env = acc[2]
       , compiledProgramAndPinfo = p.compile(env, pinfo)
       , compiledProgram = compiledProgramAndPinfo[0]
-      , pinfo = compiledProgramAndPinfo[1];
+      , pinfo2 = compiledProgramAndPinfo[1];
     return [
-      [compiledProgram].concat(bytecodes), pinfo, env
+      [compiledProgram].concat(bytecodes), pinfo2, env
     ];
   }
 
@@ -845,24 +845,24 @@ plt.compiler = plt.compiler || {};
   defFunc.prototype.compile = function(env, pinfo) {
     var compiledFunNameAndPinfo = this.name.compile(env, pinfo)
       , compiledFunName = compiledFunNameAndPinfo[0]
-      , pinfo = compiledFunNameAndPinfo[1];
+      , pinfo2 = compiledFunNameAndPinfo[1];
     var lambda = new lambdaExpr(this.args, this.body)
-      , compiledLambdaAndPinfo = lambda.compile(env, pinfo, false, this.name)
+      , compiledLambdaAndPinfo = lambda.compile(env, pinfo2, false, this.name)
       , compiledLambda = compiledLambdaAndPinfo[0]
-      , pinfo = compiledLambdaAndPinfo[1];
+      , pinfo3 = compiledLambdaAndPinfo[1];
     var bytecode = new defValues([compiledFunName], compiledLambda);
-    return [bytecode, pinfo];
+    return [bytecode, pinfo3];
   };
 
   defVar.prototype.compile = function(env, pinfo) {
     var compiledIdAndPinfo = this.name.compile(env, pinfo)
       , compiledId = compiledIdAndPinfo[0]
-      , pinfo = compiledIdAndPinfo[1];
-    var compiledExprAndPinfo = this.expr.compile(env, pinfo)
+      , pinfo2 = compiledIdAndPinfo[1];
+    var compiledExprAndPinfo = this.expr.compile(env, pinfo2)
       , compiledExpr = compiledExprAndPinfo[0]
-      , pinfo = compiledExprAndPinfo[1];
+      , pinfo3 = compiledExprAndPinfo[1];
     var bytecode = new defValues([compiledId], compiledExpr);
-    return [bytecode, pinfo];
+    return [bytecode, pinfo3];
   };
 
   defVars.prototype.compile = function(env, pinfo) {
@@ -870,12 +870,12 @@ plt.compiler = plt.compiler || {};
         [], pinfo, env
       ])
       , compiledIds = compiledIdsAndPinfo[0]
-      , pinfo = compiledIdsAndPinfo[1];
-    var compiledBodyAndPinfo = this.expr.compile(env, pinfo)
+      , pinfo2 = compiledIdsAndPinfo[1];
+    var compiledBodyAndPinfo = this.expr.compile(env, pinfo2)
       , compiledBody = compiledBodyAndPinfo[0]
-      , pinfo = compiledBodyAndPinfo[1];
+      , pinfo3 = compiledBodyAndPinfo[1];
     var bytecode = new defValues(compiledIds, compiledBody);
-    return [bytecode, pinfo];
+    return [bytecode, pinfo3];
   };
 
   beginExpr.prototype.compile = function(env, pinfo) {
@@ -1023,10 +1023,10 @@ plt.compiler = plt.compiler || {};
     // (2) process the definitions, starting with pinfo and our new environment as the base
     var letVoidBodyAndPinfo = processDefns(this.defs, pinfo, envWithBoxedNames, 0)
       , letVoidBody = letVoidBodyAndPinfo[0]
-      , pinfo = letVoidBodyAndPinfo[1];
+      , pinfoBody = letVoidBodyAndPinfo[1];
 
     // (3) return a new letVoid for the stack depth we require, then use the bytecode as the body
-    return [new letVoid(definedNames.length, true, letVoidBody), pinfo]
+    return [new letVoid(definedNames.length, true, letVoidBody), pinfoBody]
 
     // getDefinedNames : [names], def -> names
     // given a list of names and a defn, add defined name(s) to the list
@@ -1045,18 +1045,18 @@ plt.compiler = plt.compiler || {};
       // compile the first definition in the current environment
       var compiledDefAndPInfo = defs[0].compile(env, pinfo);
       var compiledRhs = compiledDefAndPInfo[0].rhs; // important: all we need is the rhs!!
-      pinfo = compiledDefAndPInfo[1];
+      var pinfoRhs = compiledDefAndPInfo[1];
 
       // figure out how much room we'll need on the stack for this defn
       // compile the rest of the definitions, using the new pinfo and stack size
       var numToInstall = (defs[0] instanceof defVars) ? defs[0].names.length : 1;
-      var newBodyAndPinfo = processDefns(defs.slice(1), pinfo, env, numInstalled + numToInstall);
+      var newBodyAndPinfo = processDefns(defs.slice(1), pinfoRhs, env, numInstalled + numToInstall);
       var newBody = newBodyAndPinfo[0]
-      pinfo = newBodyAndPinfo[1];
+      pinfoBody = newBodyAndPinfo[1];
 
       // generate bytecode to install new values for the remaining body
       var bytecode = new installValue(numToInstall, numInstalled, true, compiledRhs, newBody);
-      return [bytecode, pinfo];
+      return [bytecode, pinfoBody];
     }
   };
 
@@ -1196,24 +1196,24 @@ plt.compiler = plt.compiler || {};
         [], pinfo, env
       ])
       , compiledRequires = compiledRequiresAndPinfo[0]
-      , pinfo = compiledRequiresAndPinfo[1];
+      , pinfoRequires = compiledRequiresAndPinfo[1];
     var compiledDefinitionsAndPinfo = defns.reduceRight(compilePrograms, [
-        [], pinfo, env
+        [], pinfoRequires, env
       ])
       , compiledDefinitions = compiledDefinitionsAndPinfo[0]
-      , pinfo = compiledDefinitionsAndPinfo[1];
+      , pinfoDefinitions = compiledDefinitionsAndPinfo[1];
     var compiledExpressionsAndPinfo = exprs.reduceRight(compilePrograms, [
-        [], pinfo, env
+        [], pinfoDefinitions, env
       ])
       , compiledExpressions = compiledExpressionsAndPinfo[0]
-      , pinfo = compiledExpressionsAndPinfo[1];
+      , pinfoExpressions = compiledExpressionsAndPinfo[1];
     // generate the bytecode for the program and return it, along with the program info
     var forms = new seq([].concat(compiledRequires, compiledDefinitions, compiledExpressions))
       , zo_bytecode = new compilationTop(0, toplevelPrefix, forms)
       , response = {
         "bytecode": "/* runtime-version: local-compiler-summer2014 */\n" + zo_bytecode.toBytecode()
-        , "permissions": pinfo.permissions()
-        , "provides": pinfo.providedNames.keys()
+        , "permissions": pinfoExpressions.permissions()
+        , "provides": pinfoExpressions.providedNames.keys()
       };
     return response;
   }
