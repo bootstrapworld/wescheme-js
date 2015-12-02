@@ -1,6 +1,5 @@
 /*global */
 
-import * as structures from './structures'
 import {
   literal,
   symbolExpr,
@@ -37,8 +36,8 @@ import {
   moduleBinding,
   defaultModuleResolver,
   emptyEnv
-}
-from './structures'
+} from './structures';
+var structures = require('./structures');
 
 require('./modules');
 var types = require('./runtime/types');
