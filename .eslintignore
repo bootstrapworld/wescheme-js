@@ -3,3 +3,4 @@ lib/*
 src/optimizer.js
 coverage/*
 src/toPyret*
+spec/endToEnd-test.js

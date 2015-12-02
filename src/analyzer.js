@@ -491,7 +491,7 @@ unquotedExpr.prototype.desugar = function(pinfo, depth) {
     return this.val.desugar(pinfo);
   } else if (depth > 1) {
     if (this.val instanceof Array) {
-      return desugarQuasiQuotedList(element, pinfo, depth - 1);
+      return desugarQuasiQuotedList(this.val, pinfo, depth - 1);
     } else {
       var uSym = new quotedExpr(new symbolExpr('unquote'));
       var listSym = new symbolExpr('list');
@@ -516,7 +516,7 @@ unquoteSplice.prototype.desugar = function(pinfo, depth) {
     return this.val.desugar(pinfo);
   } else if (depth > 1) {
     if (this.val instanceof Array) {
-      return desugarQuasiQuotedList(element, pinfo, depth - 1);
+      return desugarQuasiQuotedList(this.val, pinfo, depth - 1);
     } else {
       var usSym = new quotedExpr(new symbolExpr('unquote-splicing'));
       var listSym = new symbolExpr('list');
@@ -655,12 +655,12 @@ defFunc.prototype.collectDefinitions = function(pinfo) {
   });
 
   var binding = bf(this.name.val, false, this.args.length, false, this.name.location);
-  return pinfo.accumulateDefinedBinding(binding, this.location);
+  return pinfo.accumulateDefinedBinding(binding, this.name.location);
 };
 defVar.prototype.collectDefinitions = function(pinfo) {
   var binding = (this.expr instanceof lambdaExpr) ?
     bf(this.name.val, false, this.expr.args.length, false, this.name.location) : new constantBinding(this.name.val, false, [], this.name.location);
-  return pinfo.accumulateDefinedBinding(binding, this.location);
+  return pinfo.accumulateDefinedBinding(binding, this.name.location);
 };
 defVars.prototype.collectDefinitions = function(pinfo) {
   var that = this;
@@ -698,7 +698,7 @@ defVars.prototype.collectDefinitions = function(pinfo) {
   } else {
     return this.names.reduce(function(pinfo, id) {
       var binding = new constantBinding(id.val, false, [], id.location);
-      return pinfo.accumulateDefinedBinding(binding, that.location);
+      return pinfo.accumulateDefinedBinding(binding, id.location);
     }, pinfo);
   }
 };
@@ -741,7 +741,7 @@ requireExpr.prototype.collectDefinitions = function(pinfo) {
       return b;
     };
     var provideBindings = provides.map(strToBinding);
-    var modulebinding = new moduleBinding(moduleName, provideBindings);
+    var modulebinding = new moduleBinding(moduleName, "dummy", provideBindings);
     newPinfo = pinfo.accumulateModule(modulebinding).accumulateModuleBindings(provideBindings);
   }
 
