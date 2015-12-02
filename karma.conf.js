@@ -79,7 +79,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: [ envConfig.isCI ? 'PhantomJS' : envConfig.devBrowser ],
+    browsers: [ envConfig.isCI ? 'ChromeTravisCI' : envConfig.devBrowser ],
     customLaunchers: {
       ChromeTravisCI: {
         base: 'Chrome',
