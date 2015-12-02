@@ -134,7 +134,7 @@ describe('testing everything', function() {
   repl2_setup();
 
   //TODO: get the rest of the tests to pass...
-  SUITE_DATA = SUITE_DATA.slice(0,74);
+  SUITE_DATA = SUITE_DATA.slice(0, 300);
   SUITE_DATA.forEach(function(testData, index) {
     it('should properly handle test #'+index+': '+testData.expr, function() {
       //      test(testData.expr, testData.server, testData.desugar, testData.bytecode,
