@@ -1,5 +1,3 @@
-/*global */
-
 import {
   literal,
   symbolExpr,
@@ -35,11 +33,13 @@ import {
   functionBinding,
   moduleBinding,
   defaultModuleResolver,
-  emptyEnv
+  env,
+  emptyEnv,
+  keywords
 } from './structures';
-var structures = require('./structures');
 
 require('./modules');
+var structures = require('./structures');
 var types = require('./runtime/types');
 
 /*
@@ -610,7 +610,7 @@ symbolExpr.prototype.desugar = function(pinfo) {
   }
   // if this is a keyword without a parent, or if it's not the first child of the parent
   if (!this.parent &&
-    (structures.keywords.indexOf(this.val) > -1) && (this.val !== "else")) {
+    (keywords.indexOf(this.val) > -1) && (this.val !== "else")) {
     throwError(new types.Message([new types.ColoredPart(this.val, this.location), ": expected an open parenthesis before ", this.val, ", but found none"]),
       this.location);
   }
@@ -645,7 +645,7 @@ function bf(name, modulePath, arity, vararity, loc) {
 }
 defFunc.prototype.collectDefinitions = function(pinfo) {
   this.args.forEach(function(arg) {
-    if (structures.keywords.indexOf(arg.val) > -1) {
+    if (keywords.indexOf(arg.val) > -1) {
       throwError(new types.Message([new types.ColoredPart(arg.val, arg.location),
         ": this is a reserved keyword and cannot be used" +
         " as a variable or function name"
@@ -888,7 +888,7 @@ function analyzeClosureUses(funcExpr, pinfo) {
 
   // 2) make a copy of the environment, using the newly-copied bindings, and
   //    add the args to this environment
-  var newEnv = new structures.env(newBindings);
+  var newEnv = new env(newBindings);
   newEnv = funcExpr.args.reduce(function(env, arg) {
     return env.extend(new constantBinding(arg.val, false, [], arg.location));
   }, newEnv);
@@ -937,7 +937,7 @@ ifExpr.prototype.analyzeUses = function(pinfo, env) {
 };
 symbolExpr.prototype.analyzeUses = function(pinfo, env) {
   // if this is a keyword without a parent, or if it's not the first child of the parent
-  if (structures.keywords.indexOf(this.val) > -1 &&
+  if (keywords.indexOf(this.val) > -1 &&
     (!this.parent || this.parent[0] !== this) ||
     this.parent instanceof couple) {
     throwError(

@@ -1,13 +1,36 @@
 /*eslint no-console: 0*/
-/*global plt*/
-
-require('./structures');
+import {
+  literal,
+  symbolExpr,
+  Program,
+  ifExpr,
+  beginExpr,
+  localExpr,
+  andExpr,
+  orExpr,
+  lambdaExpr,
+  quotedExpr,
+  callExpr,
+  defFunc,
+  defVar,
+  defVars,
+  defStruct,
+  requireExpr,
+  provideStatement,
+  emptyEnv,
+  localEnv,
+  globalEnv,
+  unnamedEnv,
+  isDefinition,
+  isExpression,
+  baseStackReference,
+  localStackReference,
+  globalStackReference,
+  unboundStackReference
+} from './structures';
+var compiler = require('./compiler');
 var jsnums = require('./runtime/js-numbers');
 var types = require('./runtime/types');
-
-// if not defined, declare the compiler object as part of plt
-window.plt = window.plt || {};
-plt.compiler = plt.compiler || {};
 
 /*
  TODO
@@ -19,25 +42,6 @@ plt.compiler = plt.compiler || {};
  */
 
 (function() {
-
-  // import frequently-used bindings
-  var literal = plt.compiler.literal;
-  var symbolExpr = plt.compiler.symbolExpr;
-  var Program = plt.compiler.Program;
-  var ifExpr = plt.compiler.ifExpr;
-  var beginExpr = plt.compiler.beginExpr;
-  var localExpr = plt.compiler.localExpr;
-  var andExpr = plt.compiler.andExpr;
-  var orExpr = plt.compiler.orExpr;
-  var lambdaExpr = plt.compiler.lambdaExpr;
-  var quotedExpr = plt.compiler.quotedExpr;
-  var callExpr = plt.compiler.callExpr;
-  var defFunc = plt.compiler.defFunc;
-  var defVar = plt.compiler.defVar;
-  var defVars = plt.compiler.defVars;
-  var defStruct = plt.compiler.defStruct;
-  var requireExpr = plt.compiler.requireExpr;
-  var provideStatement = plt.compiler.provideStatement;
 
   // Inheritance from pg 168: Javascript, the Definitive Guide.
   var heir = function(p) {
@@ -81,48 +85,14 @@ plt.compiler = plt.compiler || {};
   types.Char.prototype.toBytecode = function() {
     return 'types[\'char\'](String.fromCharCode(' + this.val.charCodeAt(0) + '))';
   };
-  // STACKREF STRUCTS ////////////////////////////////////////////////////////////////
-  class baseStackReference {
-    constructor() {
-      this.type = 'base';
-    }
-  }
-  class localStackReference extends baseStackReference {
-    constructor(name, isBoxed, depth) {
-      super();
-      this.type = 'local';
-      this.name = name;
-      this.isBoxed = isBoxed;
-      this.depth = depth;
-    }
-  }
-  class globalStackReference extends baseStackReference {
-    constructor(name, depth, pos) {
-      super();
-      this.type = 'global';
-      this.name = name;
-      this.pos = pos;
-      this.depth = depth;
-    }
-  }
-  class unboundStackReference extends baseStackReference {
-    constructor(name) {
-      super();
-      this.type = 'unbound';
-      this.name = name;
-    }
-  }
+
   var isLocalStackRef = function(r) {
-    return r.type === 'local';
-    // TODO: figure out why the below doesn't work.
     return r instanceof localStackReference;
   };
   var isGlobalStackRef = function(r) {
-    return r.type === 'global';
     return r instanceof globalStackReference;
   };
   var isUnboundStackRef = function(r) {
-    return r.type === 'unbound'
     return r instanceof unboundStackReference;
   };
 
@@ -737,10 +707,10 @@ plt.compiler = plt.compiler || {};
   localExpr.prototype.freeVariables = function(acc, env) {
     // helper functions
     var pushLocalBoxedFromSym = function(env, sym) {
-        return new plt.compiler.localEnv(sym.val, true, env);
+        return new localEnv(sym.val, true, env);
       }
       , pushLocalFromSym = function(env, sym) {
-        return new plt.compiler.localEnv(sym.val, false, env);
+        return new localEnv(sym.val, false, env);
       };
 
     // collect all the defined names in the local
@@ -787,7 +757,7 @@ plt.compiler = plt.compiler || {};
   // be careful to make a copy of the array before reversing!
   lambdaExpr.prototype.freeVariables = function(acc, env) {
     var pushLocalFromSym = function(env, sym) {
-        return new plt.compiler.localEnv(sym.val, false, env);
+        return new localEnv(sym.val, false, env);
       }
     , envWithArgs = this.args.slice(0).reverse().reduce(pushLocalFromSym, env);
     return this.body.freeVariables(acc, envWithArgs);
@@ -901,15 +871,15 @@ plt.compiler = plt.compiler || {};
     }
 
     function pushLocal(env, n) {
-      return new plt.compiler.localEnv(n, false, env);
+      return new localEnv(n, false, env);
     }
 
     function pushLocalBoxed(env, n) {
-      return new plt.compiler.localEnv(n, true, env);
+      return new localEnv(n, true, env);
     }
 
     function pushGlobals(names, env) {
-      return new plt.compiler.globalEnv(names, false, env);
+      return new globalEnv(names, false, env);
     }
 
     // getClosureVectorAndEnv : (list of Symbols) (list of Symbols) env -> [(Vector of number), env]
@@ -978,7 +948,7 @@ plt.compiler = plt.compiler || {};
     // push each arg onto an empty Env, the compute the free variables in the function body with that Env
     var envWithArgs = this.args.map(function(s) {
       return s.val;
-    }).reduce(pushLocal, new plt.compiler.emptyEnv());
+    }).reduce(pushLocal, new emptyEnv());
     var freeVarsInBody = this.body.freeVariables([], envWithArgs);
     // compute the closure information using a COPY of the args array (protect against in-place reversal)
     var closureVectorAndEnv = getClosureVectorAndEnv(this.args.slice(0), freeVarsInBody, env)
@@ -1016,7 +986,7 @@ plt.compiler = plt.compiler || {};
     var that = this
       , definedNames = this.defs.reduce(getDefinedNames, [])
       , pushLocalBoxedFromSym = function(env, sym) {
-        return new plt.compiler.localEnv(sym.val, true, env);
+        return new localEnv(sym.val, true, env);
       }
       , envWithBoxedNames = definedNames.reverse().reduce(pushLocalBoxedFromSym, env);
 
@@ -1063,7 +1033,7 @@ plt.compiler = plt.compiler || {};
   callExpr.prototype.compile = function(env, pinfo) {
     // add space to the stack for each argument, then build the bytecode for the application itself
     var makeSpace = function(env) {
-        return new plt.compiler.unnamedEnv(env);
+        return new unnamedEnv(env);
       }
       , extendedEnv = this.args.reduce(makeSpace, env);
     var compiledOperatorAndPinfo = this.func.compile(extendedEnv, pinfo)
@@ -1178,7 +1148,7 @@ plt.compiler = plt.compiler || {};
         })
       );
       return [new prefix(0, topLevels, [])
-        , new plt.compiler.globalEnv(globals, false, new plt.compiler.emptyEnv())
+        , new globalEnv(globals, false, new emptyEnv())
       ];
     }
     // The toplevel is going to include all of the defined identifiers in the pinfo
@@ -1187,11 +1157,11 @@ plt.compiler = plt.compiler || {};
       , toplevelPrefix = toplevelPrefixAndEnv[0]
       , env = toplevelPrefixAndEnv[1];
     // pull out separate program components for ordered compilation
-    var defns = program.filter(plt.compiler.isDefinition)
+    var defns = program.filter(isDefinition)
       , requires = program.filter((function(p) {
         return (p instanceof requireExpr);
       }))
-      , exprs = program.filter(plt.compiler.isExpression);
+      , exprs = program.filter(isExpression);
     var compiledRequiresAndPinfo = requires.reduceRight(compilePrograms, [
         [], pinfo, env
       ])
@@ -1222,11 +1192,11 @@ plt.compiler = plt.compiler || {};
   /////////////////////
   /* Export Bindings */
   /////////////////////
-  plt.compiler.baseStackReference = baseStackReference;
-  plt.compiler.localStackReference = localStackReference;
-  plt.compiler.globalStackReference = globalStackReference;
-  plt.compiler.unboundStackReference = unboundStackReference;
-  plt.compiler.compile = function(program, pinfo, debug) {
+  compiler.baseStackReference = baseStackReference;
+  compiler.localStackReference = localStackReference;
+  compiler.globalStackReference = globalStackReference;
+  compiler.unboundStackReference = unboundStackReference;
+  compiler.compile = function(program, pinfo, debug) {
     var start = new Date().getTime();
     try {
       var response = compileCompilationTop(program, pinfo);
@@ -1244,4 +1214,4 @@ plt.compiler = plt.compiler || {};
   };
 })();
 
-module.exports = plt.compiler;
+module.exports = compiler;

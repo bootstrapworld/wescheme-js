@@ -1,8 +1,9 @@
-/*global plt*/
-
-// if not defined, declare the compiler object as part of plt
-window.plt = window.plt || {};
-plt.compiler = require('./structures');
+import {
+  moduleBinding,
+  functionBinding,
+  constantBinding
+} from './structures';
+var compiler = require('./compiler');
 /*
  TODO
  -
@@ -11,10 +12,6 @@ plt.compiler = require('./structures');
 //////////////////////////////////////////////////////////////////////////////
 /////////////////// MODULE BINDINGS //////////////////////////
 (function() {
-
-  var moduleBinding = plt.compiler.moduleBinding;
-  var functionBinding = plt.compiler.functionBinding;
-  var constantBinding = plt.compiler.constantBinding;
 
   // given a moduleName, return a function that converts binding specs into function bindings
   function makeFunctionBinding(modulePath) {
@@ -575,12 +572,12 @@ plt.compiler = require('./structures');
 
   // The core environment includes the baseConstants, the topLevel bindings, and the world bindings
   // NOTE: worldModule *includes* worldEffects and worldHandlers, according to Danny's modules.ss file
-  plt.compiler.topLevelModules = [topLevelModule, kernelMiscModule, jsWorldModule, worldModule];
-  plt.compiler.knownCollections = ["bootstrap", "bootstrap2011", "bootstrap2012", "bootstrap2014", "bootstrap2015"];
-  plt.compiler.mobyModuleBinding = mobyModuleBinding;
+  compiler.topLevelModules = [topLevelModule, kernelMiscModule, jsWorldModule, worldModule];
+  compiler.knownCollections = ["bootstrap", "bootstrap2011", "bootstrap2012", "bootstrap2014", "bootstrap2015"];
+  compiler.mobyModuleBinding = mobyModuleBinding;
 
 
-  plt.compiler.knownModules = [kernelMiscModule, jsWorldModule, foreignModule, worldModule, worldStubModule, bootstrapTeachpack, bootstrapTeachpack2011, bootstrapTeachpack2012, bootstrapTeachpack2014, bootstrapTeachpack2015, bootstrapTiltTeachpack2012, bootstrapTiltTeachpack2014, bootstrapTiltTeachpack2015, cageTeachpack, cageTeachpack2011, cageTeachpack2012, cageTeachpack2014, functionTeachpack, functionTeachpack2011, functionTeachpack2012, functionTeachpack2014, functionTeachpack2015, locationModule, tiltModule, telephonyModule, netModule, mobyModuleBinding, parserModule, topLevelModule];
+  compiler.knownModules = [kernelMiscModule, jsWorldModule, foreignModule, worldModule, worldStubModule, bootstrapTeachpack, bootstrapTeachpack2011, bootstrapTeachpack2012, bootstrapTeachpack2014, bootstrapTeachpack2015, bootstrapTiltTeachpack2012, bootstrapTiltTeachpack2014, bootstrapTiltTeachpack2015, cageTeachpack, cageTeachpack2011, cageTeachpack2012, cageTeachpack2014, functionTeachpack, functionTeachpack2011, functionTeachpack2012, functionTeachpack2014, functionTeachpack2015, locationModule, tiltModule, telephonyModule, netModule, mobyModuleBinding, parserModule, topLevelModule];
 })();
 
-module.exports = plt.compiler;
+module.exports = compiler;

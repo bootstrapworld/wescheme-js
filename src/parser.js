@@ -1,10 +1,36 @@
-/*global plt*/
-
-// if not defined, declare the compiler object as part of plt
-window.plt = window.plt || {};
-plt.compiler = require('./structures');
-var types = require('./runtime/types');
-
+import {
+  literal,
+  symbolExpr,
+  couple,
+  ifExpr,
+  beginExpr,
+  letExpr,
+  letStarExpr,
+  letrecExpr,
+  localExpr,
+  andExpr,
+  orExpr,
+  condExpr,
+  caseExpr,
+  lambdaExpr,
+  quotedExpr,
+  unquotedExpr,
+  quasiquotedExpr,
+  unquoteSplice,
+  callExpr,
+  whenUnlessExpr,
+  defFunc,
+  defVar,
+  defVars,
+  defStruct,
+  requireExpr,
+  provideStatement,
+  unsupportedExpr,
+  throwError,
+  keywords
+} from './structures';
+var types    = require('./runtime/types');
+var compiler = require('./compiler');
 /*
  
  //////////////////////////////////////////////////////////////////////////////
@@ -23,37 +49,6 @@ var types = require('./runtime/types');
 
 (function() {
   'use strict';
-
-  // import frequently-used bindings
-  var literal = plt.compiler.literal;
-  var symbolExpr = plt.compiler.symbolExpr;
-  var couple = plt.compiler.couple;
-  var ifExpr = plt.compiler.ifExpr;
-  var beginExpr = plt.compiler.beginExpr;
-  var letExpr = plt.compiler.letExpr;
-  var letStarExpr = plt.compiler.letStarExpr;
-  var letrecExpr = plt.compiler.letrecExpr;
-  var localExpr = plt.compiler.localExpr;
-  var andExpr = plt.compiler.andExpr;
-  var orExpr = plt.compiler.orExpr;
-  var condExpr = plt.compiler.condExpr;
-  var caseExpr = plt.compiler.caseExpr;
-  var lambdaExpr = plt.compiler.lambdaExpr;
-  var quotedExpr = plt.compiler.quotedExpr;
-  var unquotedExpr = plt.compiler.unquotedExpr;
-  var quasiquotedExpr = plt.compiler.quasiquotedExpr;
-  var unquoteSplice = plt.compiler.unquoteSplice;
-  var callExpr = plt.compiler.callExpr;
-  var whenUnlessExpr = plt.compiler.whenUnlessExpr;
-  var defFunc = plt.compiler.defFunc;
-  var defVar = plt.compiler.defVar;
-  var defVars = plt.compiler.defVars;
-  var defStruct = plt.compiler.defStruct;
-  var requireExpr = plt.compiler.requireExpr;
-  var provideStatement = plt.compiler.provideStatement;
-  var unsupportedExpr = plt.compiler.unsupportedExpr;
-  var throwError = plt.compiler.throwError;
-
   //////////////////////////////////// UTILITY FUNCTIONS //////////////////////////////
   function isVector(x) {
     return types.isVector(x.val);
@@ -78,8 +73,8 @@ var types = require('./runtime/types');
   // isSymbolEqualTo : symbolExpr symbolExpr -> Boolean
   // are these all symbols of the same value?
   function isSymbolEqualTo(x, y) {
-    x = (x instanceof symbolExpr) ? x.val : x;
-    y = (y instanceof symbolExpr) ? y.val : y;
+    x = isSymbol(x) ? x.val : x;
+    y = isSymbol(y) ? y.val : y;
     return x === y;
   }
 
@@ -141,7 +136,7 @@ var types = require('./runtime/types');
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected the structure name after define-struct, but nothing's there"]), sexp.location);
       }
       // is the structure name there?
-      if (!(sexp[1] instanceof symbolExpr)) {
+      if (!isSymbol(sexp[1])) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected the structure name after define-struct, but found ", new types.ColoredPart("something else", sexp[1].location)]), sexp.location);
       }
       // is it just (define-struct <name>)?
@@ -154,7 +149,7 @@ var types = require('./runtime/types');
       }
       // is it a list of not-all-symbols?
       sexp[2].forEach(function(arg) {
-        if (!(arg instanceof symbolExpr)) {
+        if (!isSymbol(arg)) {
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a field name, but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
         }
       });
@@ -208,12 +203,12 @@ var types = require('./runtime/types');
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a name for the function within ", new types.ColoredPart("the parentheses", sexp[1].location)]), sexp.location);
         }
         // is the first element in the list a symbol?
-        if (!(sexp[1][0] instanceof symbolExpr)) {
+        if (!isSymbol(sexp[1][0])) {
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a function name after the open parenthesis but found ", new types.ColoredPart("something else", sexp[1][0].location)]), sexp.location);
         }
         // is the next element a list of not-all-symbols?
         sexp[1].forEach(function(arg) {
-          if (!(arg instanceof symbolExpr)) {
+          if (!isSymbol(arg)) {
             throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a variable but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
           }
         });
@@ -232,7 +227,7 @@ var types = require('./runtime/types');
         return new defFunc(parseIdExpr(sexp[1][0]), args, parseExpr(sexp[2]), sexp);
       }
       // If it's (define x ...)
-      if (sexp[1] instanceof symbolExpr) {
+      if (isSymbol(sexp[1])) {
         // is it just (define x)?
         if (sexp.length < 3) {
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression after the variable ", new types.ColoredPart(sexp[1].val, sexp[1].location), " but nothing's there"]), sexp.location);
@@ -298,7 +293,7 @@ var types = require('./runtime/types');
       }
       // is it a list of not-all-symbols?
       sexp[1].forEach(function(arg) {
-        if (!(arg instanceof symbolExpr)) {
+        if (!isSymbol(arg)) {
           var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a list of variables after lambda, but found ", new types.ColoredPart("something else", arg.location)]);
           throwError(msg, sexp.location);
         }
@@ -615,7 +610,7 @@ var types = require('./runtime/types');
         result = parseExpr(clause[1]),
         cpl = new couple(test, result);
       // the only un-parenthesized keyword allowed in the first slot is 'else'
-      if ((plt.compiler.keywords.indexOf(test.val) > -1) && (test.val !== "else")) {
+      if ((keywords.indexOf(test.val) > -1) && (test.val !== "else")) {
         throwError(new types.Message([new types.ColoredPart(test.val, test.location), ": expected an open parenthesis before ", test.val, ", but found none"]),
           test.location);
       }
@@ -663,7 +658,7 @@ var types = require('./runtime/types');
         throwError(msg, sexp.location);
       }
       if (!((clause[0] instanceof Array) ||
-          ((clause[0] instanceof symbolExpr) && isSymbolEqualTo(clause[0], "else")))) {
+          (isSymbol(clause[0]) && isSymbolEqualTo(clause[0], "else")))) {
         msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected 'else', or at least one choice in parentheses, but found ", new types.ColoredPart("something else", clause.location)]);
         throwError(msg, sexp.location);
       }
@@ -898,7 +893,7 @@ var types = require('./runtime/types');
       msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": Importing PLaneT pacakges is not supported at this time"]);
       throwError(msg, sexp.location);
       // if it's (require <not-a-string-or-symbol>)
-    } else if (!((sexp[1] instanceof symbolExpr) || isString(sexp[1]))) {
+    } else if (!(isSymbol(sexp[1]) || isString(sexp[1]))) {
       msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name as a string or a `(lib ...)' form, but found ", new types.ColoredPart("something else", sexp[1].location)]);
       throwError(msg, sexp.location);
     }
@@ -915,11 +910,11 @@ var types = require('./runtime/types');
   function parseProvide(sexp) {
     var clauses = rest(sexp).map(function(p) {
       // symbols are ok
-      if (p instanceof symbolExpr) {
+      if (isSymbol(p)) {
         return p;
       }
       // (struct-out sym) is ok
-      if ((p instanceof Array) && (p.length == 2) && (p[0] instanceof symbolExpr) && isSymbolEqualTo(p[0], "struct-out") && (p[1] instanceof symbolExpr)) {
+      if ((p instanceof Array) && (p.length == 2) && isSymbol(p[0]) && isSymbolEqualTo(p[0], "struct-out") && isSymbol(p[1])) {
         return p;
       }
       // everything else is NOT okay
@@ -934,7 +929,7 @@ var types = require('./runtime/types');
   /////////////////////
   /* Export Bindings */
   /////////////////////
-  plt.compiler.parse = function(sexp, debug) {
+  compiler.parse = function(sexp, debug) {
     var start = new Date().getTime();
     try {
       var AST = parse(sexp);
@@ -953,4 +948,4 @@ var types = require('./runtime/types');
   };
 })();
 
-module.exports = plt.compiler;
+module.exports = compiler;
