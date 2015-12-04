@@ -7,6 +7,7 @@ import {lex} from '../src/lex'
 import * as analyzer from '../src/analyzer'
 import * as structures from '../src/structures'
 import types from '../src/runtime/types'
+import compiler from '../src/compiler'
 // TODO: currently the bytecode evaluation relies on types being in the global namespace
 // le sigh...
 window.types = types
@@ -188,7 +189,6 @@ function loadSuite(json){
   }
   console.log(document.getElementById('runTests'))
   document.getElementById('runTests').disabled=false
-  document.getElementById('pyretUI').style.display="inline-block"
   document.getElementById('runTests').value="Run test:"
   document.getElementById('runTests').onclick=function(){runTests(true)}
   document.getElementById('memoryTest').disabled=false
@@ -331,7 +331,7 @@ function runTests(verbose){
 
     bytecode.innerHTML = 'bytecode'
     try {
-      recieved    = JSON.stringify(plt.compiler.compile(program, pinfo2))
+      recieved    = JSON.stringify(compiler.compile(program, pinfo2))
     } catch (recieved) {
       if (recieved instanceof structures.unimplementedException){
         throw recieved.str + " NOT IMPLEMENTED"
@@ -359,36 +359,6 @@ function runTests(verbose){
 
     // EVERYTHING PASSED! WHOOPIE!
     bytecode.style.background = 'lightgreen'
-
-    // do we move on to testing the Pyret Translation?
-    if(!document.getElementById('pyretTest').checked) return true
-    // we're testing Pyret translation, so let's add the columns for Src and AST
-
-    // TRANSLATE TO PYRET SRC
-    row.appendChild(pyretSrc)
-    pyretSrc.innerHTML = 'pyretSrc'
-    try{
-      recieved = plt.compiler.toPyretString(AST, pinfo2).join("\n")
-    } catch (translationError) {
-      console.log(translationError)
-      pyretSrc.style.background = 'red'
-      return setTestFailureLink(row, pyretSrcRef, recieved)
-    }
-    // if we don't have a JSONRef for this test, call it a questinonable pass move on
-    if(pyretSrcRef === undefined) {
-      pyretSrc.style.background = 'rgb(194, 288, 194)'
-      return true
-    }
-    // if there's no translation, it's a pass by default
-    if(pyretSrcRef === "NOTRANSLATE") {
-      pyretSrc.style.background = 'lightblue'
-      return true
-    }
-    expected = pyretSrcRef
-    if(sameResults(recieved, expected)) { pyretSrc.style.background = 'lightgreen' }
-    else { return setTestFailureLink(row, expected, recieved)}
-
-    // for now, we're only checking the source translation
     return true
 
     // TRANSLATE TO PYRET AST

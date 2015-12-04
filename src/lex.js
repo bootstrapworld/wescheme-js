@@ -1,8 +1,4 @@
-/*global plt*/
-
-// if not defined, declare the compiler object as part of plt
-window.plt = window.plt || {};
-plt.compiler = require('./structures');
+var compiler = require('./structures');
 var types = require('./runtime/types');
 var jsnums = require('./runtime/js-numbers');
 
@@ -46,10 +42,10 @@ var jsnums = require('./runtime/js-numbers');
   'use strict';
 
   // import frequently-used bindings
-  var literal = plt.compiler.literal;
-  var symbolExpr = plt.compiler.symbolExpr;
-  var unsupportedExpr = plt.compiler.unsupportedExpr;
-  var throwError = plt.compiler.throwError;
+  var literal = compiler.literal;
+  var symbolExpr = compiler.symbolExpr;
+  var unsupportedExpr = compiler.unsupportedExpr;
+  var throwError = compiler.throwError;
 
   // a collection of common RegExps
   var leftListDelims = /[(\u005B\u007B]/
@@ -1009,7 +1005,7 @@ var jsnums = require('./runtime/js-numbers');
   /////////////////////
   /* Export Bindings */
   /////////////////////
-  plt.compiler.lex = function(str, strSource, debug) {
+  compiler.lex = function(str, strSource, debug) {
     var start = new Date().getTime();
     try {
       var sexp = readProg(str, strSource);
@@ -1026,7 +1022,7 @@ var jsnums = require('./runtime/js-numbers');
     }
     return sexp;
   };
-  plt.compiler.sexpToString = sexpToString;
+  compiler.sexpToString = sexpToString;
 })();
 
-module.exports = plt.compiler;
+module.exports = compiler;
