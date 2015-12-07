@@ -3,14 +3,14 @@ wescheme javascript compiler
 
 [![Travis Build Status][build-badge]][build]
 
-[![Coverage Status](https://coveralls.io/repos/pcardune/wescheme-js/badge.svg?branch=master&service=github)](https://coveralls.io/github/pcardune/wescheme-js?branch=master)
+[![Coverage Status](https://coveralls.io/repos/bootstrap-world/wescheme-js/badge.svg?branch=master&service=github)](https://coveralls.io/github/bootstrap-world/wescheme-js?branch=master)
 
 # Installation
 
 This package has not been published to npm yet, so you have to install it from
 the github repository:
 
-    npm install --save pcardune/wescheme-js
+    npm install --save bootstrap-world/wescheme-js
 
 # Usage
 
@@ -46,4 +46,4 @@ then browse to
 and click around on that page as you wish.
 
 [build-badge]: https://travis-ci.org/react-bootstrap/react-bootstrap.svg?branch=master
-[build]: https://travis-ci.org/pcardune/wescheme-js
+[build]: https://travis-ci.org/bootstrap-world/wescheme-js
