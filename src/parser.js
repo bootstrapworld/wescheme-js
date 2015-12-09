@@ -1,4 +1,5 @@
 import {
+  comment,
   literal,
   symbolExpr,
   couple,
@@ -50,26 +51,16 @@ var compiler = require('./compiler');
 (function() {
   'use strict';
   //////////////////////////////////// UTILITY FUNCTIONS //////////////////////////////
-  function isVector(x) {
-    return types.isVector(x.val);
-  }
+  function isVector(x)      { return types.isVector(x); }
+  function isString(x)      { return types.isString(x.val); }
+  function isSymbol(x)      { return x instanceof symbolExpr; }
+  function isLiteral(x)     { return x instanceof literal; }
+  function isUnsupported(x) { return x instanceof unsupportedExpr; }
+  function isComment(x)     { return x instanceof comment; }
 
-  function isString(x) {
-    return types.isString(x.val);
-  }
-
-  function isSymbol(x) {
-    return x instanceof symbolExpr;
-  }
-
-  function isLiteral(x) {
-    return x instanceof literal;
-  }
-
-  function isUnsupported(x) {
-    return x instanceof unsupportedExpr;
-  }
-
+  function isCons(x) { return x instanceof Array && x.length >= 1; }
+  function rest(ls) { return ls.slice(1); }
+ 
   // isSymbolEqualTo : symbolExpr symbolExpr -> Boolean
   // are these all symbols of the same value?
   function isSymbolEqualTo(x, y) {
@@ -78,25 +69,19 @@ var compiler = require('./compiler');
     return x === y;
   }
 
-  function isCons(x) {
-    return x instanceof Array && x.length >= 1;
-  }
-
-  function rest(ls) {
-    return ls.slice(1);
-  }
 
   // PARSING ///////////////////////////////////////////
 
   // parse* : sexp list -> Program list
   function parseStar(sexps) {
     function parseSExp(sexp) {
-      return isDefinition(sexp) ? parseDefinition(sexp) :
-        isExpr(sexp) ? parseExpr(sexp) :
-        isRequire(sexp) ? parseRequire(sexp) :
-        isProvide(sexp) ? parseProvide(sexp) :
-        throwError(new types.Message(["Not a Definition, Expression, Library Require, or Provide"]),
-          sexp.location);
+      return isComment(sexp) ? sexp :
+            isDefinition(sexp) ? parseDefinition(sexp) :
+            isExpr(sexp) ? parseExpr(sexp) :
+            isRequire(sexp) ? parseRequire(sexp) :
+            isProvide(sexp) ? parseProvide(sexp) :
+            throwError(new types.Message(["Not a Definition, Expression, Library Require, or Provide"]),
+                       sexp.location);
     }
     return sexps.map(parseSExp);
   }

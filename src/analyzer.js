@@ -1,4 +1,5 @@
 import {
+  comment,
   literal,
   symbolExpr,
   Program,
@@ -105,7 +106,7 @@ function desugarProgram(programs, pinfo, isTopLevelExpr) {
   var acc = [
     [], (pinfo || new structures.pinfo())
   ];
-  var res = programs.reduce((function(acc, p) {
+  var res = programs.filter(function(p){ return !(p instanceof comment); }).reduce((function(acc, p) {
     var desugaredAndPinfo = p.desugar(acc[1]);
     // if it's an expression, insert a print-values call so it shows up in the repl
     if (structures.isExpression(p) && isTopLevelExpr) {

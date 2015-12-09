@@ -91,6 +91,12 @@ export class Program {
   toString() { return this.val.toString(); }
 }
 
+// Comment
+export class comment extends Program {
+  constructor(txt) { super(); this.txt = txt; }
+  toString() { return ";"+this.txt; }
+}
+
 // Function definition
 export class defFunc extends Program {
   constructor(name, args, body, stx) {
