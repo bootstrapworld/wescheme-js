@@ -51,7 +51,7 @@ var compiler = require('./compiler');
 (function() {
   'use strict';
   //////////////////////////////////// UTILITY FUNCTIONS //////////////////////////////
-  function isVector(x)      { return types.isVector(x); }
+  function isVector(x)      { return types.isVector(x.val); }
   function isString(x)      { return types.isString(x.val); }
   function isSymbol(x)      { return x instanceof symbolExpr; }
   function isLiteral(x)     { return x instanceof literal; }
