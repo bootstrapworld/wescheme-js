@@ -781,7 +781,7 @@ var jsnums = require('./runtime/js-numbers');
     while ((i = chewWhiteSpace(str, i)) && // there's whitespace to chew
       (i + 1 < str.length) && // we're not out of string
       (nextSExp = readSExpByIndex(str, i)) && // there's an s-expr to be read
-      (nextSExp instanceof Comment)) { // and it's not a comment
+      (nextSExp instanceof comment)) { // and it's not a comment
       i = nextSExp.location.endChar;
     }
 
