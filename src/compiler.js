@@ -1013,7 +1013,9 @@ var types = require('./runtime/types');
     var getLocs = function(id) {
         return id.location.toVector();
       }
-      , bytecode = new lam(isUnnamedLambda ? [] : new symbolExpr(name), [isUnnamedLambda ? this.stx : name].concat(this.args).map(getLocs), [], // flags
+      , bytecode = new lam(isUnnamedLambda ? [] : new symbolExpr(name),
+                           [isUnnamedLambda ? this.stx : name].concat(this.args).map(getLocs),
+                           [], // flags
         this.args.length, // numParams
         this.args.map(function() {
           return new symbolExpr("val");
@@ -1162,13 +1164,12 @@ var types = require('./runtime/types');
         }, [])
         , isNotRequiredModuleBinding = function(b) {
           return b.moduleSource && (requiredModuleBindings.indexOf(b) === -1)
-        }
-        , moduleOrTopLevelDefinedBindings = pinfo.usedBindingsHash.values().filter(isNotRequiredModuleBinding),
-
-        allModuleBindings = requiredModuleBindings.concat(moduleOrTopLevelDefinedBindings),
-
+        };
+      var usedBindingsArray = Array.from(pinfo.usedBindingsHash.values());
+      var moduleOrTopLevelDefinedBindings = usedBindingsArray.filter(isNotRequiredModuleBinding);
+      var allModuleBindings = requiredModuleBindings.concat(moduleOrTopLevelDefinedBindings);
         // utility functions for making globalBuckets and moduleVariables
-        makeGlobalBucket = function(name) {
+      var makeGlobalBucket = function(name) {
           return new globalBucket(name);
         }
         , modulePathIndexJoin = function(path, base) {
@@ -1180,14 +1181,12 @@ var types = require('./runtime/types');
               , (b.imported) ? false : modulePathIndexJoin(false, false))
             , new symbolExpr(b.name), -1, 0);
         };
-      var globalNames = pinfo.freeVariables.concat(pinfo.definedNames.keys());
+      var globalNames = pinfo.freeVariables.concat(Array.from(pinfo.definedNames.keys()));
       // FIXME: we have to make uniqueGlobalNames because a function name can also be a free variable,
       // due to a bug in analyze-lambda-expression in which the base pinfo is used for the function body.
-      var uniqueGlobalNames = sortAndUnique(globalNames, function(a, b) {
-        return a < b;
-      }, function(a, b) {
-        return a == b;
-      });
+      var uniqueGlobalNames = sortAndUnique(globalNames,
+                                            function(a, b) { return a < b; },
+                                            function(a, b) { return a == b; });
       var topLevels = [false].concat(
         uniqueGlobalNames.map(makeGlobalBucket)
         , allModuleBindings.map(makeModuleVariablefromBinding)
@@ -1234,7 +1233,7 @@ var types = require('./runtime/types');
       , response = {
         "bytecode": "/* runtime-version: local-compiler-spring2016 */\n" + zo_bytecode.toBytecode()
         , "permissions": pinfoExpressions.permissions()
-        , "provides": pinfoExpressions.providedNames.keys()
+        , "provides": Array.from(pinfoExpressions.providedNames.keys())
       };
     return response;
   }

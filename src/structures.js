@@ -520,7 +520,6 @@ export function structBinding(name, moduleSource, fields, constructor,
   return this;
 }
 
-var makeHash = types.makeLowLevelEqHash;
 export var keywords = ["cond", "else", "let", "case", "let*", "letrec", "quote",
   "quasiquote", "unquote","unquote-splicing","local","begin",
   "if","or","and","when","unless","lambda","λ","define",
@@ -560,12 +559,12 @@ export class unboundStackReference extends baseStackReference {
 // things live.
 export class env{
   constructor(bindings){
-    this.bindings = bindings || makeHash();
+    this.bindings = bindings || new Map();
     this.keys = this.bindings.keys;
   }
   // lookup : Symbol -> (or/c binding false)
   lookup(id){
-    return (this.bindings.containsKey(id))? this.bindings.get(id) : false;
+    return (this.bindings.has(id))? this.bindings.get(id) : false;
   }
 
   // peek: Number -> env
@@ -582,7 +581,7 @@ export class env{
 
   // extend: binding -> env
   extend(binding){
-    this.bindings.put(binding.name, binding);
+    this.bindings.set(binding.name, binding);
     return new env(this.bindings);
   }
 
@@ -741,13 +740,13 @@ export class pinfo{
                declaredPermissions){
     this.env = env || new emptyEnv();                       // env
     this.modules = modules || [];                           // (listof module-binding)
-    this.usedBindingsHash = usedBindingsHash || makeHash(); // (hashof symbol binding)
+    this.usedBindingsHash = usedBindingsHash || new Map();  // (hashof symbol binding)
     this.freeVariables = freeVariables || [];               // (listof symbol)
     this.gensymCounter = gensymCounter || 0;                // number
-    this.providedNames = providedNames || makeHash();       // (hashof symbol provide-binding)
-    this.definedNames  = definedNames  || makeHash();       // (hashof symbol binding)
+    this.providedNames = providedNames || new Map();        // (hashof symbol provide-binding)
+    this.definedNames  = definedNames  || new Map();        // (hashof symbol binding)
 
-    this.sharedExpressions = sharedExpressions || makeHash();// (hashof expression labeled-translation)
+    this.sharedExpressions = sharedExpressions || new Map();// (hashof expression labeled-translation)
     // Maintains a mapping between expressions and a labeled translation.  Acts
     // as a symbol table to avoid duplicate construction of common literal values.
 
@@ -769,7 +768,7 @@ export class pinfo{
     this.declaredPermissions = declaredPermissions || [];   // (listof (listof symbol any/c))
     // usedBindings: -> (listof binding)
     // Returns the list of used bindings computed from the program analysis.
-    this.usedBindings =  this.usedBindingsHash.values;
+    this.usedBindings =  function(){ return Array.from(this.usedBindingsHash.values()); };
     
   }
   /////////////////////////////////////////////////
@@ -785,7 +784,7 @@ export class pinfo{
   makeLabeledTranslation() { return false; }
   accumulateSharedExpression(expression, translation){
     var labeledTranslation = makeLabeledTranslation(this.gensymCounter, translation);
-    this.sharedExpressions.put(labeledTranslation, expression);
+    this.sharedExpressions.set(labeledTranslation, expression);
     return this;
   }
 */
@@ -816,7 +815,7 @@ export class pinfo{
       }
     } else {
       this.env.extend(binding);
-      this.definedNames.put(binding.name, binding);
+      this.definedNames.set(binding.name, binding);
       return this;
     }
   }
@@ -852,7 +851,9 @@ export class pinfo{
   accumulateBindingUse(binding){
     var alreadyExists = this.usedBindingsHash.get(binding.name);
     // if it's a module binding, don't replace it with a different kind of binding
-    if(!(alreadyExists && alreadyExists.moduleSource)) this.usedBindingsHash.put(binding.name, binding);
+    if(!(alreadyExists && alreadyExists.moduleSource)){
+      this.usedBindingsHash.set(binding.name, binding);
+    }
     return this;
   }
 
@@ -882,7 +883,7 @@ export class pinfo{
         && (b.permissions.length > 0))?
       permissions.concat(b.permissions) : permissions;
     }
-    return this.usedBindings().reduce(reducePermissions, []).filter(onlyUnique);
+    return Array.from(this.usedBindings()).reduce(reducePermissions, []).filter(onlyUnique);
   }
 
   // getExposedBindings:  -> (listof binding)
@@ -894,7 +895,7 @@ export class pinfo{
     // Lookup the provided bindings.
     function lookupProvideBindingInDefinitionBindings(provideBinding){
       // if it's not defined, throw an error
-      if(!that.definedNames.containsKey(provideBinding.symbl)){
+      if(!that.definedNames.has(provideBinding.symbl)){
         throwError(new types.Message(["provided-name-not-defined: ", provideBinding.symbl]));
       }
       // if it IS defined, let's examine it and make sure it is what it claims to be

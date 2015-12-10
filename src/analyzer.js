@@ -823,7 +823,7 @@ provideStatement.prototype.collectProvides = function(pinfo) {
   function collectProvidesFromClause(pinfo, clause) {
     // if it's a symbol, make sure it's defined (otherwise error)
     if (clause instanceof symbolExpr) {
-      if (pinfo.definedNames.containsKey(clause.val)) {
+      if (pinfo.definedNames.has(clause.val)) {
         addProvidedName(clause.val);
         return pinfo;
       } else {
@@ -835,7 +835,7 @@ provideStatement.prototype.collectProvides = function(pinfo) {
       // if it's an array, make sure the struct is defined (otherwise error)
       // NOTE: ONLY (struct-out id) IS SUPPORTED AT THIS TIME
     } else if (clause instanceof Array) {
-      if (pinfo.definedNames.containsKey(clause[1].val) && (pinfo.definedNames.get(clause[1].val) instanceof structBinding)) {
+      if (pinfo.definedNames.has(clause[1].val) && (pinfo.definedNames.get(clause[1].val) instanceof structBinding)) {
         // add the entire structBinding to the provided binding, so we
         // can access fieldnames, predicates, and permissions later
         var b = pinfo.definedNames.get(clause[1].val);
@@ -881,12 +881,8 @@ defVars.prototype.analyzeUses = function(pinfo) {
 function analyzeClosureUses(funcExpr, pinfo) {
   // 1) make a copy of all the bindings
   var oldEnv = pinfo.env;
-  var oldKeys = oldEnv.bindings.keys();
-  var newBindings = types.makeLowLevelEqHash();
-  oldKeys.forEach(function(k) {
-    newBindings.put(k, oldEnv.bindings.get(k));
-  });
-
+  var newBindings = new Map();
+  for(var [k,v] of oldEnv.bindings){ newBindings.set(k, v); };
   // 2) make a copy of the environment, using the newly-copied bindings, and
   //    add the args to this environment
   var newEnv = new env(newBindings);
