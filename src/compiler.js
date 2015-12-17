@@ -23,7 +23,6 @@ import {
   unnamedEnv,
   isDefinition,
   isExpression,
-  baseStackReference,
   localStackReference,
   globalStackReference,
   unboundStackReference
