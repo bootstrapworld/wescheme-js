@@ -227,6 +227,10 @@ localExpr.prototype.desugar = function(pinfo) {
   return [newLocalExpr, exprAndPinfo[1]];
 };
 callExpr.prototype.desugar = function(pinfo) {
+  if(!this.func){
+    throwError(new types.Message([new types.ColoredPart("( )", this.location), ": expected a function, but nothing's there"]), 
+      this.location);
+  }
   var exprsAndPinfo = desugarProgram([this.func].concat(this.args), pinfo);
   var newCallExpr = new callExpr(exprsAndPinfo[0][0], exprsAndPinfo[0].slice(1), this.stx);
   newCallExpr.location = this.location;
