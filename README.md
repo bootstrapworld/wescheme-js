@@ -10,7 +10,7 @@ wescheme javascript compiler
 This package has not been published to npm yet, so you have to install it from
 the github repository:
 
-    npm install --save pcardune/wescheme-js
+    npm install --save bootstrapworld/wescheme-js
 
 # Usage
 

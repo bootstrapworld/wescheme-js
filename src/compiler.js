@@ -23,7 +23,6 @@ import {
   unnamedEnv,
   isDefinition,
   isExpression,
-  baseStackReference,
   localStackReference,
   globalStackReference,
   unboundStackReference
@@ -42,16 +41,6 @@ var types = require('./runtime/types');
  */
 
 (function() {
-
-  // Inheritance from pg 168: Javascript, the Definitive Guide.
-  var heir = function(p) {
-    var f = function() {};
-    f.prototype = p;
-    return new f();
-  };
-
-
-
   literal.prototype.toBytecode = function() {
     var str = this.val.toBytecode ? this.val.toBytecode() : this.val === true ? "true" : this.val === false ? "false" : this.toString();
     return '{"$":"constant","value":' + str + '}';
@@ -107,13 +96,13 @@ var types = require('./runtime/types');
 
   // all Programs, by default, print out their values and have no location
   // anything that behaves differently must provide their own toBytecode() function
-  var Bytecode = function() {
+  class Bytecode{
     // -> JSON
-    this.toBytecode = function() {
+    toBytecode() {
       console.log(this);
       throw "IMPOSSIBLE - generic bytecode toBytecode method was called";
-    };
-  };
+    }
+  }
 
   // for mapping JSON conversion over an array
   function convertToBytecode(bc) {
@@ -136,560 +125,621 @@ var types = require('./runtime/types');
   }
 
   // Global bucket
-  function globalBucket(name) {
-    Bytecode.call(this);
-    this.name = name; // symbol
-    this.toBytecode = function() {
+  class globalBucket extends Bytecode {
+    constructor(name) {
+      super();
+      this.name = name; // symbol
+    }
+    toBytecode() {
       return '{"$":"global-bucket","value":"' + escapeSym(this.name) + '"}';
-    };
+    }
   }
-  globalBucket.prototype = heir(Bytecode.prototype);
 
   // Module variable
-  function moduleVariable(modidx, sym, pos, phase) {
-    Bytecode.call(this);
-    this.$ = 'module-variable';
-    this.modidx = modidx; // module-path-index
-    this.sym = sym; // symbol
-    this.pos = pos; // exact integer
-    this.phase = phase; // 1/0 - direct access to exported id
-    this.toBytecode = function() {
+  class moduleVariable extends Bytecode {
+    constructor(modidx, sym, pos, phase) {
+      super();
+      this.$ = 'module-variable';
+      this.modidx = modidx; // module-path-index
+      this.sym = sym; // symbol
+      this.pos = pos; // exact integer
+      this.phase = phase; // 1/0 - direct access to exported id
+    }
+    toBytecode() {
       return '{"$":"module-variable","sym":' + this.sym.toBytecode() + ',"modidx":' + this.modidx.toBytecode() + ',"pos":' + this.pos + ',"phase":' + this.phase + '}';
-    };
+    }
   }
-  moduleVariable.prototype = heir(Bytecode.prototype);
-
-  // Wrap syntax object
-  function wrap() {
-    Bytecode.call(this);
-  }
-  wrap.prototype = heir(Bytecode.prototype);
-
-  // Wrapped syntax object
-  function wrapped(datum, wraps, certs) {
-    Bytecode.call(this);
-    this.datum = datum; // any
-    this.wraps = wraps; // list of wrap
-    this.certs = certs; // list or false
-  }
-  wrapped.prototype = heir(Bytecode.prototype);
-
-  // Stx
-  function stx(encoded) {
-    this.encoded = encoded; // wrapped
-    Bytecode.call(this);
-  }
-  stx.prototype = heir(Bytecode.prototype);
-
+ 
   // prefix
-  function prefix(numLifts, topLevels, stxs) {
-    Bytecode.call(this);
-    this.numLifts = numLifts; // exact, non-negative integer
-    this.topLevels = topLevels; // list of (false, symbol, globalBucket or moduleVariable)
-    this.stxs = stxs; // list of stxs
-    this.toBytecode = function() {
+  class prefix extends Bytecode {
+    constructor(numLifts, topLevels, stxs) {
+      super();
+      this.numLifts = numLifts;   // exact, non-negative integer
+      this.topLevels = topLevels; // list of (false, symbol, globalBucket or moduleVariable)
+      this.stxs = stxs;           // list of stxs
+    }
+    toBytecode() {
       return '{"$":"prefix","num-lifts":' + this.numLifts + ',"toplevels":[' + this.topLevels.map(function(v) {
         return convertToBytecode(v);
       }).join(',') + '],"stxs":[' + this.stxs.map(convertToBytecode) + ']}';
-    };
+    }
   }
-  prefix.prototype = heir(Bytecode.prototype);
-
-  // form
-  function form() { Bytecode.call(this); }
-  form.prototype = heir(Bytecode.prototype);
-
-  // expr
-  function expr() { Bytecode.call(this); }
-  expr.prototype = heir(Bytecode.prototype);
-
-  // Indirect
-  function indirect(v) {
-    Bytecode.call(this);
-    this.v = v; // ??
-    this.toBytecode = function() {
-      return '{"$":"indirect","v":' + this.v.toBytecode() + '}';
-    };
-  }
-  indirect.prototype = heir(Bytecode.prototype);
 
   // compilationTop
-  function compilationTop(maxLetDepth, prefix, code) {
-    Bytecode.call(this);
-    this.maxLetDepth = maxLetDepth; // exact non-negative integer
-    this.prefix = prefix; // prefix
-    this.code = code; // form, indirect, or any
-    this.toBytecode = function() {
-      return '{"$":"compilation-top","max-let-depth":' + this.maxLetDepth + ',"prefix":' + this.prefix.toBytecode() + ',"compiled-indirects":[],"code":' + this.code.toBytecode() + '}';
-    };
+  class compilationTop extends Bytecode {
+    constructor(maxLetDepth, prefix, code) {
+      super();
+      this.maxLetDepth = maxLetDepth; // exact non-negative integer
+      this.prefix = prefix;           // prefix
+      this.code = code;               // form, indirect, or any
+    }
+    toBytecode() {
+      return '{"$":"compilation-top","max-let-depth":' + this.maxLetDepth + ',"prefix":' + this.prefix.toBytecode()
+            + ',"compiled-indirects":[],"code":' + this.code.toBytecode() + '}';
+    }
   }
-  compilationTop.prototype = heir(Bytecode.prototype);
-
-  // provided
-  function provided(name, src, srcName, nomSrc, srcPhase, isProtected, insp) {
-    Bytecode.call(this);
-    this.name = name; // symbol
-    this.src = src; // false or modulePathIndex
-    this.srcName = srcName; // symbol
-    this.nomSrc = nomSrc; // false or modulePathIndex
-    this.srcPhase = srcPhase; // 0/1
-    this.insp = insp; // boolean or void
-    this.isProtected = isProtected; // boolean
-  }
-  provided.prototype = heir(Bytecode.prototype);
 
   // topLevel
-  function topLevel(depth, pos, constant, ready, loc) {
-    Bytecode.call(this);
-    this.depth = depth; // exact, non-negative integer
-    this.pos = pos; // exact, non-negative integer
-    this.constant = constant; // boolean
-    this.ready = ready; // boolean
-    this.loc = loc; // false or Location
-    this.toBytecode = function() {
-      return '{"$":"toplevel","depth":' + this.depth.toString() + ',"pos":' + this.pos.toString() + ',"const?":' + this.constant + ',"ready?":' + this.ready + ',"loc":' + (this.loc && this.loc.toVector().toBytecode()) + '}';
-    };
+  class topLevel extends Bytecode {
+    constructor(depth, pos, constant, ready, loc) {
+      super();
+      this.depth = depth; // exact, non-negative integer
+      this.pos = pos; // exact, non-negative integer
+      this.constant = constant; // boolean
+      this.ready = ready; // boolean
+      this.loc = loc; // false or Location
+    }
+    toBytecode() {
+      return '{"$":"toplevel","depth":' + this.depth.toString() + ',"pos":' + this.pos.toString() + ',"const?":'
+      + this.constant + ',"ready?":' + this.ready + ',"loc":' + (this.loc && this.loc.toVector().toBytecode()) + '}';
+    }
   }
-  topLevel.prototype = heir(Bytecode.prototype);
 
   // seq
-  function seq(forms) {
-    Bytecode.call(this);
-    this.forms = forms; // list of form, indirect, any
-    this.toBytecode = function() {
+  class seq extends Bytecode {
+    constructor(forms) {
+      super();
+      this.forms = forms; // list of form, indirect, any
+    }
+    toBytecode() {
       return '{"$":"seq","forms":[' + this.forms.map(convertToBytecode).join(',') + ']}';
-    };
+    }
   }
-  seq.prototype = heir(Bytecode.prototype);
 
   // defValues
-  function defValues(ids, rhs) {
-    Bytecode.call(this);
-    this.ids = ids; // list of toplevel or symbol
-    this.rhs = rhs; // expr, indirect, seq, any
-    this.toBytecode = function() {
+  class defValues extends Bytecode {
+    constructor(ids, rhs) {
+      super();
+      this.ids = ids; // list of toplevel or symbol
+      this.rhs = rhs; // expr, indirect, seq, any
+    }
+    toBytecode() {
       return '{"$":"def-values","ids":[' + this.ids.map(convertToBytecode).join(',') + '],"body":' + this.rhs.toBytecode() + '}';
-    };
+    }
   }
-  defValues.prototype = heir(Bytecode.prototype);
-
-  // defSyntaxes
-  function defSyntaxes(ids, rhs, prefix, maxLetDepth) {
-    Bytecode.call(this);
-    this.$ = 'def-values';
-    this.ids = ids; // list of toplevel or symbol
-    this.rhs = rhs; // expr, indirect, seq, any
-    this.prefix = prefix; // prefix
-    this.maxLetDepth = maxLetDepth; // exact, non-negative integer
-    this.toBytecode = function() {
-      return '{"$":"def-values","ids":[' + this.ids.toBytecode().join(',') + '],"rhs":' + this.rhs.toBytecode() + ',"prefix":' + this.prefix.toBytecode() + ',"max-let-depth":' + this.maxLetDepth.toBytecode() + '}';
-    };
-  }
-  defSyntaxes.prototype = heir(Bytecode.prototype);
-
-  // defForSyntax
-  function defForSyntax(ids, rhs, prefix, maxLetDepth) {
-    Bytecode.call(this);
-    this.ids = ids; // list of toplevel or symbol
-    this.rhs = rhs; // expr, indirect, seq, any
-    this.prefix = prefix; // prefix
-    this.maxLetDepth = maxLetDepth; // exact, non-negative integer
-  }
-  defForSyntax.prototype = heir(Bytecode.prototype);
-
-  // mod
-  function mod(name, selfModidx, prefix, provides, requires, body
-    , syntaxBody, unexported, maxLetDepth, dummy, langInfo
-    , internalContext) {
-    Bytecode.call(this);
-    this.name = name; // exact, non-negative integer
-    this.selfModidx = selfModidx; // exact, non-negative integer
-    this.prefix = prefix; // boolean
-    this.provides = provides; // boolean
-    this.requires = requires; // false or Location
-    this.body = body; // exact, non-negative integer
-    this.syntaxBody = syntaxBody; // exact, non-negative integer
-    this.unexported = unexported; // boolean
-    this.maxLetDepth = maxLetDepth; // exact, non-negative integer
-    this.dummy = dummy; // false or Location
-    this.langInfo = langInfo; // false or (vector modulePath symbol any)
-    this.internalContext = internalContext;
-    this.toBytecode = function() {
-      return '{"$":"mod","name":' + this.name.toBytecode() + ',"self-modidx":' + this.selfModidx.toBytecode() + ',"prefix":' + this.prefix.toBytecode() + ',"provides":' + this.provides.toBytecode() + ',"requires":' + (this.requires && this.requires.toVector().toBytecode()) + ',"body":' + this.body.toBytecode() + ',"stx-body":' + this.syntaxBody.toBytecode() + ',"max-let-depth":' + this.maxLetDepth.toBytecode() + '}';
-    };
-  }
-  mod.prototype = heir(Bytecode.prototype);
 
   // lam
-  function lam(name, operatorAndRandLocs, flags, numParams, paramTypes
-    , rest, closureMap, closureTypes, maxLetDepth, body) {
-
-    Bytecode.call(this);
-    this.name = name; // symbol, vector, empty
-    this.flags = flags; // (list of ('preserves-marks 'is-method 'single-result))
-    this.numParams = numParams; // exact, non-negative integer
-    this.paramTypes = paramTypes; // list of ('val 'ref 'flonum)
-    this.rest = rest; // boolean
-    this.body = body; // expr, seq, indirect
-    this.closureMap = closureMap; // vector of exact, non-negative integers
-    this.maxLetDepth = maxLetDepth; // exact, non-negative integer
-    this.closureTypes = closureTypes; // list of ('val/ref or 'flonum)
-    this.operatorAndRandLocs = operatorAndRandLocs; // list of Vectors
-    // operator+rand-locs includes a list of vectors corresponding to the location
-    // of the operator, operands, etc if we can pick them out.  If we can't get
-    // this information, it's false
-    this.toBytecode = function() {
+  class lam extends Bytecode {
+    constructor(name, operatorAndRandLocs, flags, numParams, paramTypes
+                , rest, closureMap, closureTypes, maxLetDepth, body) {
+      super();
+      this.name = name; // symbol, vector, empty
+      this.flags = flags; // (list of ('preserves-marks 'is-method 'single-result))
+      this.numParams = numParams; // exact, non-negative integer
+      this.paramTypes = paramTypes; // list of ('val 'ref 'flonum)
+      this.rest = rest; // boolean
+      this.body = body; // expr, seq, indirect
+      this.closureMap = closureMap; // vector of exact, non-negative integers
+      this.maxLetDepth = maxLetDepth; // exact, non-negative integer
+      this.closureTypes = closureTypes; // list of ('val/ref or 'flonum)
+      this.operatorAndRandLocs = operatorAndRandLocs; // list of Vectors
+      // operator+rand-locs includes a list of vectors corresponding to the location
+      // of the operator, operands, etc if we can pick them out.  If we can't get
+      // this information, it's false
+    }
+    toBytecode() {
       return '{"$":"lam","name":' + this.name.toBytecode() + ',"locs":[' + this.operatorAndRandLocs.map(convertToBytecode).join(',') + '],"flags":[' + this.flags.map(convertToBytecode).join(',') + '],"num-params":' + this.numParams + ',"param-types":[' + this.paramTypes.map(convertToBytecode).join(',') + '],"rest?":' + this.rest + ',"closure-map":[' + this.closureMap.map(convertToBytecode).join(',') + '],"closure-types":[' + this.closureTypes.map(convertToBytecode).join(',') + '],"max-let-depth":' + this.maxLetDepth + ',"body":' + this.body.toBytecode() + '}';
-    };
+    }
   }
-  lam.prototype = heir(Bytecode.prototype);
-
-
-  // closure: a static closure (nothing to close over)
-  function closure(code, genId) {
-    Bytecode.call(this);
-    this.code = code; // lam
-    this.genId = genId; // symbol
-    this.toBytecode = function() {
-      return '{"$":"closure","code":' + this.code.toBytecode() + ',"gen-id":' + this.genId.toBytecode() + '}';
-    };
-  }
-  closure.prototype = heir(Bytecode.prototype);
-
-  // caseLam: each clause is a lam (added indirect)
-  function caseLam(name, clauses) {
-    Bytecode.call(this);
-    this.name = name; // symbol, vector, empty
-    this.clauses = clauses; // list of (lambda or indirect)
-    this.toBytecode = function() {
-      return '{"$":"case-lam","name":' + this.name.toBytecode() + ',"clauses":' + this.clauses.toBytecode() + '}';
-    };
-  }
-  caseLam.prototype = heir(Bytecode.prototype);
-
-  // letOne
-  function letOne(rhs, body, flonum) {
-    Bytecode.call(this);
-    this.rhs = rhs; // expr, seq, indirect, any
-    this.body = body; // expr, seq, indirect, any
-    this.flonum = flonum; // boolean
-    this.toBytecode = function() {
-      return '{"$": "let-one","rhs":' + this.rhs.toBytecode() + ',"body":' + this.body.toBytecode() + ',"flonum":' + this.flonum.toBytecode() + '}';
-    };
-  }
-  letOne.prototype = heir(Bytecode.prototype);
 
   // letVoid
-  function letVoid(count, boxes, body) {
-    Bytecode.call(this);
-    this.count = count; // exact, non-negative integer
-    this.boxes = boxes; // boolean
-    this.body = body; // expr, seq, indirect, any
-    this.toBytecode = function() {
+  class letVoid extends Bytecode {
+    constructor(count, boxes, body) {
+      super();
+      this.count = count; // exact, non-negative integer
+      this.boxes = boxes; // boolean
+      this.body = body;   // expr, seq, indirect, any
+    }
+    toBytecode() {
       return '{"$":"let-void","count":' + convertToBytecode(this.count) + ',"boxes?":' + convertToBytecode(this.boxes) + ',"body":' + this.body.toBytecode() + '}';
-    };
+    }
   }
-  letVoid.prototype = heir(Bytecode.prototype);
-
-  // letRec: put `letrec'-bound closures into existing stack slots
-  function letRec(procs, body) {
-    Bytecode.call(this);
-    this.procs = procs; // list of lambdas
-    this.body = body; // expr, seq, indirect, any
-    this.toBytecode = function() {
-      return '{"$":"let-rec","procs":' + this.procs.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
-    };
-  }
-  letRec.prototype = heir(Bytecode.prototype);
 
   // installValue
-  function installValue(count, pos, boxes, rhs, body) {
-    Bytecode.call(this);
-    this.count = count; // exact, non-negative integer
-    this.pos = pos; // exact, non-negative integer
-    this.boxes = boxes; // boolean
-    this.rhs = rhs; // expr, seq, indirect, any
-    this.body = body; // expr, seq, indirect, any -- set existing stack slot(s)
-    this.toBytecode = function() {
-      return '{"$":"install-value","count":' + convertToBytecode(this.count) + ',"pos":' + convertToBytecode(this.pos) + ',"boxes?":' + convertToBytecode(this.boxes) + ',"rhs":' + this.rhs.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
-    };
+  class installValue extends Bytecode {
+    constructor(count, pos, boxes, rhs, body) {
+      super();
+      this.count = count; // exact, non-negative integer
+      this.pos = pos;     // exact, non-negative integer
+      this.boxes = boxes; // boolean
+      this.rhs = rhs;     // expr, seq, indirect, any
+      this.body = body;   // expr, seq, indirect, any -- set existing stack slot(s)
+    }
+    toBytecode() {
+      return '{"$":"install-value","count":' + convertToBytecode(this.count) + ',"pos":' + convertToBytecode(this.pos)
+        + ',"boxes?":' + convertToBytecode(this.boxes) + ',"rhs":' + this.rhs.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
+    }
   }
-  installValue.prototype = heir(Bytecode.prototype);
-
-  // boxEnv: box existing stack element
-  function boxEnv(pos, body) {
-    Bytecode.call(this);
-    this.pos = pos; // exact, non-negative integer
-    this.body = body; // expr, seq, indirect, any
-    this.toBytecode = function() {
-      return '{"$":"boxenv","pos":' + this.pos.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
-    };
-  }
-  boxEnv.prototype = heir(Bytecode.prototype);
 
   // localRef: access local via stack
-  function localRef(unbox, pos, clear, otherClears, flonum) {
-    Bytecode.call(this);
-    this.unbox = unbox || false; // boolean
-    this.pos = pos; // exact, non-negative integer
-    this.clear = clear; // boolean
-    this.flonum = flonum; // boolean
-    this.otherClears = otherClears; // boolean
-    this.toBytecode = function() {
-      return '{"$":"localref","unbox?":' + this.unbox + ',"pos":' + this.pos + ',"clear":' + this.clear + ',"other-clears?":' + this.otherClears + ',"flonum?":' + this.flonum + '}';
-    };
+  class localRef extends Bytecode {
+    constructor(unbox, pos, clear, otherClears, flonum) {
+      super();
+      this.unbox = unbox || false; // boolean
+      this.pos = pos; // exact, non-negative integer
+      this.clear = clear; // boolean
+      this.flonum = flonum; // boolean
+      this.otherClears = otherClears; // boolean
+    }
+    toBytecode() {
+      return '{"$":"localref","unbox?":' + this.unbox + ',"pos":' + this.pos + ',"clear":' + this.clear + ',"other-clears?":'
+      + this.otherClears + ',"flonum?":' + this.flonum + '}';
+    }
   }
-  localRef.prototype = heir(Bytecode.prototype);
-
-  // topSyntax : access syntax object via prefix array (which is on stack)
-  function topSyntax(depth, pos, midpt) {
-    Bytecode.call(this);
-    this.depth = depth; // exact, non-negative integer
-    this.pos = pos; // exact, non-negative integer
-    this.midpt = midpt; // exact, non-negative integer
-  }
-  topSyntax.prototype = heir(Bytecode.prototype);
 
   // application: function call
-  function application(rator, rands) {
-    Bytecode.call(this);
-    this.rator = rator; // expr, seq, indirect, any
-    this.rands = rands; // list of (expr, seq, indirect, any)
-    this.toBytecode = function() {
+  class application extends Bytecode {
+    constructor(rator, rands) {
+      super();
+      this.rator = rator; // expr, seq, indirect, any
+      this.rands = rands; // list of (expr, seq, indirect, any)
+    }
+    toBytecode() {
       return '{"$":"application","rator":' + this.rator.toBytecode() + ',"rands":[' + this.rands.map(convertToBytecode).join(',') + ']}';
-    };
+    }
   }
-  application.prototype = heir(Bytecode.prototype);
 
   // branch
-  function branch(testExpr, thenExpr, elseExpr) {
-    Bytecode.call(this);
-    this.testExpr = testExpr; // expr, seq, indirect, any
-    this.thenExpr = thenExpr; // expr, seq, indirect, any
-    this.elseExpr = elseExpr; // expr, seq, indirect, any
-    this.toBytecode = function() {
+  class branch extends Bytecode {
+    constructor(testExpr, thenExpr, elseExpr) {
+      super();
+      this.testExpr = testExpr; // expr, seq, indirect, any
+      this.thenExpr = thenExpr; // expr, seq, indirect, any
+      this.elseExpr = elseExpr; // expr, seq, indirect, any
+    }
+    toBytecode() {
       return '{"$":"branch","test":' + this.testExpr.toBytecode() + ',"then":' + this.thenExpr.toBytecode() + ',"else":' + this.elseExpr.toBytecode() + '}';
-    };
+    }
   }
-  branch.prototype = heir(Bytecode.prototype);
 
   // withContMark:'with-cont-mark'
-  function withContMark(key, val, body) {
-    Bytecode.call(this);
-    this.$ = 'with-cont-mark';
-    this.key = key; // expr, seq, indirect, any
-    this.val = val; // expr, seq, indirect, any
-    this.body = body; // expr, seq, indirect, any
-    this.toBytecode = function() {
-      return '{"$":"with-cont-mark","key":' + new literal(new symbolExpr(this.key)).toBytecode() + ',"val":' + new literal(this.val).toBytecode() + ',"body":' + this.body.toBytecode() + '}';
-    };
+  class withContMark extends Bytecode {
+    constructor(key, val, body) {
+      super();
+      this.$ = 'with-cont-mark';
+      this.key = key; // expr, seq, indirect, any
+      this.val = val; // expr, seq, indirect, any
+      this.body = body; // expr, seq, indirect, any
+    }
+    toBytecode() {
+      return '{"$":"with-cont-mark","key":' + new literal(new symbolExpr(this.key)).toBytecode() + ',"val":'
+        + new literal(this.val).toBytecode() + ',"body":' + this.body.toBytecode() + '}';
+    }
   }
-  withContMark.prototype = heir(Bytecode.prototype);
-
-  // beg0: begin0
-  function beg0(seq) {
-    Bytecode.call(this);
-    this.seq = seq; // list  of (expr, seq, indirect, any)
-    this.toBytecode = function() {
-      return '{"$":"beg0","seq":' + this.seq.toBytecode() + '}';
-    };
-  }
-  beg0.prototype = heir(Bytecode.prototype);
-
-  // splice: top-level 'begin'
-  function splice(forms) {
-    Bytecode.call(this);
-    this.forms = forms; // list  of (expr, seq, indirect, any)
-    this.toBytecode = function() {
-      return '{"$":"splice","forms":' + this.forms.toBytecode() + '}';
-    };
-  }
-  splice.prototype = heir(Bytecode.prototype);
-
-  // varRef: `#%variable-reference'
-  function varRef(topLevel) {
-    Bytecode.call(this);
-    this.topLevel = topLevel; // topLevel
-    this.toBytecode = function() {
-      return '{"$":"varref","top-level":' + this.topLevel.toBytecode() + '}';
-    };
-  }
-  varRef.prototype = heir(Bytecode.prototype);
-
-  // assign: top-level or module-level set!
-  function assign(id, rhs, undefOk) {
-    Bytecode.call(this);
-    this.id = id; // topLevel
-    this.rhs = rhs; // expr, seq, indirect, any
-    this.undefOk = undefOk; // boolean
-    this.toBytecode = function() {
-      return '{"$":"assign","id":' + this.id.toBytecode() + ',"rhs":' + this.rhs.toBytecode() + ',"undef-ok":' + this.undefOk.toBytecode() + '}';
-    };
-  }
-  assign.prototype = heir(Bytecode.prototype);
-
-  // applyValues: `(call-with-values (lambda () ,args-expr) ,proc)
-  function applyValues(proc, args) {
-    Bytecode.call(this);
-    this.proc = proc; // expr, seq, indirect, any
-    this.args = args; // expr, seq, indirect, any
-    this.toBytecode = function() {
-      return '{"$":"apply-values","proc":' + this.proc.toBytecode() + ',"args":' + this.args.toBytecode() + '}';
-    };
-  }
-  applyValues.prototype = heir(Bytecode.prototype);
-
-  // primVal: direct preference to a kernel primitive
-  function primVal(id) {
-    Bytecode.call(this);
-    this.id = id; // exact, non-negative integer
-    this.toBytecode = function() {
-      return '{"$":"primval","id":' + this.id.toBytecode() + '}';
-    };
-  }
-  primVal.prototype = heir(Bytecode.prototype);
 
   // req
-  function req(reqs, dummy) {
-    Bytecode.call(this);
-    this.$ = 'req';
-    this.reqs = reqs; // syntax
-    this.dummy = dummy; // toplevel
-    this.toBytecode = function() {
+  class req extends Bytecode {
+    constructor(reqs, dummy) {
+      super();
+      this.$ = 'req';
+      this.reqs = reqs; // syntax
+      this.dummy = dummy; // toplevel
+    }
+    toBytecode() {
       var reqBytecode = (this.reqs instanceof literal) ? '"' + this.reqs.val + '"' : this.reqs.toBytecode();
       return '{"$":"req","reqs":' + reqBytecode + ',"dummy":' + this.dummy.toBytecode() + '}';
-    };
+    }
   }
-  req.prototype = heir(Bytecode.prototype);
+
+  // HACK: module-path
+  class modulePath extends Bytecode {
+    constructor(path, base) {
+      super();
+      this.path = path;
+      this.base = base;
+    }
+    toBytecode() {
+      return '{"$":"module-path","path":' + convertToBytecode(this.path) + ',"base":' + convertToBytecode(this.base) + '}';
+    }
+  }
+
+/*
+ 
+ /////////////////////////////////////////////////////////////////////////////////////////////////////
+ // UNUSED RACKET BYTCODE STRUCTS -- as of 12/11/15, these bytecodes have never been used in WeScheme
+ // they were ported to ES6 for completeness, but they're essentially dead code at this point
+ 
+ 
+ 
+  // Wrap syntax object
+  class wrap extends Bytecode {
+    constructor(){ super(); }
+  }
+
+  // Wrapped syntax object
+  class wrapped extends Bytecode {
+    constructor(datum, wraps, certs) {
+      super();
+      this.datum = datum; // any
+      this.wraps = wraps; // list of wrap
+      this.certs = certs; // list or false
+    }
+  }
+
+  // Stx
+  class stx extends Bytecode {
+    constructor(encoded) {
+      super();
+      this.encoded = encoded; // wrapped
+    }
+  }
+ 
+  // form
+  class form extends Bytecode {
+    constructor(){ super(); }
+  }
+
+  // expr
+  class expr extends Bytecode {
+    constructor(){ super(); }
+  }
+
+  // Indirect
+  class indirect extends Bytecode {
+    constructor(v) {
+      super();
+      this.v = v; // ??
+    }
+    toBytecode() {
+      return '{"$":"indirect","v":' + this.v.toBytecode() + '}';
+    }
+  }
+
+  // provided
+  class provided extends Bytecode {
+    constructor(name, src, srcName, nomSrc, srcPhase, isProtected, insp) {
+      super();
+      this.name = name;         // symbol
+      this.src = src;           // false or modulePathIndex
+      this.srcName = srcName;   // symbol
+      this.nomSrc = nomSrc;     // false or modulePathIndex
+      this.srcPhase = srcPhase; // 0/1
+      this.insp = insp;         // boolean or void
+      this.isProtected = isProtected; // boolean
+    }
+  }
+
+  // defSyntaxes
+  class defSyntaxes extends Bytecode {
+    constructor(ids, rhs, prefix, maxLetDepth) {
+      super();
+      this.$ = 'def-values';
+      this.ids = ids; // list of toplevel or symbol
+      this.rhs = rhs; // expr, indirect, seq, any
+      this.prefix = prefix; // prefix
+      this.maxLetDepth = maxLetDepth; // exact, non-negative integer
+    }
+    toBytecode() {
+      return '{"$":"def-values","ids":[' + this.ids.toBytecode().join(',') + '],"rhs":' + this.rhs.toBytecode()
+      + ',"prefix":' + this.prefix.toBytecode() + ',"max-let-depth":' + this.maxLetDepth.toBytecode() + '}';
+    }
+  }
+
+  // defForSyntax
+  class defForSyntax extends Bytecode {
+    constructor(ids, rhs, prefix, maxLetDepth) {
+      super();
+      this.ids = ids; // list of toplevel or symbol
+      this.rhs = rhs; // expr, indirect, seq, any
+      this.prefix = prefix; // prefix
+      this.maxLetDepth = maxLetDepth; // exact, non-negative integer
+    }
+  }
+
+  // mod
+  class mod extends Bytecode {
+    constructor(name, selfModidx, prefix, provides, requires, body
+                , syntaxBody, unexported, maxLetDepth, dummy, langInfo
+                , internalContext) {
+      super();
+      this.name = name; // exact, non-negative integer
+      this.selfModidx = selfModidx; // exact, non-negative integer
+      this.prefix = prefix; // boolean
+      this.provides = provides; // boolean
+      this.requires = requires; // false or Location
+      this.body = body; // exact, non-negative integer
+      this.syntaxBody = syntaxBody; // exact, non-negative integer
+      this.unexported = unexported; // boolean
+      this.maxLetDepth = maxLetDepth; // exact, non-negative integer
+      this.dummy = dummy; // false or Location
+      this.langInfo = langInfo; // false or (vector modulePath symbol any)
+      this.internalContext = internalContext;
+    }
+    toBytecode() {
+      return '{"$":"mod","name":' + this.name.toBytecode() + ',"self-modidx":' + this.selfModidx.toBytecode() + ',"prefix":' + this.prefix.toBytecode() + ',"provides":' + this.provides.toBytecode() + ',"requires":' + (this.requires && this.requires.toVector().toBytecode()) + ',"body":' + this.body.toBytecode() + ',"stx-body":' + this.syntaxBody.toBytecode() + ',"max-let-depth":' + this.maxLetDepth.toBytecode() + '}';
+    }
+  }
+
+  // closure: a static closure (nothing to close over)
+  class closure extends Bytecode {
+    constructor(code, genId) {
+      super();
+      this.code = code;   // lam
+      this.genId = genId; // symbol
+    }
+    toBytecode() {
+      return '{"$":"closure","code":' + this.code.toBytecode() + ',"gen-id":' + this.genId.toBytecode() + '}';
+    }
+  }
+
+  // caseLam: each clause is a lam (added indirect)
+  class caseLam extends Bytecode {
+    constructor(name, clauses) {
+      super();
+      this.name = name;       // symbol, vector, empty
+      this.clauses = clauses; // list of (lambda or indirect)
+    }
+    toBytecode() {
+      return '{"$":"case-lam","name":' + this.name.toBytecode() + ',"clauses":' + this.clauses.toBytecode() + '}';
+    }
+  }
+
+  // letOne
+  class letOne extends Bytecode {
+    constructor(rhs, body, flonum) {
+      super();
+      this.rhs = rhs;       // expr, seq, indirect, any
+      this.body = body;     // expr, seq, indirect, any
+      this.flonum = flonum; // boolean
+    }
+    toBytecode() {
+      return '{"$": "let-one","rhs":' + this.rhs.toBytecode() + ',"body":' + this.body.toBytecode() + ',"flonum":' + this.flonum.toBytecode() + '}';
+    }
+  }
+
+  // letRec: put `letrec'-bound closures into existing stack slots
+  class letRec extends Bytecode {
+    constructor(procs, body) {
+      super();
+      this.procs = procs; // list of lambdas
+      this.body = body;   // expr, seq, indirect, any
+    }
+    toBytecode() {
+      return '{"$":"let-rec","procs":' + this.procs.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
+    }
+  }
+
+  // boxEnv: box existing stack element
+  class boxEnv extends Bytecode {
+    constructor(pos, body) {
+      super();
+      this.pos = pos;   // exact, non-negative integer
+      this.body = body; // expr, seq, indirect, any
+    }
+    toBytecode() {
+      return '{"$":"boxenv","pos":' + this.pos.toBytecode() + ',"body":' + this.body.toBytecode() + '}';
+    }
+  }
+
+  // topSyntax : access syntax object via prefix array (which is on stack)
+  class topSyntax extends Bytecode {
+    constructor(depth, pos, midpt) {
+      super();
+      this.depth = depth; // exact, non-negative integer
+      this.pos = pos; // exact, non-negative integer
+      this.midpt = midpt; // exact, non-negative integer
+    }
+  }
+
+  // beg0: begin0
+  class beg0 extends Bytecode {
+    constructor(seq) {
+      super();
+      this.seq = seq; // list  of (expr, seq, indirect, any)
+    }
+    toBytecode() {
+      return '{"$":"beg0","seq":' + this.seq.toBytecode() + '}';
+    }
+  }
+
+  // splice: top-level 'begin'
+  class splice extends Bytecode {
+    constructor(forms) {
+      super();
+      this.forms = forms; // list  of (expr, seq, indirect, any)
+    }
+    toBytecode() {
+      return '{"$":"splice","forms":' + this.forms.toBytecode() + '}';
+    }
+  }
+
+  // varRef: `#%variable-reference'
+  class varRef extends Bytecode {
+    constructor(topLevel) {
+      super();
+      this.topLevel = topLevel; // topLevel
+    }
+    toBytecode() {
+      return '{"$":"varref","top-level":' + this.topLevel.toBytecode() + '}';
+    }
+  }
+
+  // assign: top-level or module-level set!
+  class assign extends Bytecode {
+    constructor(id, rhs, undefOk) {
+      super();
+      this.id = id;           // topLevel
+      this.rhs = rhs;         // expr, seq, indirect, any
+      this.undefOk = undefOk; // boolean
+    }
+    toBytecode() {
+      return '{"$":"assign","id":' + this.id.toBytecode() + ',"rhs":' + this.rhs.toBytecode() + ',"undef-ok":' + this.undefOk.toBytecode() + '}';
+    }
+  }
+
+  // applyValues: `(call-with-values (lambda () ,args-expr) ,proc)
+  class applyValues extends Bytecode {
+    constructor(proc, args) {
+      super();
+      this.proc = proc; // expr, seq, indirect, any
+      this.args = args; // expr, seq, indirect, any
+    }
+    toBytecode() {
+      return '{"$":"apply-values","proc":' + this.proc.toBytecode() + ',"args":' + this.args.toBytecode() + '}';
+    }
+  }
+
+  // primVal: direct preference to a kernel primitive
+  class primVal extends Bytecode {
+    constructor(id) {
+      super();
+      this.id = id; // exact, non-negative integer
+    }
+    toBytecode() {
+      return '{"$":"primval","id":' + this.id.toBytecode() + '}';
+    }
+  }
 
   // lexicalRename
-  function lexicalRename(bool1, bool2, alist) {
-    this.bool1 = bool1; // boolean
-    this.bool2 = bool2; // boolean
-    this.alist = alist; // should be list of (cons symbol, symbol)
-    Bytecode.call(this);
+  class lexicalRename extends Bytecode {
+    constructor(bool1, bool2, alist) {
+      super();
+      this.bool1 = bool1; // boolean
+      this.bool2 = bool2; // boolean
+      this.alist = alist; // should be list of (cons symbol, symbol)
+    }
   }
-  lexicalRename.prototype = heir(Bytecode.prototype);
 
   // phaseShift
-  function phaseShift(amt, src, dest) {
-    this.amt = amt; // syntax
-    this.src = src; // false or modulePathIndex
-    this.dest = dest; // false or modulePathIndex
-    Bytecode.call(this);
+  class phaseShift extends Bytecode {
+    constructor(amt, src, dest) {
+      super();
+      this.amt = amt;   // syntax
+      this.src = src;   // false or modulePathIndex
+      this.dest = dest; // false or modulePathIndex
+    }
   }
-  phaseShift.prototype = heir(Bytecode.prototype);
 
   // wrapMark
-  function wrapMark(val) {
-    this.val = val; // exact integer
-    Bytecode.call(this);
+  class wrapMark extends Bytecode {
+    constructor(val) {
+      super();
+      this.val = val; // exact integer
+    }
   }
-  wrapMark.prototype = heir(Bytecode.prototype);
 
   // prune
-  function prune(sym) {
-    this.sym = sym; // any
-    Bytecode.call(this);
+  class prune extends Bytecode {
+    constructor(sym) {
+      super();
+      this.sym = sym; // any
+    }
   }
-  prune.prototype = heir(Bytecode.prototype);
 
   // allFromModule
-  function allFromModule(path, phase, srcPhase, exceptions, prefix) {
-    this.path = path; // modulePathIndex
-    this.phase = phase; // false or exact integer
-    this.srcPhase = srcPhase; // any
-    this.prefix = prefix; // false or symbol
-    this.exceptions = exceptions; // list of symbols
-    Bytecode.call(this);
+  class allFromModule extends Bytecode {
+    constructor(path, phase, srcPhase, exceptions, prefix) {
+      super();
+      this.path = path;             // modulePathIndex
+      this.phase = phase;           // false or exact integer
+      this.srcPhase = srcPhase;     // any
+      this.prefix = prefix;         // false or symbol
+      this.exceptions = exceptions; // list of symbols
+    }
   }
-  allFromModule.prototype = heir(Bytecode.prototype);
 
   // nominalPath
-  function nominalPath() {
-    Bytecode.call(this);
+  class nominalPath extends Bytecode() {
+    constructor(){ super(); }
   }
-  nominalPath.prototype = heir(Bytecode.prototype);
 
   // simpleNominalPath
-  function simpleNominalPath(value) {
-    this.value = value; // modulePathIndex
-    Bytecode.call(this);
+  class simpleNominalPath extends Bytecode {
+    constructor(value) {
+      super();
+      this.value = value; // modulePathIndex
+    }
   }
-  simpleNominalPath.prototype = heir(Bytecode.prototype);
 
-  /*    // moduleBinding
-      function moduleBinding() {
-        Bytecode.call(this);
-      };
-      moduleBinding.prototype = heir(Bytecode.prototype);
-  */
-  // phasedModuleBinding
-  function phasedModuleBinding(path, phase, exportName, nominalPath, nominalExportName) {
-    this.path = path; // modulePathIndex
-    this.phase = phase; // exact integer
-    this.exportName = nominalPath; // nominalPath
-    this.nominalExportName = nominalExportName; // any
-    Bytecode.call(this);
+  // moduleBinding
+  class moduleBinding extends Bytecode {
+    constructor(){ super(); }
   }
-  phasedModuleBinding.prototype = heir(Bytecode.prototype);
+
+  // phasedModuleBinding
+  class phasedModuleBinding extends Bytecode {
+    constructor(path, phase, exportName, nominalPath, nominalExportName) {
+      super();
+      this.path = path;                           // modulePathIndex
+      this.phase = phase;                         // exact integer
+      this.exportName = nominalPath;              // nominalPath
+      this.nominalExportName = nominalExportName; // any
+    }
+  }
 
   // exportedNominalModuleBinding
-  function exportedNominalModuleBinding(path, exportName, nominalPath, nominalExportName) {
-    this.path = path; // modulePathIndex
-    this.exportName = exportName; // any
-    this.nominalPath = nominalPath; // nominalPath
-    this.nominalExportName = nominalExportName; // any
-    Bytecode.call(this);
+  class exportedNominalModuleBinding extends Bytecode {
+    constructor(path, exportName, nominalPath, nominalExportName) {
+      super();
+      this.path = path;                           // modulePathIndex
+      this.exportName = exportName;               // any
+      this.nominalPath = nominalPath;             // nominalPath
+      this.nominalExportName = nominalExportName; // any
+    }
   }
-  exportedNominalModuleBinding.prototype = heir(Bytecode.prototype);
 
   // nominalModuleBinding
-  function nominalModuleBinding(path, nominalPath) {
-    this.path = path; // modulePathIndex
-    this.nominalPath = nominalPath; // any
-    Bytecode.call(this);
+  class nominalModuleBinding extends Bytecode {
+    constructor(path, nominalPath) {
+      super();
+      this.path = path;               // modulePathIndex
+      this.nominalPath = nominalPath; // any
+    }
   }
-  nominalModuleBinding.prototype = heir(Bytecode.prototype);
 
   // exportedModuleBinding
-  function exportedModuleBinding(path, exportName) {
-    this.path = path; // modulePathIndex
-    this.exportName = exportName; // any
-    Bytecode.call(this);
+  class exportedModuleBinding extends Bytecode {
+    constructor(path, exportName) {
+      super();
+      this.path = path;             // modulePathIndex
+      this.exportName = exportName; // any
+    }
   }
   exportedModuleBinding.prototype = heir(Bytecode.prototype);
 
   // simpleModuleBinding
-  function simpleModuleBinding(path) {
-    this.path = path; // modulePathIndex
-    Bytecode.call(this);
+  class simpleModuleBinding extends Bytecode {
+    constructor(path) {
+      super();
+      this.path = path; // modulePathIndex
+    }
   }
-  simpleModuleBinding.prototype = heir(Bytecode.prototype);
 
   // ModuleRename
-  function ModuleRename(phase, kind, setId, unmarshals, renames, markRenames, plusKern) {
-    this.phase = phase; // false or exact integer
-    this.kind = kind; // "marked" or "normal"
-    this.unmarshals = unmarshals; // list of allFromModule
-    this.renames = renames; // list of (symbol or moduleBinding)
-    this.markRenames = markRenames; // any
-    this.plusKern = plusKern; // boolean
-    Bytecode.call(this);
+  class ModuleRename extends Bytecode {
+    constructor(phase, kind, setId, unmarshals, renames, markRenames, plusKern) {
+      super();
+      this.phase = phase; // false or exact integer
+      this.kind = kind; // "marked" or "normal"
+      this.unmarshals = unmarshals; // list of allFromModule
+      this.renames = renames; // list of (symbol or moduleBinding)
+      this.markRenames = markRenames; // any
+      this.plusKern = plusKern; // boolean
+    }
   }
-  ModuleRename.prototype = heir(Bytecode.prototype);
-
-  // HACK: module-path
-  function modulePath(path, base) {
-    this.path = path;
-    this.base = base;
-    Bytecode.call(this);
-    this.toBytecode = function() {
-      return '{"$":"module-path","path":' + convertToBytecode(this.path) + ',"base":' + convertToBytecode(this.base) + '}';
-    };
-  }
-  modulePath.prototype = heir(Bytecode.prototype);
-
+*/
+ 
+ 
   // freeVariables : [listof symbols] env -> [list of symbols]
   Program.prototype.freeVariables = function(acc) { return acc; }
   ifExpr.prototype.freeVariables = function(acc, env) {
@@ -962,7 +1012,9 @@ var types = require('./runtime/types');
     var getLocs = function(id) {
         return id.location.toVector();
       }
-      , bytecode = new lam(isUnnamedLambda ? [] : new symbolExpr(name), [isUnnamedLambda ? this.stx : name].concat(this.args).map(getLocs), [], // flags
+      , bytecode = new lam(isUnnamedLambda ? [] : new symbolExpr(name),
+                           [isUnnamedLambda ? this.stx : name].concat(this.args).map(getLocs),
+                           [], // flags
         this.args.length, // numParams
         this.args.map(function() {
           return new symbolExpr("val");
@@ -1111,13 +1163,12 @@ var types = require('./runtime/types');
         }, [])
         , isNotRequiredModuleBinding = function(b) {
           return b.moduleSource && (requiredModuleBindings.indexOf(b) === -1)
-        }
-        , moduleOrTopLevelDefinedBindings = pinfo.usedBindingsHash.values().filter(isNotRequiredModuleBinding),
-
-        allModuleBindings = requiredModuleBindings.concat(moduleOrTopLevelDefinedBindings),
-
+        };
+      var usedBindingsArray = Array.from(pinfo.usedBindingsHash.values());
+      var moduleOrTopLevelDefinedBindings = usedBindingsArray.filter(isNotRequiredModuleBinding);
+      var allModuleBindings = requiredModuleBindings.concat(moduleOrTopLevelDefinedBindings);
         // utility functions for making globalBuckets and moduleVariables
-        makeGlobalBucket = function(name) {
+      var makeGlobalBucket = function(name) {
           return new globalBucket(name);
         }
         , modulePathIndexJoin = function(path, base) {
@@ -1129,14 +1180,12 @@ var types = require('./runtime/types');
               , (b.imported) ? false : modulePathIndexJoin(false, false))
             , new symbolExpr(b.name), -1, 0);
         };
-      var globalNames = pinfo.freeVariables.concat(pinfo.definedNames.keys());
+      var globalNames = pinfo.freeVariables.concat(Array.from(pinfo.definedNames.keys()));
       // FIXME: we have to make uniqueGlobalNames because a function name can also be a free variable,
       // due to a bug in analyze-lambda-expression in which the base pinfo is used for the function body.
-      var uniqueGlobalNames = sortAndUnique(globalNames, function(a, b) {
-        return a < b;
-      }, function(a, b) {
-        return a == b;
-      });
+      var uniqueGlobalNames = sortAndUnique(globalNames,
+                                            function(a, b) { return a < b; },
+                                            function(a, b) { return a == b; });
       var topLevels = [false].concat(
         uniqueGlobalNames.map(makeGlobalBucket)
         , allModuleBindings.map(makeModuleVariablefromBinding)
@@ -1181,9 +1230,9 @@ var types = require('./runtime/types');
     var forms = new seq([].concat(compiledRequires, compiledDefinitions, compiledExpressions))
       , zo_bytecode = new compilationTop(0, toplevelPrefix, forms)
       , response = {
-        "bytecode": "/* runtime-version: local-compiler-summer2014 */\n" + zo_bytecode.toBytecode()
+        "bytecode": "/* runtime-version: local-compiler-spring2016 */\n" + zo_bytecode.toBytecode()
         , "permissions": pinfoExpressions.permissions()
-        , "provides": pinfoExpressions.providedNames.keys()
+        , "provides": Array.from(pinfoExpressions.providedNames.keys())
       };
     return response;
   }
@@ -1192,10 +1241,6 @@ var types = require('./runtime/types');
   /////////////////////
   /* Export Bindings */
   /////////////////////
-  compiler.baseStackReference = baseStackReference;
-  compiler.localStackReference = localStackReference;
-  compiler.globalStackReference = globalStackReference;
-  compiler.unboundStackReference = unboundStackReference;
   compiler.compile = function(program, pinfo, debug) {
     var start = new Date().getTime();
     try {

@@ -1,4 +1,5 @@
 import {
+  comment,
   literal,
   symbolExpr,
   Program,
@@ -105,7 +106,7 @@ function desugarProgram(programs, pinfo, isTopLevelExpr) {
   var acc = [
     [], (pinfo || new structures.pinfo())
   ];
-  var res = programs.reduce((function(acc, p) {
+  var res = programs.filter(function(p){ return !(p instanceof comment); }).reduce((function(acc, p) {
     var desugaredAndPinfo = p.desugar(acc[1]);
     // if it's an expression, insert a print-values call so it shows up in the repl
     if (structures.isExpression(p) && isTopLevelExpr) {
@@ -226,6 +227,10 @@ localExpr.prototype.desugar = function(pinfo) {
   return [newLocalExpr, exprAndPinfo[1]];
 };
 callExpr.prototype.desugar = function(pinfo) {
+  if(!this.func){
+    throwError(new types.Message([new types.ColoredPart("( )", this.location), ": expected a function, but nothing's there"]), 
+      this.location);
+  }
   var exprsAndPinfo = desugarProgram([this.func].concat(this.args), pinfo);
   var newCallExpr = new callExpr(exprsAndPinfo[0][0], exprsAndPinfo[0].slice(1), this.stx);
   newCallExpr.location = this.location;
@@ -460,77 +465,85 @@ orExpr.prototype.desugar = function(pinfo) {
   return desugarOrExprs(exprs, pinfo);
 };
 
-quotedExpr.prototype.desugar = function(pinfo) {
+quotedExpr.prototype.desugar = function (pinfo) {
   if (typeof this.location === 'undefined') {
-    throwError(new types.Message(["ASSERTION ERROR: Every quotedExpr should have a location"]))
+    throwError( new types.Message(["ASSERTION ERROR: Every quotedExpr should have a location"])
+              , this.location)
   }
   // Sexp-lists (arrays) become lists
   // literals and symbols stay themselves
   // everything else gets desugared
-  function desugarQuotedItem(pinfo, loc) {
-    return function(x) {
-      if (x instanceof callExpr || x instanceof quotedExpr || x instanceof unsupportedExpr) {
+  function desugarQuotedItem(pinfo, loc){
+    return function (x) {
+      if (  x instanceof callExpr
+         || x instanceof quotedExpr
+         || x instanceof unsupportedExpr
+         ) {
         return x.desugar(pinfo);
-      } else if (x instanceof symbolExpr || x instanceof literal || x instanceof Array) {
+      } else if (  x instanceof symbolExpr
+                || x instanceof literal
+                || x instanceof Array
+                ) {
         var res = new quotedExpr(x);
         res.location = loc;
         return [res, pinfo];
       } else {
-        throwError(new types.Message(["ASSERTION ERROR: Found an unexpected item in a quotedExpr"]), loc);
+        throwError(new types.Message(["ASSERTION ERROR: Found an unexpected item in a quotedExpr"])
+                  , loc);
       }
     }
   }
-
   return desugarQuotedItem(pinfo, this.location)(this.val);
 };
-
-unquotedExpr.prototype.desugar = function(pinfo, depth) {
+unquotedExpr.prototype.desugar = function (pinfo, depth) {
   if (typeof depth === 'undefined') {
-    throwError(new types.Message(["misuse of a ', not under a quasiquoting backquote"]), this.location);
+    throwError( new types.Message(["misuse of a ', not under a quasiquoting backquote"])
+              , this.location);
   } else if (depth === 1) {
     return this.val.desugar(pinfo);
   } else if (depth > 1) {
-    if (this.val instanceof Array) {
-      return desugarQuasiQuotedList(this.val, pinfo, depth - 1);
-    } else {
-      var uSym = new quotedExpr(new symbolExpr('unquote'));
-      var listSym = new symbolExpr('list');
-      var listArgs = [uSym, this.val.desugar(pinfo, depth - 1)[0]];
-      var listCall = new callExpr(listSym, listArgs);
-      uSym.location = this.location;
-      uSym.parent = listArgs;
-      listSym.location = this.location;
-      listSym.parent = listCall;
-      listCall.location = this.location;
-      return [listCall, pinfo];
-    }
+    var rhs = (this.val instanceof Array)
+        ? desugarQuasiQuotedList(this.val, pinfo, depth-1)[0]
+        : this.val.desugar(pinfo, depth-1)[0]
+    var uSym = new quotedExpr(new symbolExpr('unquote')),
+      listSym = new symbolExpr('list'),
+      listArgs = [uSym, rhs],
+      listCall = new callExpr(listSym, listArgs);
+    uSym.location = this.location;
+    uSym.parent = listArgs;
+    listSym.location = this.location;
+    listSym.parent = listCall;
+    listCall.location = this.location;
+    return [listCall, pinfo];
   } else {
-    throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), this.location);
+    throwError( new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"])
+              , this.location);
   }
 };
 
-unquoteSplice.prototype.desugar = function(pinfo, depth) {
+unquoteSplice.prototype.desugar = function (pinfo, depth) {
   if (typeof depth === 'undefined') {
-    throwError(new types.Message(["misuse of a ,@, not under a quasiquoting backquote"]), this.location);
+    throwError( new types.Message(["misuse of a ,@, not under a quasiquoting backquote"])
+              , this.location);
   } else if (depth === 1) {
     return this.val.desugar(pinfo);
   } else if (depth > 1) {
-    if (this.val instanceof Array) {
-      return desugarQuasiQuotedList(this.val, pinfo, depth - 1);
-    } else {
-      var usSym = new quotedExpr(new symbolExpr('unquote-splicing'));
-      var listSym = new symbolExpr('list');
-      var listArgs = [usSym, this.val.desugar(pinfo, depth - 1)[0]];
-      var listCall = new callExpr(listSym, listArgs);
-      usSym.location = this.location;
-      usSym.parent = listArgs;
-      listSym.location = this.location;
-      listSym.parent = listCall;
-      listCall.location = this.location;
-      return [listCall, pinfo];
-    }
+    var rhs = (this.val instanceof Array)
+        ? desugarQuasiQuotedList(this.val, pinfo, depth-1)[0]
+        : this.val.desugar(pinfo, depth-1)[0]
+    var usSym = new quotedExpr(new symbolExpr('unquote-splicing')),
+      listSym = new symbolExpr('list'),
+      listArgs = [usSym, rhs],
+      listCall = new callExpr(listSym, listArgs);
+    usSym.location = this.location;
+    usSym.parent = listArgs;
+    listSym.location = this.location;
+    listSym.parent = listCall;
+    listCall.location = this.location;
+    return [listCall, pinfo];
   } else {
-    throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), this.location);
+    throwError( new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"])
+              , this.location);
   }
 };
 
@@ -542,10 +555,10 @@ function desugarQuasiQuotedList(qqlist, pinfo, depth) {
       return element.desugar(pinfo, depth);
     } else {
       var argument = (element instanceof Array) ?
-        desugarQuasiQuotedList(element, depth, depth)[0] :
-        element.desugar(pinfo, depth)[0];
-      var listSym = new symbolExpr('list');
-      var listCall = new callExpr(listSym, [argument]);
+         desugarQuasiQuotedList(element, depth, depth)[0] :
+         element.desugar(pinfo, depth)[0],
+        listSym = new symbolExpr('list'),
+        listCall = new callExpr(listSym, [argument]);
       listSym.parent = listCall;
       listCall.location = listSym.location = loc;
       return [listCall, pinfo];
@@ -553,39 +566,37 @@ function desugarQuasiQuotedList(qqlist, pinfo, depth) {
   }
 
   var loc = (typeof qqlist.location != 'undefined') ? qqlist.location :
-    ((qqlist instanceof Array) && (typeof qqlist[0].location != 'undefined')) ? qqlist[0].location :
-    (throwError(types.Message(["ASSERTION FAILURE: couldn't find a usable location"]), new Location(0, 0, 0, 0)));
-  var appendArgs = qqlist.map(function(x) {
-    return desugarQuasiQuotedListElement(x, pinfo, depth, loc)[0];
-  });
-  var appendSym = new symbolExpr('append');
+             ((qqlist instanceof Array) && (typeof qqlist[0].location != 'undefined')) ? qqlist[0].location :
+             (throwError( types.Message(["ASSERTION FAILURE: couldn't find a usable location"])
+                         , new Location(0,0,0,0))),
+    appendArgs = qqlist.map(function(x){ return desugarQuasiQuotedListElement(x, pinfo, depth, loc)[0]; }),
+    appendSym = new symbolExpr('append');
   appendSym.location = loc
   var appendCall = new callExpr(appendSym, appendArgs);
   appendCall.location = loc;
   return [appendCall, pinfo];
 }
-
 // go through each item in search of unquote or unquoteSplice
-quasiquotedExpr.prototype.desugar = function(pinfo, depth) {
+quasiquotedExpr.prototype.desugar = function(pinfo, depth){
   depth = (typeof depth === 'undefined') ? 0 : depth;
   if (depth >= 0) {
     var result;
-    if (this.val instanceof Array) {
-      result = desugarQuasiQuotedList(this.val, pinfo, depth + 1)[0];
+    if(this.val instanceof Array){
+      result = desugarQuasiQuotedList(this.val, pinfo, depth+1)[0];
     } else {
-      result = this.val.desugar(pinfo, depth + 1)[0];
+      result = this.val.desugar(pinfo, depth+1)[0];
     }
   } else {
-    throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), this.location);
+    throwError( new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"])
+              , this.location);
   }
-
   if (depth == 0) {
     return [result, pinfo];
   } else {
-    var qqSym = new quotedExpr(new symbolExpr('quasiquote'));
-    var listArgs = [qqSym, result];
-    var listSym = new symbolExpr('list');
-    var listCall = new callExpr(listSym, listArgs);
+    var qqSym = new quotedExpr(new symbolExpr('quasiquote')),
+      listArgs = [qqSym, result],
+      listSym = new symbolExpr('list'),
+      listCall = new callExpr(listSym, listArgs);
     qqSym.parent = listArgs;
     qqSym.location = this.location;
     result.parent = listArgs;
@@ -822,7 +833,7 @@ provideStatement.prototype.collectProvides = function(pinfo) {
   function collectProvidesFromClause(pinfo, clause) {
     // if it's a symbol, make sure it's defined (otherwise error)
     if (clause instanceof symbolExpr) {
-      if (pinfo.definedNames.containsKey(clause.val)) {
+      if (pinfo.definedNames.has(clause.val)) {
         addProvidedName(clause.val);
         return pinfo;
       } else {
@@ -834,7 +845,7 @@ provideStatement.prototype.collectProvides = function(pinfo) {
       // if it's an array, make sure the struct is defined (otherwise error)
       // NOTE: ONLY (struct-out id) IS SUPPORTED AT THIS TIME
     } else if (clause instanceof Array) {
-      if (pinfo.definedNames.containsKey(clause[1].val) && (pinfo.definedNames.get(clause[1].val) instanceof structBinding)) {
+      if (pinfo.definedNames.has(clause[1].val) && (pinfo.definedNames.get(clause[1].val) instanceof structBinding)) {
         // add the entire structBinding to the provided binding, so we
         // can access fieldnames, predicates, and permissions later
         var b = pinfo.definedNames.get(clause[1].val);
@@ -880,12 +891,8 @@ defVars.prototype.analyzeUses = function(pinfo) {
 function analyzeClosureUses(funcExpr, pinfo) {
   // 1) make a copy of all the bindings
   var oldEnv = pinfo.env;
-  var oldKeys = oldEnv.bindings.keys();
-  var newBindings = types.makeLowLevelEqHash();
-  oldKeys.forEach(function(k) {
-    newBindings.put(k, oldEnv.bindings.get(k));
-  });
-
+  var newBindings = new Map();
+  for(var [k,v] of oldEnv.bindings){ newBindings.set(k, v); }
   // 2) make a copy of the environment, using the newly-copied bindings, and
   //    add the args to this environment
   var newEnv = new env(newBindings);

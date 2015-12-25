@@ -1,11 +1,9 @@
 /*eslint no-console: 0*/
-/* global plt, sameResults */
 
-import {
-  sexpToString
-}
-from '../src/lex'
-
+import { sexpToString, lex } from '../src/lex'
+import { parse } from '../src/parser'
+import { desugar, analyze } from '../src/analyzer'
+import { compile } from '../src/compiler'
 export var repl_input
 export var repl_input_li
 export var output_list
@@ -68,7 +66,7 @@ export function download(filename, text) {
   document.body.removeChild(pom)
 }
 
-export function readFromRepl(event) {
+window.readFromRepl = function(event) {
   var key = event.keyCode
   if (key === 13) { // "\n"
     compileREPL()
@@ -80,13 +78,12 @@ export function compileREPL(makeTeachpack) {
   var aSource = repl_input.value
     // run the local compiler
   var debug = true
-  var sexp = plt.compiler.lex(aSource, programName, debug)
-  var AST = plt.compiler.parse(sexp, debug)
-  var ASTandPinfo = plt.compiler.desugar(AST, undefined, debug)
-  var program = ASTandPinfo[0], pinfo = ASTandPinfo[1]
-  var pinfo2 = plt.compiler.analyze(program, debug)
-    //    var optimized   = plt.compiler.optimize(program)
-  var response = plt.compiler.compile(program, pinfo2, debug)
+  var sexp = lex(aSource, programName, debug)
+  var AST = parse(sexp, debug)
+  var ASTandPinfo = desugar(AST, undefined, debug)
+  var program = ASTandPinfo[0]
+  var pinfo = analyze(program, debug)
+  var response = compile(program, pinfo, debug)
   if (makeTeachpack) {
     var teachpack = "window.COLLECTIONS = window.COLLECTIONS || {};\n" + "window.COLLECTIONS[\"" + programName + "\"]={\"name\":\"" + programName + "\"" + ",\"bytecode\":"
     teachpack += unescape(response.bytecode)

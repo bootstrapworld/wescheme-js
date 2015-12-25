@@ -1,7 +1,6 @@
 /*eslint no-console: 0 no-unused-vars: 0*/
-/*global plt*/
 
-import {compileREPL, getError, repl2_setup} from './repl2'
+import {compileREPL, getError, repl2_setup, readFromRepl} from './repl2'
 import {parse} from '../src/parser'
 import {lex} from '../src/lex'
 import * as analyzer from '../src/analyzer'

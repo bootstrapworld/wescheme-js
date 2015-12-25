@@ -43,6 +43,7 @@ var jsnums = require('./runtime/js-numbers');
 
   // import frequently-used bindings
   var literal = compiler.literal;
+  var comment = compiler.comment;
   var symbolExpr = compiler.symbolExpr;
   var unsupportedExpr = compiler.unsupportedExpr;
   var throwError = compiler.throwError;
@@ -118,11 +119,6 @@ var jsnums = require('./runtime/js-numbers');
     return x === '(' || x === ')' || x === '[' || x === ']' || x === '{' || x === '}';
   }
 
-  // this is returned when a comment is read
-  function Comment(txt) {
-    this.txt = txt;
-  }
-
   // determines if they are matching delimiter pairs
   // ie ( and ) [ and ] { and }
   function matchingDelims(x, y) {
@@ -188,9 +184,7 @@ var jsnums = require('./runtime/js-numbers');
     i = chewWhiteSpace(str, 0);
     while (i < str.length) {
       sexp = readSExpByIndex(str, i);
-      if (!(sexp instanceof Comment)) {
-        sexps.push(sexp);
-      }
+      sexps.push(sexp);
       i = chewWhiteSpace(str, sexp.location.startChar + sexp.location.span);
     }
     sexps.location = new Location(startCol, startRow, 0, i, source);
@@ -771,7 +765,7 @@ var jsnums = require('./runtime/js-numbers');
     }
     i++;
     column++; // hop over '|#'
-    var comment = new Comment(txt);
+    var comment = new compiler.comment(txt);
     comment.location = new Location(startCol, startRow, iStart, i - iStart);
     return comment;
   }
@@ -787,7 +781,7 @@ var jsnums = require('./runtime/js-numbers');
     while ((i = chewWhiteSpace(str, i)) && // there's whitespace to chew
       (i + 1 < str.length) && // we're not out of string
       (nextSExp = readSExpByIndex(str, i)) && // there's an s-expr to be read
-      (nextSExp instanceof Comment)) { // and it's not a comment
+      (nextSExp instanceof comment)) { // and it's not a comment
       i = nextSExp.location.endChar;
     }
 
@@ -801,7 +795,7 @@ var jsnums = require('./runtime/js-numbers');
         , "Error-GenericReadError");
     }
     // if we're here, then we read a proper s-expr
-    var atom = new Comment("(" + nextSExp.toString() + ")");
+    var atom = new compiler.comment("(" + nextSExp.toString() + ")");
     i = nextSExp.location.endChar;
     atom.location = new Location(startCol, startRow, iStart, i - iStart);
     return atom;
@@ -827,7 +821,7 @@ var jsnums = require('./runtime/js-numbers');
       throwError(new types.Message(["read: Unexpected EOF when reading a line comment"])
         , new Location(startCol, startRow, iStart, i - iStart));
     }
-    var atom = new Comment(txt);
+    var atom = new compiler.comment(txt);
     atom.location = new Location(startCol, startRow, iStart, i + 1 - iStart);
     // at the end of the line, reset line/col values
     line++;
