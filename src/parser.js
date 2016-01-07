@@ -133,9 +133,11 @@ var compiler = require('./compiler');
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one field name (in parentheses) after the ", new types.ColoredPart("structure name", sexp[1].location), ", but found ", new types.ColoredPart("something else", sexp[2].location)]), sexp.location);
       }
       // is it a list of not-all-symbols?
-      if(!sexp[2].every(isSymbol)) {
+      sexp[2].forEach(function(arg) {
+       if (!isSymbol(arg)) {
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a field name, but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
         }
+      });
       // too many expressions?
       if (sexp.length > 3) {
         var extraLocs = sexp.slice(3).map(function(sexp) {
@@ -593,7 +595,8 @@ var compiler = require('./compiler');
         result = parseExpr(clause[1]),
         cpl = new couple(test, result);
       // the only un-parenthesized keyword allowed in the first slot is 'else'
-      if (keywords.includes(test.val) && (test.val !== "else")) {
+      if (keywords.includes(test.val)
+       && (test.val !== "else")) {
         throwError(new types.Message([new types.ColoredPart(test.val, test.location), ": expected an open parenthesis before ", test.val, ", but found none"]),
           test.location);
       }

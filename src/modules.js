@@ -192,7 +192,7 @@ var compiler = require('./compiler');
       , "image-baseline", "mode?", "image-color?", "name->color", "x-place?", "y-place?", "angle?", "side-count?", "step-count?"
     ].map(function(binding) {
       var needsPermission = ["video/url", "bitmap/url", "image-url", "open-image-url"];
-      var permissions = (needsPermission.indexOf(binding) > -1) ? ["android.permission.INTERNET"] : [];
+      var permissions = needsPermission.includes(binding)? ["android.permission.INTERNET"] : [];
       return new constantBinding(binding, '"moby/world"', permissions, false);
     })));
   }

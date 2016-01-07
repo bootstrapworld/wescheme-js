@@ -791,7 +791,7 @@ export class pinfo{
   // accumulateDefinedBinding: binding loc -> pinfo
   // Adds a new defined binding to a pinfo's set.
   accumulateDefinedBinding(binding, loc){
-    if(keywords.indexOf(binding.name) > -1){
+    if(keywords.includes(binding.name)){
       throwError(new types.Message([new types.ColoredPart(binding.name, loc),
         ": this is a reserved keyword and cannot be used"+
         " as a variable or function name"])
@@ -860,8 +860,8 @@ export class pinfo{
   // accumulateFreeVariableUse: symbol -> pinfo
   // Mark a free variable usage.
   accumulateFreeVariableUse(sym){
-    this.freeVariables = ((this.freeVariables.indexOf(sym) > -1)?
-      this.freeVariables : [sym].concat(this.freeVariables));
+    this.freeVariables = this.freeVariables.includes(sym)?
+        this.freeVariables : [sym].concat(this.freeVariables);
     return this;
   }
 
