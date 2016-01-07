@@ -621,7 +621,7 @@ symbolExpr.prototype.desugar = function(pinfo) {
   }
   // if this is a keyword without a parent, or if it's not the first child of the parent
   if (!this.parent &&
-    (keywords.indexOf(this.val) > -1) && (this.val !== "else")) {
+    keywords.includes(this.val) && (this.val !== "else")) {
     throwError(new types.Message([new types.ColoredPart(this.val, this.location), ": expected an open parenthesis before ", this.val, ", but found none"]),
       this.location);
   }
@@ -656,7 +656,7 @@ function bf(name, modulePath, arity, vararity, loc) {
 }
 defFunc.prototype.collectDefinitions = function(pinfo) {
   this.args.forEach(function(arg) {
-    if (keywords.indexOf(arg.val) > -1) {
+    if (keywords.includes(arg.val)) {
       throwError(new types.Message([new types.ColoredPart(arg.val, arg.location),
         ": this is a reserved keyword and cannot be used" +
         " as a variable or function name"
@@ -944,7 +944,7 @@ ifExpr.prototype.analyzeUses = function(pinfo, env) {
 };
 symbolExpr.prototype.analyzeUses = function(pinfo, env) {
   // if this is a keyword without a parent, or if it's not the first child of the parent
-  if (keywords.indexOf(this.val) > -1 &&
+  if (keywords.includes(this.val) &&
     (!this.parent || this.parent[0] !== this) ||
     this.parent instanceof couple) {
     throwError(

@@ -723,9 +723,9 @@ export function defaultModulePathResolver(path){
     collectionName = parts[0];
   // TODO: fix this circular dependency
   var modules = require('./modules')
-  return ((modules.knownCollections.indexOf(collectionName) > -1)
-    && defaultModuleResolver(path.toString()))
-  || /^wescheme\/\w+$/.exec(path);
+  return (modules.knownCollections.includes(collectionName)
+          && defaultModuleResolver(path.toString()))
+        || /^wescheme\/\w+$/.exec(path);
 }
 
 

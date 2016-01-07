@@ -117,7 +117,7 @@ var types = require('./runtime/types');
     // possible characters that need to be escaped
     var escapes = ["{", "}", "[", "]", ",", "'", "`", " ", "\\", '"'];
     for (var j = 0; j < str.length; j++) {
-      bcStr += ((escapes.indexOf(str.charAt(j)) > -1) ? '\\' : '') + str.charAt(j);
+      bcStr += (escapes.includes(str.charAt(j)) ? '\\' : '') + str.charAt(j);
     }
     // special-case for newline characters
     bcStr = bcStr.replace(/\n/g, "\\n");
@@ -752,7 +752,7 @@ var types = require('./runtime/types');
   }
   // if it's an unbound variable that we haven't seen before, add it to acc
   symbolExpr.prototype.freeVariables = function(acc, env) {
-    return (isUnboundStackRef(env.lookup(this.val, 0)) && (acc.indexOf(this) == -1)) ? acc.concat([this]) : acc;
+    return (isUnboundStackRef(env.lookup(this.val, 0)) && !acc.includes(this)) ? acc.concat([this]) : acc;
   }
   localExpr.prototype.freeVariables = function(acc, env) {
     // helper functions
@@ -916,7 +916,7 @@ var types = require('./runtime/types');
     // maskUnusedGlobals : (listof symbol?) (listof symbol?) -> (listof symbol or false)
     function maskUnusedGlobals(listOfNames, namesToKeep) {
       return listOfNames.map(function(n) {
-        return (namesToKeep.indexOf(n) > -1) ? n : false;
+        return namesToKeep.includes(n) ? n : false;
       });
     }
 
@@ -1162,7 +1162,7 @@ var types = require('./runtime/types');
           return acc.concat(m.bindings);
         }, [])
         , isNotRequiredModuleBinding = function(b) {
-          return b.moduleSource && (requiredModuleBindings.indexOf(b) === -1)
+          return b.moduleSource && !requiredModuleBindings.includes(b)
         };
       var usedBindingsArray = Array.from(pinfo.usedBindingsHash.values());
       var moduleOrTopLevelDefinedBindings = usedBindingsArray.filter(isNotRequiredModuleBinding);
