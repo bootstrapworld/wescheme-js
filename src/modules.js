@@ -325,6 +325,7 @@ var compiler = require('./compiler');
     , ["list*", 1, true]
     , ["list-ref", 2]
     , ["remove", 2]
+    , ["remove-all", 2]
     , ["member", 2]
     , ["member?", 2]
     , ["memq", 2]

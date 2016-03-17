@@ -66,35 +66,25 @@ var jsnums = require('./runtime/js-numbers');
 
   // the location struct
   // endCol and endRow are included for pyret error location
-  var Location = function(startCol, startRow, startChar, span, theSource) {
-    this.startCol = startCol; // starting index into the line
-    this.startRow = startRow; // starting line # (1-index)
-    this.startChar = startChar; // ch index of lexeme start, from beginning
-    this.span = span; // num chrs between lexeme start and end
-    this.source = theSource || source; // [OPTIONAL] id of the containing DOM element
+  class Location {
+    constructor(startCol, startRow, startChar, span, theSource) {
+      this.startCol = startCol; // starting index into the line
+      this.startRow = startRow; // starting line # (1-index)
+      this.startChar = startChar; // ch index of lexeme start, from beginning
+      this.span = span; // num chrs between lexeme start and end
+      this.source = theSource || source; // [OPTIONAL] id of the containing DOM element
 
-    this.endCol = column; // ending index into the line
-    this.endRow = line; // ending index into the line
-    this.endChar = startChar + span; // ch index of lexeme end, from beginning
-
-    this.start = function() {
-      return new Location("", "", this.startChar, 1);
-    };
-    this.end = function() {
-      return new Location("", "", this.startChar + this.span - 1, 1);
-    };
-    this.toString = function() {
-      return "Loc(" + this.startCol + ", " + this.startRow + ", " + (this.startChar + 1) + "," + this.span + ")";
-    };
-    this.toVector = function() {
+      this.endCol = column; // ending index into the line
+      this.endRow = line; // ending index into the line
+      this.endChar = startChar + span; // ch index of lexeme end, from beginning
+    }
+    start() { return new Location("", "", this.startChar, 1); };
+    end()   { return new Location("", "", this.startChar + this.span - 1, 1); };
+    toVector() {
       return new types.vector(['"' + this.source + '"' // add quotes to the source, since it's a str (not a symbol)
-
-
-        
-        , this.startChar + 1, this.startRow, this.startCol, this.span
-      ]);
+                              , this.startChar + 1, this.startRow, this.startCol, this.span]);
     };
-    this.toString = function() {
+    toString() {
       return {
         line: this.startRow.toString()
         , id: this.source
@@ -184,7 +174,9 @@ var jsnums = require('./runtime/js-numbers');
     i = chewWhiteSpace(str, 0);
     while (i < str.length) {
       sexp = readSExpByIndex(str, i);
-      sexps.push(sexp);
+      if (!(sexp instanceof compiler.comment)) {
+        sexps.push(sexp);
+      }
       i = chewWhiteSpace(str, sexp.location.startChar + sexp.location.span);
     }
     sexps.location = new Location(startCol, startRow, 0, i, source);
