@@ -332,9 +332,6 @@ function runTests(verbose){
     try {
       recieved    = JSON.stringify(compiler.compile(program, pinfo2))
     } catch (recieved) {
-      if (recieved instanceof structures.unimplementedException){
-        throw recieved.str + " NOT IMPLEMENTED"
-      }
       throw Error("COMPILATION ERROR\n"+getError(recieved).toString())
     }
     // if we don't have a bytecodeRef for this test, call it a questinonable pass move on
