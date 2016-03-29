@@ -6,7 +6,7 @@ import {lex} from '../src/lex'
 import * as analyzer from '../src/analyzer'
 import * as structures from '../src/structures'
 import types from '../src/runtime/types'
-import compiler from '../src/compiler'
+import {compile} from '../src/compiler'
 // TODO: currently the bytecode evaluation relies on types being in the global namespace
 // le sigh...
 window.types = types
@@ -330,7 +330,7 @@ function runTests(verbose){
 
     bytecode.innerHTML = 'bytecode'
     try {
-      recieved    = JSON.stringify(compiler.compile(program, pinfo2))
+      recieved    = JSON.stringify(compile(program, pinfo2))
     } catch (recieved) {
       throw Error("COMPILATION ERROR\n"+getError(recieved).toString())
     }

@@ -52,7 +52,7 @@ var types = require('./runtime/types');
 // sort the array, and throw errors for non-symbols, keywords or duplicates
 function checkDuplicateIdentifiers(lst, stx, unusedLoc) {
   var visitedIds = {}; // initialize a dictionary of ids we've seen
-  lst.forEach(function(id) {
+  lst.forEach( id => {
     if (!(id instanceof symbolExpr)) {
       throwError("expected identifier " + id.val, id.location);
     } else if (visitedIds[id.val]) { // if we've seen this variable before, throw an error
@@ -76,9 +76,7 @@ function tagApplicationOperator_Module(application, moduleName) {
   var module = defaultModuleResolver(moduleName);
   var env = new emptyEnv().extendEnv_moduleBinding(module);
   // assign it as the context of the function, and each of the arguments
-  [application.func].concat(application.args).forEach(function(expr) {
-    expr.context = env;
-  });
+  [application.func].concat(application.args).forEach(expr => expr.context = env );
   return application;
 }
 
@@ -133,7 +131,7 @@ function _desugar(pinfo, p, depth) {
     // check for duplicate arguments
     checkDuplicateIdentifiers([p.name].concat(p.args), p.stx[0], p.location);
     // check for non-symbol arguments
-    p.args.forEach(function(arg) {
+    p.args.forEach(arg => {
       if (!(arg instanceof symbolExpr)) {
         throwError(new types.Message([new types.ColoredPart(p.stx.val, p.stx.location), 
                                       ": expected a variable but found ", 
@@ -176,9 +174,8 @@ function _desugar(pinfo, p, depth) {
     ];
     var makeStructTypeCall = new callExpr(makeStructTypeFunc, makeStructTypeArgs);
     // set location for all of these nodes
-    [makeStructTypeCall, makeStructTypeFunc].concat(idSymbols, makeStructTypeArgs).forEach(function(part) {
-      part.location = p.location
-    });
+    [makeStructTypeCall, makeStructTypeFunc].concat(idSymbols, makeStructTypeArgs)
+      .forEach(part => part.location = p.location);
 
     // make the define-values stx object, but store the original stx for define-struct
     var defineValuesStx = new defVars([p.name].concat(idSymbols), makeStructTypeCall, p.stx);
@@ -193,9 +190,8 @@ function _desugar(pinfo, p, depth) {
       var accessorSymbol = new symbolExpr(p.name.val + '-' + f.val);
       var defineVar = new defVar(accessorSymbol, makeFieldCall);
       // set location for all of these nodes
-      [defineVar, makeFieldFunc, makeFieldCall, accessorSymbol].concat(makeFieldArgs).forEach(function(p) {
-        p.location = f.location
-      });
+      [defineVar, makeFieldFunc, makeFieldCall, accessorSymbol].concat(makeFieldArgs)
+        .forEach(p => p.location = f.location);
       stxs.push(defineVar);
     }
     p.fields.forEach(makeAccessorDefn);
@@ -316,13 +312,13 @@ function _desugar(pinfo, p, depth) {
     var caseStx = new symbolExpr("if"); // TODO: The server returns "if" here, but I am almost certain it should be "case"
     caseStx.location = p.location;
 
-    var pinfoAndValSym = pinfo.gensym('val'); // create a symbol 'val
-    var updatedPinfo1 = pinfoAndValSym[0]; // generate pinfo containing 'val
-    var valStx = pinfoAndValSym[1]; // remember the symbolExpr for 'val'
+    var pinfoAndValSym = pinfo.gensym('val');     // create a symbol 'val
+    var updatedPinfo1 = pinfoAndValSym[0];        // generate pinfo containing 'val
+    var valStx = pinfoAndValSym[1];               // remember the symbolExpr for 'val'
     var pinfoAndXSym = updatedPinfo1.gensym('x'); // create another symbol 'x' using pinfo1
-    var updatedPinfo2 = pinfoAndXSym[0]; // generate pinfo containing 'x'
-    var xStx = pinfoAndXSym[1]; // remember the symbolExpr for 'x'
-    var voidStx = new symbolExpr('void'); // make the void symbol
+    var updatedPinfo2 = pinfoAndXSym[0];          // generate pinfo containing 'x'
+    var xStx = pinfoAndXSym[1];                   // remember the symbolExpr for 'x'
+    var voidStx = new symbolExpr('void');         // make the void symbol
 
     // track all the syntax we've created so far...
     var stxs = [valStx, xStx, voidStx];
@@ -360,7 +356,7 @@ function _desugar(pinfo, p, depth) {
     stxs = stxs.concat([binding, letExp]);
 
     // assign location to every stx element we created
-    stxs.forEach(function(stx) { stx.location = p.location; });
+    stxs.forEach(stx => stx.location = p.location );
     return _desugar(updatedPinfo2, letExp);
   }
   // ands become nested ifs
@@ -381,7 +377,7 @@ function _desugar(pinfo, p, depth) {
       var stxs = [alternative, ifStx, ifLink];
 
       // assign location information to everything
-      stxs.forEach(function(stx) { return stx.location = p.location; });
+      stxs.forEach(stx => stx.location = p.location );
       return ifLink;
     }
 
@@ -429,7 +425,7 @@ function _desugar(pinfo, p, depth) {
       var let_exp = new letExpr([tmpBinding], if_exp, orStx);
       var stxs = [orStx, firstExprSym, tmpBinding, if_exp, if_exp.stx, let_exp];
       // assign location information to everything
-      stxs.forEach(function(stx) { return stx.location = p.location; });
+      stxs.forEach(stx => stx.location = p.location );
       return _desugar(pinfo, let_exp);
     }
 
@@ -641,7 +637,7 @@ function bf(name, modulePath, arity, vararity, loc) {
 
 function collectDefinitions(pinfo, p) {
   function collectDefinitions_defFunc(pinfo, p) {
-    p.args.forEach(function(arg) {
+    p.args.forEach(arg => {
       if (keywords.includes(arg.val)) {
         throwError(new types.Message([new types.ColoredPart(arg.val, arg.location),
           ": this is a reserved keyword and cannot be used" +
@@ -898,9 +894,7 @@ function analyzeUses(p, pinfo, _env){
     return analyzeUses(p.expr, pinfo, pinfo.env);
   }
   function analyzeUses_defVars(p, pinfo, env) {
-    p.names.forEach(function(id){
-        pinfo.env.extend(new constantBinding(id.val, false, [], id.location));
-      });
+    p.names.forEach(id => pinfo.env.extend(new constantBinding(id.val, false, [], id.location)) );
     return analyzeUses(p.expr, pinfo, pinfo.env);
   }
   function analyzeUses_defFunc(p, pinfo, _env) {

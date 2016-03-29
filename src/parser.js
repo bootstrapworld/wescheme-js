@@ -43,9 +43,6 @@ var compiler = require('./compiler');
  * Given an Array of SExps, produce an array of Programs or a structured error
  * see structures.js for Program Objects and Error throwing
  
- TODO
- - Perf: give location information to all AST nodes as constructor argument
- - JSLint
  */
 
 //////////////////////////////////// UTILITY FUNCTIONS //////////////////////////////
@@ -131,7 +128,7 @@ function parseDefinition(sexp) {
       throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one field name (in parentheses) after the ", new types.ColoredPart("structure name", sexp[1].location), ", but found ", new types.ColoredPart("something else", sexp[2].location)]), sexp.location);
     }
     // is it a list of not-all-symbols?
-    sexp[2].forEach(function(arg) {
+    sexp[2].forEach(arg => {
      if (!isSymbol(arg)) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a field name, but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
       }
@@ -190,7 +187,7 @@ function parseDefinition(sexp) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a function name after the open parenthesis but found ", new types.ColoredPart("something else", sexp[1][0].location)]), sexp.location);
       }
       // is the next element a list of not-all-symbols?
-      sexp[1].forEach(function(arg) {
+      sexp[1].forEach(arg => {
         if (!isSymbol(arg)) {
           throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a variable but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
         }
@@ -275,7 +272,7 @@ function parseExprList(sexp) {
         sexp.location);
     }
     // is it a list of not-all-symbols?
-    sexp[1].forEach(function(arg) {
+    sexp[1].forEach(arg => {
       if (!isSymbol(arg)) {
         var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a list of variables after lambda, but found ", new types.ColoredPart("something else", arg.location)]);
         throwError(msg, sexp.location);
@@ -312,7 +309,7 @@ function parseExprList(sexp) {
         sexp[1].location);
     }
     // is it a list of not-all-definitions?
-    sexp[1].forEach(function(def) {
+    sexp[1].forEach(def => {
       if (!isDefinition(def)) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a definition, but given ", new types.ColoredPart("something else", def.location)]),
           def.location);
@@ -347,7 +344,7 @@ function parseExprList(sexp) {
         sexp.location);
     }
     // is it a list of not-all-bindings?
-    sexp[1].forEach(function(binding) {
+    sexp[1].forEach(binding => {
       if (!sexpIsCouple(binding)) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", binding.location)]),
           binding.location);
@@ -382,7 +379,7 @@ function parseExprList(sexp) {
         sexp[1].location);
     }
     // is it a list of not-all-bindings?
-    sexp[1].forEach(function(binding) {
+    sexp[1].forEach(binding => {
       if (!sexpIsCouple(binding)) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", binding.location)]),
           binding.location);
@@ -417,7 +414,7 @@ function parseExprList(sexp) {
       throwError(msg, sexp.location);
     }
     // is it a list of not-all-bindings?
-    sexp[1].forEach(function(binding) {
+    sexp[1].forEach( binding => {
       if (!sexpIsCouple(binding)) {
         throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", binding.location)]),
           binding.location);
@@ -609,7 +606,7 @@ function parseCondExpr(sexp) {
     parsedClauses = rest(sexp).map(parseCondCouple);
   // if we see an else and we haven't seen all other clauses first
   // throw an error that points to the next clause (rst + the one we're looking at + "cond")
-  rest(sexp).forEach(function(couple, idx) {
+  rest(sexp).forEach((couple, idx) => {
     if (isElseClause(couple) && (idx < (numClauses - 1))) {
       throwError(new types.Message([new types.MultiPart("cond", condLocs, true), ": ", "found an ", new types.ColoredPart("else clause", couple.location), " that isn't the last clause in its cond expression; there is ", new types.ColoredPart("another clause", sexp[idx + 2].location), " after it"]),
         couple.location);
@@ -684,7 +681,7 @@ function parseCaseExpr(sexp) {
 
   // if we see an else and we haven't seen all other clauses first
   // throw an error that points to the next clause (rst + the one we're looking at + "cond")
-  clauses.forEach(function(couple, idx) {
+  clauses.forEach((couple, idx) => {
     if (isElseClause(couple) && (idx < (numClauses - 1))) {
       var msg = new types.Message([new types.MultiPart("case", caseLocs, true), ": found an ", new types.ColoredPart("else clause", couple.location), "that isn't the last clause in its case expression; there is ", new types.ColoredPart("another clause", sexp[idx + 2].location), " after it"]);
       throwError(msg, sexp.location);
@@ -867,7 +864,7 @@ function parseRequire(sexp) {
       throwError(msg, sexp.location);
     }
     // is it (require (lib not-strings))?
-    rest(sexp[1]).forEach(function(lit) {
+    rest(sexp[1]).forEach((lit) => {
       if (!(isString(lit))) {
         msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", lit.location)]);
         throwError(msg, sexp.location);

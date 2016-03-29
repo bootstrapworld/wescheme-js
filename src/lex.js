@@ -10,11 +10,6 @@ var jsnums = require('./runtime/js-numbers');
  NOT SUPPORTED BY MOBY, WESCHEME, OR THIS COMPILER: define-datatype, begin0, set!, time, delay, shared, recur,
     match, check-member-of, check-range, (require planet), byetstrings (#"Apple"),
     regexps (#rx or #px), hashtables (#hash), graphs (#1=100 #1# #1#), #reader and #lang
-
-
- TODO
- - JSLint
- - convert Location structs to use those from the Pyret lexer
  */
 
 //////////////////////////////////////////////////////////////////////////////
