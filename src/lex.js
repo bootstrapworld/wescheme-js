@@ -154,12 +154,14 @@ function maybeAssignComment(sexp) {
   // immediately-preceding line, assign it and clear the comment
   if(!(sexp instanceof comment) && lastComment &&
     lastComment.location.endRow === sexp.location.startRow-1) { 
+    console.log('assignign comment from previous line');
     sexp.comment = lastComment;
     lastComment = false;
   // if it's a comment and there's an un-commented sexp on
   // the same line, assign it and clear the comment
   } else if((sexp instanceof comment) && lastSexp && !lastSexp.comment &&
             lastSexp.location.startRow == sexp.location.startRow) {
+    console.log('assignign comment from current line');
     lastSexp.comment = sexp;
     lastComment = false;
   // merge unattached comments with the contiguous previous comments
@@ -191,7 +193,7 @@ function readProg(str, strSource) {
   i = chewWhiteSpace(str, 0);
   while (i < str.length) {
     sexp = readSExpByIndex(str, i);
-    if (!(sexp instanceof compiler.comment)) {
+    if (!(sexp instanceof comment)) {
       sexps.push(sexp);
     }
     i = chewWhiteSpace(str, sexp.location.startChar + sexp.location.span);
@@ -229,6 +231,7 @@ function readSExpByIndex(str, i) {
     
   // see if we can assign a comment to this sexp
   maybeAssignComment(sexp);
+  lastSexp = sexp;
   return sexp;
 }
 
@@ -266,10 +269,11 @@ function readList(str, i) {
       dot2Idx = dot1Idx ? list.length : false; // if we've seen dot1, save this idx to dot2Idx
       dot1Idx = dot1Idx || list.length; // if we haven't seen dot1, save this idx to dot1Idx
     }
-    if (!(sexp instanceof Comment)) { // if it's not a comment, add it to the list
+    if (!(sexp instanceof comment)) { // if it's not a comment, add it to the list
       sexp.parent = list; // set this list as it's parent
       list.push(sexp); // and add the sexp to the list
     }
+    lastSexp = sexp;
     return i;
   }
 
@@ -809,7 +813,7 @@ function readSExpComment(str, i) {
       , "Error-GenericReadError");
   }
   // if we're here, then we read a proper s-expr
-  var atom = new compiler.comment("(" + nextSExp.toString() + ")");
+  var atom = new comment("(" + nextSExp.toString() + ")");
   i = nextSExp.location.endChar;
   atom.location = new Location(startCol, startRow, iStart, i - iStart);
   return atom;
@@ -835,7 +839,7 @@ function readLineComment(str, i) {
     throwError(new types.Message(["read: Unexpected EOF when reading a line comment"])
       , new Location(startCol, startRow, iStart, i - iStart));
   }
-  var atom = new compiler.comment(txt);
+  var atom = new comment(txt);
   atom.location = new Location(startCol, startRow, iStart, i + 1 - iStart);
   // at the end of the line, reset line/col values
   line++;
@@ -886,7 +890,7 @@ function readQuote(str, i) {
   symbol.location = new Location(column - 1, startRow, iStart, i - iStart);
 
   // read the next non-comment sexp
-  while (!nextSExp || (nextSExp instanceof Comment)) {
+  while (!nextSExp || (nextSExp instanceof comment)) {
     i = chewWhiteSpace(str, i);
     try {
       nextSExp = readSExpByIndex(str, i);
