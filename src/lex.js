@@ -246,6 +246,8 @@ function readList(str, i) {
     , msg;
   column++; // move forward to count the closing delimeter
   var list = [];
+  // grab lastComment if one exists
+  if(lastComment) { list.comment = lastComment; lastComment = null; }
   delims.push(openingDelim);
   i = chewWhiteSpace(str, i);
 
