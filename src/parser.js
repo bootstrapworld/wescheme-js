@@ -243,7 +243,7 @@ function isExpr(sexp) {
 function parseExpr(sexp) {
   var p = isCons(sexp) ? parseExprList(sexp) :
           parseExprSingleton(sexp);
-  p.comment = sexp.comment;
+  if(!isComment(p)) { p.comment = sexp.comment; }
   return p;
 }
 
@@ -833,6 +833,7 @@ function parseExprSingleton(sexp) {
                   isSymbolEqualTo("quote", sexp) ? new quotedExpr(sexp) :
                   isSymbolEqualTo("empty", sexp) ? new callExpr(new symbolExpr("list"), []) :
     throwError(new types.Message([new types.ColoredPart("( )", sexp.location), ": expected a function, but nothing's there"]), sexp.location);
+  if(!isComment(singleton)) { singleton.comment = sexp.comment; }
   singleton.location = sexp.location;
   return singleton;
 }
