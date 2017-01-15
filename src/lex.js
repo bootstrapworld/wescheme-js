@@ -53,6 +53,8 @@ var leftListDelims = /[(\u005B\u007B]/
 
 // the delimiters encountered so far, line and column, and case-sensitivity
 var delims, line, column, startCol, startRow, source, caseSensitiveSymbols;
+// last-seen comments and sexps, so we can associate one with the other
+var lastComment, lastSexp;
 // UGLY HACK to track index if an error occurs. We should remove this if we can make i entirely stateful
 var endOfError;
 
@@ -146,6 +148,29 @@ export function sexpToString(sexp) {
   return (sexp instanceof Array) ? "(" + sexp.map(sexpToString).toString() + ")" : sexp.toString();
 }
 
+// use heuristic to assign comments to an sexp
+function maybeAssignComment(sexp) {
+  // if it's code and there's an un-assigned comment
+  // immediately-preceding line, assign it and clear the comment
+  if(!(sexp instanceof comment) && lastComment &&
+    lastComment.location.endRow === sexp.location.startRow-1) { 
+    sexp.comment = lastComment;
+    lastComment = false;
+  // if it's a comment and there's an un-commented sexp on
+  // the same line, assign it and clear the comment
+  } else if((sexp instanceof comment) && lastSexp && !lastSexp.comment &&
+            lastSexp.location.startRow == sexp.location.startRow) {
+    lastSexp.comment = sexp;
+    lastComment = false;
+  // merge unattached comments with the contiguous previous comments
+  } else if(sexp instanceof comment) {
+    if(lastComment && lastComment.location.endRow == sexp.location.endRow-1) {
+      sexp.txt = lastComment.txt + "\n" + sexp.txt;
+    } 
+    lastComment = sexp;
+  }
+}
+
 
 /////////////////////
 /* Primary Methods */
@@ -201,6 +226,9 @@ function readSExpByIndex(str, i) {
     quotes.test(p) ? readQuote(str, i) :
     /* else */
     readSymbolOrNumber(str, i);
+    
+  // see if we can assign a comment to this sexp
+  maybeAssignComment(sexp);
   return sexp;
 }
 

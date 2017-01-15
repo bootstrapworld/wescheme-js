@@ -70,13 +70,14 @@ function isSymbolEqualTo(x, y) {
 // parse* : sexp list -> Program list
 function parseStar(sexps) {
   function parseSExp(sexp) {
-    return isComment(sexp) ? sexp :
+    var p=isComment(sexp) ? sexp :
           isDefinition(sexp) ? parseDefinition(sexp) :
           isExpr(sexp) ? parseExpr(sexp) :
           isRequire(sexp) ? parseRequire(sexp) :
           isProvide(sexp) ? parseProvide(sexp) :
           throwError(new types.Message(["Not a Definition, Expression, Library Require, or Provide"]),
                      sexp.location);
+    p.comment = sexp.comment;
   }
   return sexps.map(parseSExp);
 }
@@ -239,8 +240,9 @@ function isExpr(sexp) {
 }
 
 function parseExpr(sexp) {
-  return isCons(sexp) ? parseExprList(sexp) :
-    parseExprSingleton(sexp);
+  var p = isCons(sexp) ? parseExprList(sexp) :
+          parseExprSingleton(sexp);
+  p.comment = sexp.comment;
 }
 
 // parseExprList : SExp -> AST
