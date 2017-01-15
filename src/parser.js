@@ -78,6 +78,7 @@ function parseStar(sexps) {
           throwError(new types.Message(["Not a Definition, Expression, Library Require, or Provide"]),
                      sexp.location);
     p.comment = sexp.comment;
+    return p;
   }
   return sexps.map(parseSExp);
 }
@@ -243,6 +244,7 @@ function parseExpr(sexp) {
   var p = isCons(sexp) ? parseExprList(sexp) :
           parseExprSingleton(sexp);
   p.comment = sexp.comment;
+  return p;
 }
 
 // parseExprList : SExp -> AST
