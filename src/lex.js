@@ -154,14 +154,12 @@ function maybeAssignComment(sexp) {
   // immediately-preceding line, assign it and clear the comment
   if(!(sexp instanceof comment) && lastComment &&
     lastComment.location.endRow === sexp.location.startRow-1) { 
-    console.log('assignign comment from previous line');
     sexp.comment = lastComment;
     lastComment = false;
   // if it's a comment and there's an un-commented sexp on
   // the same line, assign it and clear the comment
   } else if((sexp instanceof comment) && lastSexp && !lastSexp.comment &&
             lastSexp.location.startRow == sexp.location.startRow) {
-    console.log('assignign comment from current line');
     lastSexp.comment = sexp;
     lastComment = false;
   // merge unattached comments with the contiguous previous comments
