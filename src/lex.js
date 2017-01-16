@@ -158,7 +158,7 @@ function maybeAssignComment(sexp) {
     lastComment = false;
   // if it's a comment and there's an un-commented sexp on
   // the same line, assign it and clear the comment
-  } else if((sexp instanceof comment) && lastSexp && !lastSexp.comment &&
+  } else if((sexp instanceof comment) && lastSexp &&
             lastSexp.location.startRow == sexp.location.startRow) {
     lastSexp.comment = sexp;
     lastComment = false;
@@ -837,7 +837,7 @@ function readLineComment(str, i) {
     throwError(new types.Message(["read: Unexpected EOF when reading a line comment"])
       , new Location(startCol, startRow, iStart, i - iStart));
   }
-  var atom = new comment(txt);
+  var atom = new comment(txt.replace(/^[\;\s]*/,'')); // remove starting WS or ;s
   atom.location = new Location(startCol, startRow, iStart, i + 1 - iStart);
   // at the end of the line, reset line/col values
   line++;
