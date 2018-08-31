@@ -54,7 +54,7 @@ var leftListDelims = /[(\u005B\u007B]/
 // the delimiters encountered so far, line and column, and case-sensitivity
 var delims, line, column, startCol, startRow, source, caseSensitiveSymbols;
 // last-seen comments and sexps, so we can associate one with the other
-var lastComment, lastSexp;
+var lastComment = false, lastSexp = false;
 // UGLY HACK to track index if an error occurs. We should remove this if we can make i entirely stateful
 var endOfError;
 
@@ -159,12 +159,12 @@ function maybeAssignComment(sexp) {
   // if it's a comment and there's an un-commented sexp on
   // the same line, assign it and clear the comment
   } else if((sexp instanceof comment) && lastSexp &&
-            lastSexp.location.startRow == sexp.location.startRow) {
+            (lastSexp.location.startRow == sexp.location.startRow)) {
     lastSexp.comment = sexp;
     lastComment = false;
   // merge unattached comments with the contiguous previous comments
   } else if(sexp instanceof comment) {
-    if(lastComment && lastComment.location.endRow == sexp.location.endRow-1) {
+      if(lastComment && lastComment.location.endRow == sexp.location.endRow-1) {
       sexp.txt = lastComment.txt + "\n" + sexp.txt;
     } 
     lastComment = sexp;
@@ -180,10 +180,11 @@ function maybeAssignComment(sexp) {
 // reads multiple sexps encoded into this string and converts them to a SExp
 // datum
 function readProg(str, strSource) {
+  // set all state back to beginning
   var i = 0;
-  startCol = column = 0;
-  startRow = line = 1, // initialize all position indices
-    caseSensitiveSymbols = true; // initialize case sensitivity
+  startCol = column = 0, startRow = line = 1; // initialize all position indices
+  caseSensitiveSymbols = true;                // initialize case sensitivity
+  lastComment = lastSexp = false;             // initialize comment tracking
   source = strSource || "<definitions>";
   var sexp, sexps = [];
   delims = [];
