@@ -55,7 +55,7 @@ var leftListDelims = /[(\u005B\u007B]/
 var delims, line, column, startCol, startRow, source, caseSensitiveSymbols;
 // last-seen comments and sexps, so we can associate one with the other
 var lastComment = false, lastSexp = false;
-// UGLY HACK to track index if an error occurs. We should remove this if we can make i entirely stateful
+// UGLY HACK to track index if an error occurs. We should remove this if we can make it entirely stateless
 var endOfError;
 
 // the location struct
@@ -159,7 +159,7 @@ function maybeAssignComment(sexp) {
   // if it's a comment and there's an un-commented sexp on
   // the same line, assign it and clear the comment
   } else if((sexp instanceof comment) && lastSexp &&
-            (lastSexp.location.startRow == sexp.location.startRow)) {
+            (lastSexp.location.endRow == sexp.location.startRow)) {
     lastSexp.comment = sexp;
     lastComment = false;
   // merge unattached comments with the contiguous previous comments
@@ -198,6 +198,8 @@ function readProg(str, strSource) {
     i = chewWhiteSpace(str, sexp.location.startChar + sexp.location.span);
   }
   sexps.location = new Location(startCol, startRow, 0, i, source);
+  maybeAssignComment(sexp);
+  lastSexp = sexp;
   return sexps;
 }
 
