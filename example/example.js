@@ -19,11 +19,11 @@ var cm2 = CodeMirror.fromTextArea(
 )
 cm.setValue('(triangle 200 "solid" "turquoise")')
 
-cm2.setValue(prettyJS(compile(cm.getValue()).bytecode))
+cm2.setValue(prettyJS(compile(cm.getValue()).bytecode.toString()))
 
 cm.on('change', function() {
   try {
-    cm2.setValue(prettyJS(compile(cm.getValue()).bytcode))
+    cm2.setValue(prettyJS(compile(cm.getValue(), true).bytecode.toString()))
   } catch (e) {
     if (e instanceof Error) {
       throw e

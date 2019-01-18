@@ -12,17 +12,12 @@ module.exports = {
     library: "wescheme"
   },
   module: {
-    loaders: [
+    rules: [
       { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"},
-      { test: /\.css$/, loaders: ["style", "css"] }
+      { test: /\.css$/, loaders: ["style-loader", "css-loader"] }
     ]
   },
   plugins: [
-    new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.UglifyJsPlugin({
-      compressor: {
-        warnings: false
-      }
-    })
+
   ]
 }

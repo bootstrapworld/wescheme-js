@@ -2,13 +2,14 @@ var path = require("path")
 
 var envConfig = require('./env-config.js');
 
-var preLoaders = [];
+var rules = [];
 if (envConfig.runCoverage) {
-  preLoaders.push({
+  rules.push({
     test: /\.js/,
     loader: 'isparta',
     include: path.resolve(__dirname, 'src'),
-    exclude: /node_modules/
+    exclude: /node_modules/,
+    enforce: "pre",
   });
 }
 
@@ -24,11 +25,10 @@ module.exports = {
     filename: "[name].js"
   },
   module: {
-    loaders: [
+    rules: rules.concat([
       { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"},
-      { test: /\.css$/, loaders: ["style", "css"] },
-      { test: /\.json$/, loaders: ["json"] }
-    ],
-    preLoaders: preLoaders
+      { test: /\.css$/, loaders: ["style-loader", "css-loader"] },
+      { test: /\.json$/, loaders: ["json-loader"] }
+    ])
   }
 }
