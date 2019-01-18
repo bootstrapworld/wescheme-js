@@ -1,6 +1,6 @@
 {
   "name": "wescheme-js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "wescheme javascript compiler",
   "main": "lib/wescheme.js",
   "devDependencies": {
@@ -48,7 +48,7 @@
     "type": "git",
     "url": "https://github.com/bootstrapworld/wescheme-js.git"
   },
-  "author": "Paul Carduner",
+  "author": "Emmanuel Schanzer and Paul Carduner",
   "license": "LGPL",
   "bugs": {
     "url": "https://github.com/bootstrapworld/wescheme-js/issues"
