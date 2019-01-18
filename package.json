@@ -40,7 +40,7 @@
     "test": "karma start --single-run",
     "test-coverage": "COVERAGE=true npm test",
     "test-watch": "karma start",
-    "start": "webpack-dev-server --content-base example/",
+    "start": "webpack-dev-server --content-base example/ --mode development",
     "start-test": "webpack-dev-server --port 8085 --content-base test/",
     "lint": "eslint . --ext .js || true"
   },

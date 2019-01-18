@@ -18,7 +18,6 @@ var cm2 = CodeMirror.fromTextArea(
   {theme:'3024-day'}
 )
 cm.setValue('(triangle 200 "solid" "turquoise")')
-
 cm2.setValue(prettyJS(compile(cm.getValue()).bytecode.toString()))
 
 cm.on('change', function() {
