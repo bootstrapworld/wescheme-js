@@ -140,12 +140,8 @@ function chewWhiteSpace(str, i) {
   return i;
 }
 
-Array.prototype.toString = function() {
-  return this.join(" ");
-};
-
 export function sexpToString(sexp) {
-  return (sexp instanceof Array) ? "(" + sexp.map(sexpToString).toString() + ")" : sexp.toString();
+  return (sexp instanceof Array) ? "(" + sexp.map(sexpToString).join(" ") + ")" : sexp.toString();
 }
 
 // use heuristic to assign comments to an sexp

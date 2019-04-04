@@ -169,7 +169,7 @@ function loadSuite(json){
   console.log(json)
   for(var i=0; i<json.feed.entry.length; i++){
     rows.push(json.feed.entry[i].content.$t)
-    var chunks = rows[i].split(/expr\:|, local\: |, server\: |, firstdifference\: |, reason\: |, desugar\: |, bytecode\: |, pyret\: |, pyretast\: /)
+    var chunks = rows[i].split(/expr\:|, local\: |, server\: |, diff\: |, reason\: |, desugar\: |, bytecode\: |, pyret\: |, pyretast\: /)
     var expr = chunks[1].replace(/^\s+/,"")
     var local = chunks[2]
     var server = chunks[3]
@@ -322,8 +322,10 @@ function runTests(verbose){
       desugar.style.background = 'rgb(194, 288, 194)'
       return true
     }
+
     expected = desugarRef.replace(/\s*/g,"")     // remove whitespace fom desugar reference
-    recieved = recieved.toString().replace(/\s*/g,"")// remove whitespace from test output
+    recieved = (sexp instanceof Array)? recieved.map(e => e.toString()).join(" ") : recieved;
+    recieved = recieved.replace(/\s*/g,"")// remove whitespace from test output
     if(sameResults(recieved, expected)) { desugar.style.background = 'lightgreen' }
     else { return setTestFailureLink(row, expected, recieved)}
 

@@ -146,7 +146,7 @@ export class defStruct extends Program {
     this.stx    = stx;
   }
   toString() {
-    return "(define-struct "+this.name.toString()+" ("+this.fields.toString()+"))";
+    return "(define-struct "+this.name.toString()+" ("+this.fields.join(" ")+"))";
   }
 }
 
@@ -184,7 +184,7 @@ export class localExpr extends Program {
     this.stx  = stx;
   }
   toString() {
-    return "(local ("+this.defs.toString()+") "+this.body.toString()+")";
+    return "(local ("+this.defs.join(" ")+") "+this.body.toString()+")";
   }
 }
 
@@ -197,7 +197,7 @@ export class letrecExpr extends Program {
     this.stx      = stx;
   }
   toString() {
-    return "(letrec ("+this.bindings.toString()+") ("+this.body.toString()+"))";
+    return "(letrec ("+this.bindings.join(" ")+") ("+this.body.toString()+"))";
   }
 }
 
@@ -210,7 +210,7 @@ export class letExpr extends Program {
     this.stx      = stx;
   }
   toString() {
-    return "(let ("+this.bindings.toString()+") ("+this.body.toString()+"))";
+    return "(let ("+this.bindings.join(" ")+") ("+this.body.toString()+"))";
   }
 }
 
@@ -223,7 +223,7 @@ export class letStarExpr extends Program {
     this.stx      = stx;
   }
   toString() {
-    return "(let* ("+this.bindings.toString()+") ("+this.body.toString()+"))";
+    return "(let* ("+this.bindings.join(" ")+") ("+this.body.toString()+"))";
   }
 }
 
@@ -269,7 +269,7 @@ export class orExpr extends Program {
     this.exprs  = exprs;
     this.stx    = stx;
   }
-  toString() { return "(or "+this.exprs.toString()+")"; }
+  toString() { return "(or "+this.exprs.join(" ")+")"; }
 }
 
 // application expression
@@ -308,7 +308,7 @@ export class whenUnlessExpr extends Program {
     this.stx = stx;
   }
   toString() {
-    return "("+this.stx[0]+" "+this.predicate.toString()+" "+this.exprs.toString()+")";
+    return "("+this.stx[0]+" "+this.predicate.toString()+" "+this.exprs.join(" ")+")";
   }
 }
 
@@ -348,7 +348,7 @@ export class literal extends Program {
 Vector.prototype.toString = Vector.prototype.toWrittenString = function(){
   var filtered = this.elts.filter(function(e){return e!==undefined;}),
     last = filtered[filtered.length-1];
-  return "#("+this.elts.map(function(elt){return elt===undefined? last : elt;})+")";
+  return "#("+this.elts.map(function(elt){return elt===undefined? last : elt;}).join(" ")+")";
 }
 
 // quoted expression
@@ -362,7 +362,7 @@ export class quotedExpr extends Program {
       return v instanceof Array
       && v.length === 2
       && v[0] instanceof symbolExpr
-      && (    v[0].val === 'quasiquote'
+      && ( v[0].val === 'quasiquote'
         || v[0].val === 'quote'
         || v[0].val === 'unquote'
         || v[0].val === 'unquote-splicing'
@@ -435,7 +435,7 @@ export class provideStatement extends Program {
     this.clauses  = clauses;
     this.stx      = stx;
   }
-  toString() { return "(provide "+this.clauses.toString()+")" }
+  toString() { return "(provide "+this.clauses.join(" ")+")" }
 }
 
 // Unsupported structure (allows us to generate parser errors ahead of "unsupported" errors)
