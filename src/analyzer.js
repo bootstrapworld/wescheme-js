@@ -739,7 +739,7 @@ function collectDefinitions(pinfo, p) {
     }
 
     // open a *synchronous* GET request -- FIXME to use callbacks?
-    var url = window.location.protocol + "//" + window.location.host + (getWeSchemeModule(moduleName) ? 
+    var url = "https://www.wescheme.org/" + (getWeSchemeModule(moduleName) ? 
       "/loadProject?publicId=" + (getWeSchemeModule(moduleName)) : "/js/mzscheme-vm/collects/" + moduleName + ".js");
 
     // if the module is already loaded, we can just process without loading
