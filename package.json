@@ -1,6 +1,6 @@
 {
   "name": "wescheme-js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "wescheme javascript compiler",
   "main": "lib/wescheme.js",
   "devDependencies": {
