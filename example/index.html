@@ -1,19 +1,21 @@
 <html>
   <body>
-    <h1>wescheme-js</h1>
+    <h1>WeScheme as a Node Module</h1>
     <div class="container">
-      <div class="col">
+      <div id="sourcecode" class="col">
         <p>Write scheme code here...</p>
         <textarea id="code"></textarea>
       </div>
-      <div class="col">
-        <p>And get compiled javascript here!</p>
+      <div id="bytecode" class="col">
+        <p>get compiled bytecode here...</p>
         <textarea id="code2"></textarea>
       </div>
-      <div class="col">
-        <p>And see executed output here!</p>
+      <div id="output" class="col">
+        <p>and see output here!</p>
           <main id="interactions" role="log" aria-live="assertive"></main>
+      </div>
     </div>
+
     <script src="build/example.js"></script>
   </body>
 </html>

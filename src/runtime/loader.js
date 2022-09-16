@@ -1,6 +1,8 @@
 // Loader: take bytecode and translate to internal format.
 
 import control from './control'
+import state from './state'
+
 var sys = require('sys');
 
 var loader = {};

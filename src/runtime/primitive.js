@@ -1,4 +1,4 @@
-var types = require('./types')
+var types = require('./types').default 
 import helpers, { check } from './helpers'
 var jsnums = require('./js-numbers')
 import { world } from './world/world'
@@ -15,21 +15,12 @@ var setCALL = function(V) {
     };
 };
 
-
-
 var PAUSE;
 var setPAUSE = function(V) {
     PAUSE = function(onPause) {
 	return new V(onPause);
     };
 };
-
-
-
-
-
-
-
 
 var PRIMITIVES = {};
 
@@ -42,7 +33,6 @@ var CasePrimitive = types.CasePrimitive;
 // Helper Functions
 
 var id = function(x) { return x; };
-
 
 
 var callWithValues = function(f, vals) {

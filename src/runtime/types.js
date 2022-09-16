@@ -1,29 +1,22 @@
 //////////////////////////////////////////////////////////////////////
 // helper functions
 
-var jsnums = require('./js-numbers');
-var _Hashtable = require('./jshashtable');
-var helpers = require('./helpers');
+var jsnums = require('./js-numbers')
+var _Hashtable = require('./jshashtable')
+import helpers from './helpers'
 var types = {};
 
 
 (function () {
 
 //////////////////////////////////////////////////////////////////////
-
-
 var appendChild = function(parent, child) {
     parent.appendChild(child);
 };
 
-
-
 var hasOwnProperty = {}.hasOwnProperty;
 
 //////////////////////////////////////////////////////////////////////
-
-
-
 var _eqHashCodeCounter = 0;
 var makeEqHashCode = function() {
     _eqHashCodeCounter++;
@@ -48,7 +41,6 @@ var getEqHashCode = function(x) {
 
 
 // Union/find for circular equality testing.
-
 var UnionFind = function() {
 	// this.parenMap holds the arrows from an arbitrary pointer
 	// to its parent.
@@ -2327,4 +2319,4 @@ types.Char = Char;
 
 })();
 
-module.exports = types;
+export default types

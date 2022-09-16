@@ -3,15 +3,21 @@ var parse = require('./parser').parse
 import {desugar, analyze} from './analyzer'
 var codegen = require('./compiler').compile
 
-var types = require('./runtime/types')
+import types from './runtime/types';
 
 function compile(code, debug=false) {
-  var lexemes   = lex(code, 'fake-src-filename', debug)
-  var AST       = parse(lexemes)
-  var desugared = desugar(AST)[0]  // includes [AST, pinfo]
-  var pinfo     = analyze(desugared)
-  var local_bytecode = codegen(desugared, pinfo)
-  return local_bytecode
+  try {
+    var lexemes   = lex(code, 'fake-src-filename', debug)
+    var AST       = parse(lexemes)
+    var desugared = desugar(AST)[0]  // includes [AST, pinfo]
+    var pinfo     = analyze(desugared)
+    var local_bytecode = codegen(desugared, pinfo)
+    return local_bytecode
+  } catch (e) {
+      var local_error = getError(e).toString();
+      console.log(local_error)
+      throw local_error;
+  }
 }
 
 // check to make sure it's JSON parseable before returning it.
@@ -28,11 +34,10 @@ function getError(e){
 var onCompilationFail = function(onDoneError) {
     // If all servers are failing, we simulate a 
     // compile time error with the following content:
-    onDoneError(
-        JSON.stringify(onDoneError("The local compiler has failed to run properly. "
-                                   + "You may want to confirm that you are running "
-                                   + "a modern web browser (IE9+, Safari 6+, FF 20+, "
-                                   + "Chrome 20+).")));
+    onDoneError("The local compiler has failed to run properly. "
+                 + "You may want to confirm that you are running "
+                 + "a modern web browser (IE9+, Safari 6+, FF 20+, "
+                 + "Chrome 20+).");
 };
 
 function compileAndRun(programName, code, onDone, onDoneError) {
@@ -56,7 +61,7 @@ function compileAndRun(programName, code, onDone, onDoneError) {
       onDone(JSON.stringify(local_bytecode));
   } catch (e) {
       var local_error = getError(e).toString();
-      console.error(local_error);
+      console.error(e)
       // if it's a fatal error, log the error and move on
       if(/FATAL ERROR/.test(local_error.toString())){
         //logResults(code, JSON.stringify(local_error), "FATAL ERROR");
@@ -65,6 +70,7 @@ function compileAndRun(programName, code, onDone, onDoneError) {
       } else{
         onDoneError(local_error);
       }
+      throw local_error;
   }
   var end         = new Date().getTime(), localTime   = Math.floor(end-start);
   console.log("Compiled in: " + Math.floor(end-start) +"ms");

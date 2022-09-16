@@ -1,10 +1,6 @@
-var types = require('./types');
-
-
+var types = require('./types').default 
 
 // Represents the interpreter state.
-
-
 var state = {};
 
 (function () {

@@ -1,4 +1,4 @@
-var types = require('../types')
+import types from '../types';
 export var world = {};
 
 world.Kernel = {};

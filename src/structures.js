@@ -1,7 +1,7 @@
 /*global */
 
-var types = require('./runtime/types');
-var Vector = types.Vector;
+import types from './runtime/types'
+var Vector = types.Vector
 
 //////////////////////////////////////////////////////////////////////////////
 /////////////////// COMMON FUNCTIONS AND STRUCTURES //////////////////////////

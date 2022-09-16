@@ -1,9 +1,9 @@
 // Control structures
 
 var sys = require('sys');
-var types = require('./types');
+var types = require('./types').default 
 import primitive from './primitive'
-var types = require('./types');
+import state from './state'
 
 var DEBUG_ON = false;
 

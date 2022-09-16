@@ -10,7 +10,7 @@ body {
 }
 
 .container .col {
-  width: 50%;
+  width: 33%;
   padding: 10px;
 }
 
@@ -21,3 +21,14 @@ body {
 .CodeMirror {
   box-shadow: 3px 4px 21px -4px rgba(0,0,0,0.75);
 }
+
+
+#fullscreenButton {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 0px);
+}
+#output { position: relative; }
+main { text-align: center; }
+main .error { background: red; padding: 10px; font-family: courier; line-height: 5ex; }

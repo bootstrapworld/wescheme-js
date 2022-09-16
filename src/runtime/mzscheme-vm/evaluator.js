@@ -1,5 +1,5 @@
 import { compileAndRun } from '../../wescheme'
-var types = require('../types')
+var types = require('../types').default 
 import interpret from '../interpret'
 import helpers from '../helpers'
 
@@ -220,27 +220,24 @@ var Evaluator = (function() {
             programName,
             code, 
             function(responseText) {
-                console.log('Evaluator.executeProgram: got compiled bytecode. about to run')
                 var result = JSON.parse(responseText);
                 that.executeCompiledProgram(eval('(' + result.bytecode + ')'), onDone, onDoneError);
             },
             function(responseErrorText) {
-                console.log(responseErrorText);
                 that._onCompilationFailure(JSON.parse(responseErrorText || '""'), onDoneError);
+                throw responseErrorText;
             })
     };
 
     Evaluator.prototype.executeCompiledProgram = function(compiledBytecode, onDoneSuccess, onDoneFail) {
     	this.aState.clearForEval();
     	try {
-            console.log('Evaluator.executeCompiledProgram: about to load bytecode into interpreter');
     	    interpret.load(compiledBytecode, this.aState);
     	} catch(e) {
             console.error(e);
     	    onDoneFail(e);
     	    return;
     	}
-        console.log('Evaluator.executeCompiledProgram: about to run interpreter');
     	interpret.run(this.aState, onDoneSuccess, onDoneFail);
     };
 
@@ -529,5 +526,87 @@ var Evaluator = (function() {
 
     return Evaluator;
 })();
+
+
+export var Runner = function(outputDOMContainer) {
+    var that = this;
+    this.outputDOMContainer = outputDOMContainer;
+    this.evaluator = new Evaluator({ 
+       write: function(thing) { that.addToInteractions(thing); },
+    });
+    this.evaluator.setImageProxy("/imageProxy");
+    this.evaluator.setRootLibraryPath("/js/mzscheme-vm/collects");
+    
+    this.runCompiledCode = function(compiledCode, permStringArray) {
+      while(this.outputDOMContainer.firstChild) {
+        this.outputDOMContainer.removeChild(this.outputDOMContainer.firstChild);
+      }
+
+      var that = this;
+      var onSuccessRun = function() { };
+      var onFailRun = function(exn) { that.renderErrorAsDomNode(exn); };
+      this.evaluator.executeCompiledProgram(eval('(' + compiledCode + ')'),
+                                            onSuccessRun,
+                                            onFailRun);
+    };
+
+    this.runSourceCode = function(title, sourceCode, permStringArray) {
+      while(this.outputDOMContainer.firstChild) {
+        this.outputDOMContainer.removeChild(this.outputDOMContainer.firstChild);
+      }
+      var that = this;
+      var onSuccessRun = function() { /* no-op */ };
+      var onFailRun = function(exn) { that.renderErrorAsDomNode(exn); };
+      this.evaluator.executeProgram(title, sourceCode, onSuccessRun, onFailRun);
+    };
+
+    this.addToInteractions = function(interactionVal) {
+
+      // Returns if x is a dom node.
+      function isDomNode(x) {
+          return (x.nodeType != undefined);
+      }
+      // Returns if x is a node that should be printed
+      // Printable Nodes are CANVAS elements, OR non-empty SPANs
+      function isPrintableNode(x){
+        return x.nodeName === "CANVAS" || x.childNodes.length > 0;
+      }
+
+      if(!isPrintableNode(interactionVal)){ return;}      // make sure there are no other topLevelEvaluationNodes in the outputDOMContainer
+      if (isDomNode(interactionVal)) {
+        interactionVal.style.display="inline-block";
+        interactionVal.classList.add("replOutput");      // simulate the editor REPL, so CSS spacing will kick in
+        this.outputDOMContainer.append(interactionVal);
+      } else {
+        var newArea = document.createElement("div");
+        newArea.style.width='100%';
+        newArea.text(interactionVal);
+        newArea.style.display="inline-block";
+        this.outputDOMContainer.append(newArea);
+      }
+      this.outputDOMContainer.scrollTop = this.outputDOMContainer.scrollHeight;
+    };
+
+    // renderErrorAsDomNode: exception -> element
+    // Given an exception, produces error dom node to be displayed.
+    this.renderErrorAsDomNode = function(err) {
+      var msg = this.evaluator.getMessageFromExn(err);
+
+      var dom = document.createElement('div');
+      dom['class'] = 'moby-error';
+
+      var msgDom = document.createElement('div');
+      msgDom['class'] = 'moby-error:message';
+      msgDom.appendChild(document.createTextNode(msg));
+      dom.appendChild(msgDom);
+
+      var stacktrace = this.evaluator.getTraceFromExn(err);
+      for (var i = 0; i < stacktrace.length; i++) {
+        dom.appendChild(document.createTextNode("at: line " + stacktrace[i].line +
+                                                ", column " + stacktrace[i].column));
+      }
+      return dom;
+    };
+  };
 
 export default Evaluator;

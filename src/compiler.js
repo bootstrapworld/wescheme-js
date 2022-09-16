@@ -29,7 +29,7 @@ import {
 } from './structures';
 var compiler = require('./compiler');
 var jsnums = require('./runtime/js-numbers');
-var types = require('./runtime/types');
+import types from './runtime/types';
 
 /*
  SOMEDAY...but probably never

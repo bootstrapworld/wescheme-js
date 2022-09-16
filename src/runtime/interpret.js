@@ -1,12 +1,13 @@
 
 // For node.js.
 var sys = require('sys');
-var types = require('./types');
+var types = require('./types').default 
 import primitive from './primitive'
 import loader from './loader';
 var assert = require('assert');
 import control from './control'
-var state = require('./state');
+import helpers from './helpers'
+var state = require('./state').default;
 
 var DEBUG_ON = false;
 
@@ -143,22 +144,18 @@ var run = function(aState, onSuccessK, onFailK) {
     if (! onFailK) { onFailK = function(exn) { throw exn; } };
 
     function doRunWork(){
-      console.log(1);
       var gas = MAX_STEPS_BEFORE_BOUNCE;
       while( (! aState.isStuck()) && (gas > 0)) {
-        console.log(2);
           step(aState);
           gas--;
       }
       if (aState.breakRequested) {
-        console.log('breakRequested');
           onFailK(types.schemeError(
                     types.exnBreak("user break", 
                                    state.captureCurrentContinuationMarks(aState),
                                    captureContinuationClosure(aState))));
           return;
       } else if (gas <= 0) {
-        console.log('pausing for browser thread');
           var stateValues = aState.save();
           setTimeout(function(){ 
                        aState.restore(stateValues);
@@ -166,7 +163,6 @@ var run = function(aState, onSuccessK, onFailK) {
                      },
                      0);
       } else {
-        console.log('done!')
           onSuccessK(aState.v);
           return;
       }
@@ -184,7 +180,8 @@ var run = function(aState, onSuccessK, onFailK) {
           // scheme exception
           // If the error is incomplete, finish constructing it
           if ( types.isIncompleteExn(e.val) ) {
-        var contMarks = state.captureCurrentContinuationMarks(aState);
+            console.log(state)
+            var contMarks = state.captureCurrentContinuationMarks(aState);
           e = types.schemeError(e.val.constructor.apply(null, [e.val.msg, contMarks].concat(e.val.otherArgs) ));
           }
           onFailK(e);

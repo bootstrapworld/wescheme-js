@@ -1,5 +1,5 @@
 var compiler = require('./structures');
-var types = require('./runtime/types');
+import types from './runtime/types';
 var jsnums = require('./runtime/js-numbers');
 
 /*
@@ -1026,8 +1026,6 @@ export var lex = function(str, strSource, debug) {
   var end = new Date().getTime();
   if (debug) {
     console.log("Lexed in " + (Math.floor(end - start)) + "ms");
-    console.log(sexp);
-    console.log(sexpToString(sexp));
   }
   return sexp;
 };
