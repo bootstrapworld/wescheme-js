@@ -1,11 +1,11 @@
-/*
+
 // For node.js.
 var sys = require('sys');
 var types = require('./types');
-var primitive = require('./primitive');
-var loader = require('./loader');
+import primitive from './primitive'
+import loader from './loader';
 var assert = require('assert');
-var control = require('./control');
+import control from './control'
 var state = require('./state');
 
 var DEBUG_ON = false;
@@ -25,7 +25,7 @@ var debugF = function(f_s) {
 	sys.debug(f_s());
     }
 }
-*/
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -119,13 +119,6 @@ var processIndirects = function(state, indirects) {
     }
 };
 
-
-
-
-
-
-
-
 // makeClosureValsFromMap: state [number ...] -> [scheme-value ...]
 // Builds the array of closure values, given the closure map and its
 // types.
@@ -141,10 +134,8 @@ var makeClosureValsFromMap = function(state, closureMap, closureTypes) {
     return closureVals;
 };
 
-
 // We bounce every so often to allow UI events to process.
 var MAX_STEPS_BEFORE_BOUNCE = 50000;
-
 
 // run: state (scheme-value -> void) (exn -> void) -> void
 var run = function(aState, onSuccessK, onFailK) {
@@ -152,18 +143,22 @@ var run = function(aState, onSuccessK, onFailK) {
     if (! onFailK) { onFailK = function(exn) { throw exn; } };
 
     function doRunWork(){
+      console.log(1);
       var gas = MAX_STEPS_BEFORE_BOUNCE;
       while( (! aState.isStuck()) && (gas > 0)) {
+        console.log(2);
           step(aState);
           gas--;
       }
       if (aState.breakRequested) {
+        console.log('breakRequested');
           onFailK(types.schemeError(
                     types.exnBreak("user break", 
                                    state.captureCurrentContinuationMarks(aState),
                                    captureContinuationClosure(aState))));
           return;
       } else if (gas <= 0) {
+        console.log('pausing for browser thread');
           var stateValues = aState.save();
           setTimeout(function(){ 
                        aState.restore(stateValues);
@@ -171,13 +166,15 @@ var run = function(aState, onSuccessK, onFailK) {
                      },
                      0);
       } else {
+        console.log('done!')
           onSuccessK(aState.v);
           return;
       }
     }
  
-    try { doRunWork();
-    } catch (e) {
+    try { doRunWork(); }
+    catch (e) {
+      console.log(e);
       if (e instanceof control.PauseException) {
           var onRestart = makeOnRestart(aState, onSuccessK, onFailK);
           var onCall = makeOnCall(aState);
@@ -198,8 +195,6 @@ var run = function(aState, onSuccessK, onFailK) {
       }
     }
 };
-
-    
 
 // call: state scheme-procedure (arrayof scheme-values) (scheme-value -> void) -> void
 var call = function(state, operator, operands, k, onFail) {
@@ -223,16 +218,11 @@ var call = function(state, operator, operands, k, onFail) {
     }
 };
 
-
 var makeOnCall = function(state) {
     return function(operator, operands, k, onFail) {
 	return call(state, operator, operands, k, onFail);
     };
 };
-
-
-
-
 
 // create function for restarting a run, given the state and the
 // continuation k.
@@ -259,8 +249,6 @@ var makeOnRestart = function(aState, onSuccessK, onFailK) {
     }
 };
     
-
-
 // step: state -> void
 // Takes one step in the abstract machine.
 var step = function(aState) {
@@ -275,12 +263,7 @@ var step = function(aState) {
     }
 };
 
-
-
 //////////////////////////////////////////////////////////////////////
-
-
-
 primitive.addPrimitive('call/cc', 
 		       new primitive.Primitive('call/cc',
 					       1,
@@ -293,17 +276,12 @@ primitive.addPrimitive('call/cc',
 						   state.pushControl(new control.CallControl(1));
 					       }));
 
-
 var captureContinuationClosure = function(state) {
     return new types.ContinuationClosureValue(state.vstack,
 					      state.cstack);
 };
 
-
-
 //////////////////////////////////////////////////////////////////////
-
-
 interpret.load = load;
 interpret.step = step;
 interpret.run = run;
@@ -312,3 +290,4 @@ interpret.call = call;
 
 })();
 
+export default interpret;

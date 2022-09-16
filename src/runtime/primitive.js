@@ -1,3 +1,7 @@
+var types = require('./types')
+import helpers, { check } from './helpers'
+var jsnums = require('./js-numbers')
+import { world } from './world/world'
 
 var primitive = {};
 
@@ -6875,3 +6879,5 @@ primitive.setCALL = setCALL;
 primitive.setPAUSE = setPAUSE;
 
 })();
+
+export default primitive;

@@ -3,7 +3,7 @@
 
 var jsnums = require('./js-numbers');
 var _Hashtable = require('./jshashtable');
-
+var helpers = require('./helpers');
 var types = {};
 
 
@@ -119,7 +119,7 @@ StructType.prototype.isEqual = function(other, aUnionFind) {
 var makeStructureType = function(theName, parentType, initFieldCnt, autoFieldCnt, autoV, guard) {
   // If no parent type given, then the parent type is Struct
   if ( !parentType ) {
-	  parentType = ({type: Struct,
+	  parentType = ({type: Struct.prototype, // NOTE(Emmanuel): added '.prototype' to make this work in node
 		               numberOfArgs: 0,
 		               numberOfFields: 0,
 		               firstField: 0});

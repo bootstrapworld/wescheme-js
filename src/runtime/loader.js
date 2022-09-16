@@ -1,8 +1,7 @@
 // Loader: take bytecode and translate to internal format.
-/*
-var control = require('./control');
+
+import control from './control'
 var sys = require('sys');
-*/
 
 var loader = {};
 
@@ -292,3 +291,4 @@ loader.loadCode = loadCode;
 loader.loadPrefix = loadPrefix;
 })();
 
+export default loader;

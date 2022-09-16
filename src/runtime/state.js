@@ -1,4 +1,4 @@
-//var types = require('./types');
+var types = require('./types');
 
 
 
@@ -412,3 +412,5 @@ state.getStackTraceFromContinuationMarks = getStackTraceFromContinuationMarks;
 
 
 })();
+
+export default state;

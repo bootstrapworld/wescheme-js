@@ -1,12 +1,9 @@
 // Control structures
 
-/*
 var sys = require('sys');
 var types = require('./types');
-var primitive = require('./primitive');
+import primitive from './primitive'
 var types = require('./types');
-
-
 
 var DEBUG_ON = false;
 
@@ -25,7 +22,6 @@ var debugF = function(f_s) {
 	sys.debug(f_s());
     }
 }
-*/
 
 var control = {};
 
@@ -1470,3 +1466,4 @@ control.PauseException = PauseException;
 
 })();
 
+export default control;
