@@ -3,3 +3,4 @@ build
 lib
 coverage
 .coverage
+.DS_Store
