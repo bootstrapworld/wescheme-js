@@ -1,15 +1,14 @@
-import jsworld from 'jsworld/jsworld'
+import jsworld from './jsworld/jsworld'
+import { world } from './world'
+import types from '../types'
 
 // Depends on world.js, world-config.js
-var Jsworld = jsworld.MobyJsworld = {};
 (function() {
 
+    var Jsworld = jsworld.MobyJsworld = {};
 
     // The real low-level jsworld module:
     var _js = jsworld.Jsworld;
-
-
-
 
 
 
@@ -48,11 +47,6 @@ var Jsworld = jsworld.MobyJsworld = {};
         };
 }());
 //////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
     var caller;
     var setCaller = function(c) {
@@ -430,22 +424,17 @@ var Jsworld = jsworld.MobyJsworld = {};
 	shutdownListeners.push(function() { detachEvent(toplevelNode, 'click', absorber)});
 
 
-
 	var config = new world.config.WorldConfig();
 	for(var i = 0; i < handlers.length; i++) {
-	    if (isList(handlers[i])) {
-		attribs = handlers[i];
-	    }
-	    else if (isHandler(handlers[i])) {
-		config = handlers[i](config);
-	    }
+	    if 		(isList(handlers[i])) 	 { attribs = handlers[i]; 		  }
+	    else if (isHandler(handlers[i])) { config  = handlers[i](config); }
 	    else if ( types.isWorldConfig(handlers[i]) ) {
 		    handlers[i].startupArgs = helpers.map(expandHandler, handlers[i].startupArgs);
 		    userConfigs.push(handlers[i]); 
 	    }
 	}
 	config = config.updateAll({'changeWorld': Jsworld.updateWorld,
-                            'shutdownWorld': Jsworld.shutdownWorld});
+                            	'shutdownWorld': Jsworld.shutdownWorld});
 	var stimuli = new world.stimuli.StimuliHandler(config, caller, restarter);
 	
 	var wrappedHandlers = [];
@@ -946,8 +935,6 @@ var Jsworld = jsworld.MobyJsworld = {};
 //	return node;
 //    };
 
-
-
 })();
 
-export default Jsworld;
+export default jsworld;

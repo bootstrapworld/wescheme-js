@@ -45,7 +45,7 @@ cm2.on('change', function() {
   catch (e) { throw e; }
 });
 
-cm.setValue(world)
+cm.setValue(img)
 
 ///////////////////////////////////////////////////////////////////////////////
 // imported from WeScheme war-src/js/run.js
@@ -60,7 +60,6 @@ function runBytecode(publicId) {
   try {
     runner.runCompiledCode(cm2.getValue());
   } catch(e) {
-    console.log(e)
     inter.innerHTML = "<span class='error'>" + e.val._fields[0].toString() + "</span>"; 
   } finally {
     reportIfNoOutput();

@@ -1680,9 +1680,7 @@ function do_redraw(world, oldWorld, toplevelNode, redraw_func, redraw_css_func, 
     };
 
 
-    isPage = function(x) {
-	return x instanceof Page;
-    };
+    function isPage(x) { return x instanceof Page; };
 
     Jsworld.isPage = isPage;
 
@@ -1708,3 +1706,5 @@ function do_redraw(world, oldWorld, toplevelNode, redraw_func, redraw_css_func, 
 
 
 })();
+
+export default jsworld;
