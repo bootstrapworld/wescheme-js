@@ -1,10 +1,8 @@
-
-// For node.js.
 var sys = require('sys');
 var types = require('./types').default 
+var assert = require('assert');
 import primitive from './primitive'
 import loader from './loader';
-var assert = require('assert');
 import control from './control'
 import helpers from './helpers'
 var state = require('./state').default;
@@ -16,26 +14,12 @@ var setDebug = function(v) {
 }
 
 var debug = function(s) {
-    if (DEBUG_ON) {
-	sys.debug(s);
-    }
+  if (DEBUG_ON) { sys.debug(s); }
 }
 
 var debugF = function(f_s) {
-    if (DEBUG_ON) {
-	sys.debug(f_s());
-    }
+  if (DEBUG_ON) { sys.debug(f_s()); }
 }
-
-
-
-//////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////
 
@@ -170,25 +154,23 @@ var run = function(aState, onSuccessK, onFailK) {
  
     try { doRunWork(); }
     catch (e) {
-      console.log(e);
       if (e instanceof control.PauseException) {
-          var onRestart = makeOnRestart(aState, onSuccessK, onFailK);
-          var onCall = makeOnCall(aState);
-          e.onPause(onRestart, onCall);
-          return;
+        var onRestart = makeOnRestart(aState, onSuccessK, onFailK);
+        var onCall = makeOnCall(aState);
+        e.onPause(onRestart, onCall);
+        return;
       } else if (types.isSchemeError(e)) {
-          // scheme exception
-          // If the error is incomplete, finish constructing it
-          if ( types.isIncompleteExn(e.val) ) {
-            console.log(state)
-            var contMarks = state.captureCurrentContinuationMarks(aState);
+        // scheme exception
+        // If the error is incomplete, finish constructing it
+        if ( types.isIncompleteExn(e.val) ) {
+          var contMarks = state.captureCurrentContinuationMarks(aState);
           e = types.schemeError(e.val.constructor.apply(null, [e.val.msg, contMarks].concat(e.val.otherArgs) ));
-          }
-          onFailK(e);
-          return;
+        }
+        onFailK(e);
+        return;
       } else {
-          onFailK(e);
-          return;
+        onFailK(e);
+        return;
       }
     }
 };

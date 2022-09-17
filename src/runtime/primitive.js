@@ -2,7 +2,9 @@ var types = require('./types').default
 import helpers, { check } from './helpers'
 var jsnums = require('./js-numbers')
 import { world } from './world/world'
+import jsworld from './world/jsworld/jsworld'
 
+console.log(jsworld)
 var primitive = {};
 
 (function() {

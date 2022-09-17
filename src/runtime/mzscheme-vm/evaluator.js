@@ -220,7 +220,7 @@ var Evaluator = (function() {
             programName,
             code, 
             function(responseText) {
-                var result = JSON.parse(responseText);
+                const result = JSON.parse(responseText);
                 that.executeCompiledProgram(eval('(' + result.bytecode + ')'), onDone, onDoneError);
             },
             function(responseErrorText) {
@@ -229,16 +229,11 @@ var Evaluator = (function() {
             })
     };
 
-    Evaluator.prototype.executeCompiledProgram = function(compiledBytecode, onDoneSuccess, onDoneFail) {
+    Evaluator.prototype.executeCompiledProgram = function(compiledBytecode, onDone, onDoneError) {
     	this.aState.clearForEval();
-    	try {
-    	    interpret.load(compiledBytecode, this.aState);
-    	} catch(e) {
-            console.error(e);
-    	    onDoneFail(e);
-    	    return;
-    	}
-    	interpret.run(this.aState, onDoneSuccess, onDoneFail);
+    	try { interpret.load(compiledBytecode, this.aState); } 
+        catch(e) { onDoneFail(e); throw e; }
+    	interpret.run(this.aState, onDone, onDoneError);
     };
 
     var hasOwnProperty = {}.hasOwnProperty;
@@ -273,7 +268,6 @@ var Evaluator = (function() {
     	return state.getStackTraceFromContinuationMarks(contMarkSet);
     };
 
-
     var isEqualHash = function(hash1, hash2) {
     	for (var key in hash1) {
     	    if (hasOwnProperty.call(hash1, key)) {
@@ -299,7 +293,6 @@ var Evaluator = (function() {
     	}
     	return true;
     };
-
 
     Evaluator.prototype.getMessageFromExn = function(exn) {
     	if (typeof(exn) === 'undefined') {
@@ -395,7 +388,7 @@ var Evaluator = (function() {
            toReturn.push(locObjToVector(badLocList[i]));
        }
        return toReturn;
-   };
+    };
 
     //structuredError -> Message
     var structuredErrorToMessage = function(se) {
@@ -439,7 +432,6 @@ var Evaluator = (function() {
         }
     };
 
-
     // convertDomSexpr: dom-sexpr -> dom-sexpr
     // Converts the s-expression (array) representation of a dom element.
     Evaluator.prototype._convertDomSexpr = function(domSexpr) {
@@ -472,7 +464,6 @@ var Evaluator = (function() {
     	    return domSexpr;
     	}
     };
-
 
     //////////////////////////////////////////////////////////////////////
     /* Lesser General Public License for more details.
@@ -537,26 +528,26 @@ export var Runner = function(outputDOMContainer) {
     this.evaluator.setImageProxy("/imageProxy");
     this.evaluator.setRootLibraryPath("/js/mzscheme-vm/collects");
     
-    this.runCompiledCode = function(compiledCode, permStringArray) {
+    this.runCompiledCode = function(compiledCode) {
       while(this.outputDOMContainer.firstChild) {
         this.outputDOMContainer.removeChild(this.outputDOMContainer.firstChild);
       }
-
       var that = this;
-      var onSuccessRun = function() { };
-      var onFailRun = function(exn) { that.renderErrorAsDomNode(exn); };
-      this.evaluator.executeCompiledProgram(eval('(' + compiledCode + ')'),
-                                            onSuccessRun,
-                                            onFailRun);
+      const bytecodeObj = eval('(' + compiledCode + ')');
+
+      var onSuccessRun = function() { /* no-op */ };
+      var onFailRun = function(exn) { throw exn; };
+      this.evaluator.executeCompiledProgram(bytecodeObj, onSuccessRun, onFailRun);
     };
 
-    this.runSourceCode = function(title, sourceCode, permStringArray) {
+    this.runSourceCode = function(title, sourceCode) {
       while(this.outputDOMContainer.firstChild) {
         this.outputDOMContainer.removeChild(this.outputDOMContainer.firstChild);
       }
       var that = this;
+
       var onSuccessRun = function() { /* no-op */ };
-      var onFailRun = function(exn) { that.renderErrorAsDomNode(exn); };
+      var onFailRun = function(exn) { throw that.renderErrorAsDomNode(exn); };
       this.evaluator.executeProgram(title, sourceCode, onSuccessRun, onFailRun);
     };
 
@@ -590,23 +581,60 @@ export var Runner = function(outputDOMContainer) {
     // renderErrorAsDomNode: exception -> element
     // Given an exception, produces error dom node to be displayed.
     this.renderErrorAsDomNode = function(err) {
-      var msg = this.evaluator.getMessageFromExn(err);
+        console.log(err)
+        var msg;
+        var i;
+        var dom = document.createElement('div');
+        if (types.isSchemeError(err) && types.isExnBreak(err.val)) {
+            dom['className'] = 'moby-break-error';
+            msg = "The program has stopped.";
+        } else {
+            dom['className'] = 'moby-error';
+            if(err.structuredError && err.structuredError.message) {
+                msg = structuredErrorToMessage(err.structuredError.message);
+            }
+            else {
+                msg = that.evaluator.getMessageFromExn(err);
+            }
+        }
+        var msgDom = document.createElement('div');
+        msgDom['className'] = 'moby-error:message';
+        if(types.isMessage(msg)) {
+            if (that.withColoredErrorMessages) {
+                //if it is a Message, do special formatting
+                formatColoredMessage(that, msgDom, msg);
+            } else {
+                formatUncoloredMessage(that, msgDom, msg, getPrimaryErrorLocation(that, err));
+            }
+        } else {
+            if(err.domMessage){
+              dom.appendChild(err.domMessage);
+            } else {
+              msgDom.appendChild(document.createTextNode(msg));
+            }
+        } 
+        dom.appendChild(msgDom);
 
-      var dom = document.createElement('div');
-      dom['class'] = 'moby-error';
-
-      var msgDom = document.createElement('div');
-      msgDom['class'] = 'moby-error:message';
-      msgDom.appendChild(document.createTextNode(msg));
-      dom.appendChild(msgDom);
-
-      var stacktrace = this.evaluator.getTraceFromExn(err);
-      for (var i = 0; i < stacktrace.length; i++) {
-        dom.appendChild(document.createTextNode("at: line " + stacktrace[i].line +
-                                                ", column " + stacktrace[i].column));
-      }
-      return dom;
+        if(err.structuredError && err.structuredError.message) {
+            var link = that.createLocationHyperlink(err.structuredError.location);
+            dom.appendChild(link);
+        }
+        var stacktrace = that.evaluator.getTraceFromExn(err);
+        var stacktraceDiv = document.createElement("div");
+        stacktraceDiv['className'] = 'error-stack-trace';
+        for (i = 0; i < stacktrace.length; i++) {
+            var anchor = that.createLocationHyperlink(stacktrace[i]);
+            stacktraceDiv.appendChild(anchor);
+        }
+        
+        // don't give a stack trace if the user halts the program
+        if(!(types.isSchemeError(err) && types.isExnBreak(err.val))){
+          dom.appendChild(stacktraceDiv);
+        }
+        return dom;
     };
+
+
   };
 
 export default Evaluator;

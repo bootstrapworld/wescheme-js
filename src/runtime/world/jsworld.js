@@ -1,9 +1,9 @@
+import jsworld from 'jsworld/jsworld'
 
 // Depends on world.js, world-config.js
-
+var Jsworld = jsworld.MobyJsworld = {};
 (function() {
 
-    var Jsworld = jsworld.MobyJsworld = {};
 
     // The real low-level jsworld module:
     var _js = jsworld.Jsworld;
@@ -949,3 +949,5 @@
 
 
 })();
+
+export default Jsworld;

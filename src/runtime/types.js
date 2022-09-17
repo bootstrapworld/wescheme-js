@@ -118,13 +118,9 @@ var makeStructureType = function(theName, parentType, initFieldCnt, autoFieldCnt
   }
   var numParentArgs = parentType.numberOfArgs;
   // Create a new struct type inheriting from the parent
-  var aStruct = function(name, initArgs) {
-    this.init(name, initArgs);
-  }
-  Object.assign(aStruct.prototype, parentType.type.prototype);
+  var aStruct = function(name, initArgs) { this.init(name, initArgs); }
   aStruct.prototype.init = function(name, initArgs) {
 		// if there's no guard, construct a default one
-
 		if (!guard) {
 			guard = function(k) {
 				if (arguments.length == 3) {
@@ -163,7 +159,8 @@ var makeStructureType = function(theName, parentType, initFieldCnt, autoFieldCnt
 		initArgs.unshift(cont);
 		initArgs.push(Symbol.makeInstance(name));
 		guard.apply(null, initArgs);
-  }
+  };
+  Object.assign(aStruct.prototype, parentType.type.prototype);
 
   // Set type, necessary for equality checking
   aStruct.prototype.type = aStruct;
@@ -192,7 +189,7 @@ var Struct = function(constructorName, fields) {
   this.init(constructorName, fields);
 }
 Object.assign(Struct.prototype, {
-  init(constructorName, fields) {
+  	init(constructorName, fields) {
 	  this._constructorName = constructorName;
 	  this._fields = [];
 	},

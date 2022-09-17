@@ -2,14 +2,22 @@ import CodeMirror from 'codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/monokai.css'
 import prettyJS from 'pretty-js'
-
 import { compile } from '../src/wescheme'
-
 import { Runner } from '../src/runtime/mzscheme-vm/evaluator'
 import loadProject from '../src/runtime/loadProject'
 
 require('./example.css')
 require('./example-page.css')
+
+const inter = document.getElementById('interactions');
+const img = '(triangle 200 "solid" "turquoise")';
+const unbound = 'x';
+const parseError = '('
+const fact = '(define (fact x) (if (< x 2) 1 (* x (fact (- x 1))))) (fact 20)'
+const world = `
+(big-bang 0
+  (on-tick add1))
+`
 
 var cm = CodeMirror.fromTextArea(
   document.getElementById("code"),
@@ -26,9 +34,8 @@ cm.on('change', function() {
     cm2.setValue(bytecode)
   } catch (e) {
     cm2.setValue("Compilation Error (see console for details)")
-    if (e instanceof Error) {
-      throw e
-    }
+    while(inter.firstChild) { inter.removeChild(inter.firstChild); }
+    if (e instanceof Error) { throw e }
   }
 })
 
@@ -38,23 +45,23 @@ cm2.on('change', function() {
   catch (e) { throw e; }
 });
 
-cm.setValue('(triangle 200 "solid" "turquoise")')
+cm.setValue(world)
 
 ///////////////////////////////////////////////////////////////////////////////
 // imported from WeScheme war-src/js/run.js
 
 function runBytecode(publicId) { 
-  var inter = document.getElementById('interactions');
   var runner = new Runner(document.getElementById('interactions'));
   var reportIfNoOutput = function() {
     if(inter.children.length == 0) {
-        inter.innerHTML = "The program has finished running, but only included definitions (which do not produce any output).";
+      inter.innerHTML = "The program has finished running, but only included definitions (which do not produce any output).";
     }
   };
   try {
-    runner.runSourceCode(null, cm.getValue(), null); // pass null for permissions and title
+    runner.runCompiledCode(cm2.getValue());
   } catch(e) {
-    inter.innerHTML = "<span class='error'>" + e.toString() + "</span>";
+    console.log(e)
+    inter.innerHTML = "<span class='error'>" + e.val._fields[0].toString() + "</span>"; 
   } finally {
     reportIfNoOutput();
   }

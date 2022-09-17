@@ -41,7 +41,7 @@ import {
 
 require('./modules');
 var structures = require('./structures');
-var types = require('./runtime/types');
+import types from './runtime/types';
 
 /*
  TODO
