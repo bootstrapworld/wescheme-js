@@ -15,8 +15,10 @@ const unbound = 'x';
 const parseError = '('
 const fact = '(define (fact x) (if (< x 2) 1 (* x (fact (- x 1))))) (fact 20)'
 const world = `
+(define (draw-world w) (put-image (star 20 "solid" "blue") w 30 (rectangle 300 60 "solid" "black")))
 (big-bang 0
-  (on-tick add1))
+  (on-tick add1)
+  (to-draw draw-world))
 `
 
 var cm = CodeMirror.fromTextArea(
@@ -41,16 +43,15 @@ cm.on('change', function() {
 
 cm2.on('change', function() {
   if(cm2.getValue().includes("Compilation Error")) return;
-  try { runBytecode(); } 
-  catch (e) { throw e; }
+  runBytecode();
 });
 
-cm.setValue(img)
+cm.setValue(world)
 
 ///////////////////////////////////////////////////////////////////////////////
 // imported from WeScheme war-src/js/run.js
 
-function runBytecode(publicId) { 
+function runBytecode() { 
   var runner = new Runner(document.getElementById('interactions'));
   var reportIfNoOutput = function() {
     if(inter.children.length == 0) {

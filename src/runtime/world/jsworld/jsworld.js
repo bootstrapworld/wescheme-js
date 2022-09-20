@@ -1,3 +1,4 @@
+import helpers from '../../helpers'
 
 var jsworld = {};
 

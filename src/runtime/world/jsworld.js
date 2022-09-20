@@ -1,6 +1,8 @@
 import jsworld from './jsworld/jsworld'
 import { world } from './world'
 import types from '../types'
+var jsnums = require('../js-numbers');
+import helpers from '../helpers'
 
 // Depends on world.js, world-config.js
 (function() {
