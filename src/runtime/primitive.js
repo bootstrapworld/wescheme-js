@@ -1,5 +1,6 @@
 var types = require('./types').default 
 import helpers, { check } from './helpers'
+var assert = require('assert');
 var jsnums = require('./js-numbers')
 import { world } from './world/world'
 import jsworld from './world/jsworld'
