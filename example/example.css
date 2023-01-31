@@ -82,3 +82,9 @@
   font-weight: normal;
   margin: 15px;
 }
+
+nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1em;
+}
