@@ -30,5 +30,8 @@ module.exports = {
       { test: /\.css$/, loaders: ["style-loader", "css-loader"] },
       { test: /\.json$/, loaders: ["json-loader"] }
     ])
+  },
+  devServer: {
+    disableHostCheck: true,
   }
 }
